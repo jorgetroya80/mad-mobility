@@ -16,7 +16,7 @@ Que cada cambio que llegue a `main` esté validado automáticamente y que cada r
 - Como mantenedor, quiero que release-please versione `api` y `web` de forma independiente, con CHANGELOG y etiqueta propios.
 - Como mantenedor, quiero que una release publique artefactos desplegables (imagen Docker de la API, build estático del frontend) sin depender todavía de una plataforma de despliegue.
 
-**Fuera de alcance:** despliegue a una plataforma concreta (módulo `deploy`), código de aplicación, Dependabot para `api/` y GitHub Actions.
+**Fuera de alcance:** despliegue a una plataforma concreta (módulo `deploy`), código de aplicación, Dependabot para `api/`.
 
 ## Tech Stack
 
@@ -201,9 +201,10 @@ Resultado: un único PR de release ("chore: release main") con las versiones de 
 
 ### Dependabot (`dependabot.yml`)
 
-- Solo ecosistema `npm`, directorio `/` (workspace pnpm, cubre raíz y `web/`).
-- Frecuencia semanal (lunes), un grupo para minor/patch y PRs separados para major.
-- Prefijo de commit `chore(deps)` para que pasen commitlint y no generen releases.
+- Ecosistema `npm`, directorio `/` (workspace pnpm, cubre raíz y `web/`): semanal (lunes), un grupo para minor/patch y PRs separados para major, prefijo `chore(deps)`.
+- Ecosistema `github-actions`, directorio `/`: semanal (lunes), un único grupo, prefijo `ci(deps)`. Mantiene actualizados los SHA fijados y sus comentarios de versión.
+- Los prefijos pasan commitlint y `pr-title`, y no generan releases.
+- `api/` (Gradle) sigue fuera de Dependabot.
 
 ### Configuración manual del repositorio en GitHub
 
@@ -247,3 +248,4 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 - 2026-10-03: contrato código primero (springdoc). `openapi/` contiene un archivo generado; el job `contract` hace lint y la comprobación de desajuste se reserva para `api-bicimad`. Sin impacto en el plan.
 - 2026-10-03: `release-please-action` pasa de `@v4` a `@v5` (última versión mayor; solo cambia el runtime a Node 24).
 - 2026-10-03: release-please usa `GITHUB_TOKEN` (sin PAT); el PR de release se cierra y reabre a mano para disparar los checks. Todas las acciones se fijan por SHA. Dependabot no cubre GitHub Actions, así que actualizar esos SHA es manual.
+- 2026-10-03: Dependabot cubre también `github-actions` (prefijo `ci(deps)`) para actualizar los SHA fijados.
