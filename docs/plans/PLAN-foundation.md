@@ -11,7 +11,7 @@ Montar el repositorio `jorgetroya80/mad-mobility` con validaciones locales (Husk
 ## Decisiones de implementación
 
 - **Lista de tareas en este documento.** No se usa `tasks/todo.md`; las casillas de abajo son la fuente de verdad del progreso.
-- **Commits directos solo hasta el primer push.** Las tareas 1-4 se commitean en local y se suben juntas a `main` (el repositorio está vacío). Desde la tarea 5, cada tarea es una rama y un PR con squash merge.
+- **Nunca se hace push de código a `main`.** El único push directo es un commit raíz vacío (`chore: initial commit`), necesario porque un PR requiere una rama destino. Las tareas 1-4 se suben como la rama `chore/foundation-hooks` y entran por PR; desde ahí, cada tarea es una rama y un PR con squash merge.
 - **Orden por riesgo.** Lo que depende de GitHub (permisos de Actions, release-please) va antes que lo cosmético, para fallar pronto.
 - **Guardas por existencia de archivos.** Hooks y jobs comprueban `api/build.gradle.kts`, `web/tsconfig.json` o `api/Dockerfile` antes de ejecutar; si no existen, terminan con éxito.
 - **`publish-web` también lleva guarda** (`web/vite.config.*`), además de `web--release_created`: con el placeholder no hay build que publicar. Pequeña precisión sobre la spec.
@@ -82,12 +82,14 @@ T1 raíz del repo
 
 ### Fase 2: GitHub y CI
 
-- [ ] **T5: Primer push y permisos de Actions** (XS, ~10 min, **requiere confirmación**)
-  - Descripción: añadir el remoto, subir `main` (incluye `docs/` y la configuración de T1-T4). En Settings > Actions: permisos por defecto de solo lectura y permitir que Actions cree y apruebe PRs.
+- [ ] **T5: Commit raíz, protección básica de `main`, PR de T1-T4 y permisos de Actions** (S, ~20 min, **requiere confirmación**)
+  - Descripción: recolocar T1-T4 sobre un commit raíz vacío; push solo de ese commit a `main`; ruleset en `main` que exige PR y bloquea force push y borrado; en el repositorio solo squash merge y borrar ramas tras merge; push de `chore/foundation-hooks` y PR hacia `main`; permisos de Actions de solo lectura y permitir que Actions cree y apruebe PRs.
   - Aceptación:
-    - `main` existe en GitHub con el historial local.
+    - `main` en GitHub contiene solo el commit raíz vacío hasta que se mergea el PR.
+    - `git push origin main` directo se rechaza.
+    - El PR `build(repo): add monorepo root and git hooks` existe y solo permite squash merge.
     - `gh api repos/jorgetroya80/mad-mobility/actions/permissions/workflow` muestra `default_workflow_permissions: read` y `can_approve_pull_request_reviews: true`.
-  - Verificación: el comando `gh api` anterior.
+  - Verificación: los comandos `gh api` de rulesets y permisos; intento de push directo rechazado.
   - Archivos: ninguno (configuración remota).
   - Dependencias: T4.
 
@@ -143,10 +145,9 @@ T1 raíz del repo
   - Archivos: `.github/dependabot.yml`.
   - Dependencias: T5.
 
-- [ ] **T11: Protección de `main`** (XS, ~10 min, **requiere confirmación**)
-  - Descripción: ruleset o branch protection en `main`: PR obligatorio, checks requeridos `ci-ok` y `pr-title`, solo squash merge, historial lineal, borrar ramas tras merge.
+- [ ] **T11: Checks requeridos en `main`** (XS, ~10 min, **requiere confirmación**)
+  - Descripción: añadir al ruleset de `main` (creado en T5) los checks requeridos `ci-ok` y `pr-title`.
   - Aceptación:
-    - `git push origin main` directo se rechaza.
     - Un PR con `ci-ok` en rojo no se puede mergear.
   - Verificación: intento de push directo con un commit vacío; `gh api repos/jorgetroya80/mad-mobility/rulesets`.
   - Archivos: ninguno (configuración remota).
@@ -166,7 +167,7 @@ T1 raíz del repo
 | Las releases creadas con `GITHUB_TOKEN` no disparan otros workflows | Medio      | Publicación y deploy dentro de `release.yml` (T9)                                                              |
 | `ci-ok` cuenta un job omitido como fallo y bloquea PRs              | Alto       | Probarlo explícitamente en T6 con un PR solo de `docs/`                                                        |
 | Hooks lentos que invitan a usar `--no-verify`                       | Medio      | Objetivos de tiempo medidos en T3 y T4                                                                         |
-| Proteger `main` antes de que existan los checks impide mergear      | Medio      | T11 va al final, después de T6 y T7                                                                            |
+| Proteger `main` antes de que existan los checks impide mergear      | Medio      | T5 solo exige PR; los checks requeridos se añaden en T11, después de T6 y T7                                   |
 | Java 24 sin parches                                                 | Bajo ahora | Registrado en la spec; no afecta a este módulo                                                                 |
 
 ## Paralelización
@@ -176,3 +177,7 @@ Un solo desarrollador: orden secuencial T1 -> T11. Si se quisiera paralelizar, T
 ## Estimación
 
 Unas 4 h en total, en 2 sesiones de fin de semana: Fase 1 (~1,5 h), Fases 2 y 3 (~2,5 h).
+
+## Changelog
+
+- 2026-10-03: no se hace push de código a `main`. T5 crea un commit raíz vacío, protege `main` exigiendo PR y sube T1-T4 como PR; T11 solo añade los checks requeridos.
