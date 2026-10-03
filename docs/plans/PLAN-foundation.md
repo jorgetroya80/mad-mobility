@@ -93,7 +93,7 @@ T1 raíz del repo
   - Archivos: ninguno (configuración remota).
   - Dependencias: T4.
 
-- [ ] **T6: Workflow de CI y actionlint** (M, ~45 min)
+- [x] **T6: Workflow de CI y actionlint** (M, ~45 min)
   - Descripción: `.github/workflows/ci.yml` con `concurrency`, `permissions: contents: read`, job `changes` (`dorny/paths-filter`), jobs `api`, `web`, `contract`, `workflows` con sus guardas y job agregador `ci-ok`.
   - Aceptación:
     - Un PR que solo cambia `docs/` ejecuta `changes` y `ci-ok` en verde, con `api` y `web` omitidos (SC4).
