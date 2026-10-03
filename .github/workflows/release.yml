@@ -1,0 +1,34 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    outputs:
+      api-release-created: ${{ steps.release.outputs['api--release_created'] }}
+      api-tag-name: ${{ steps.release.outputs['api--tag_name'] }}
+      api-version: ${{ steps.release.outputs['api--version'] }}
+      web-release-created: ${{ steps.release.outputs['web--release_created'] }}
+      web-tag-name: ${{ steps.release.outputs['web--tag_name'] }}
+      web-version: ${{ steps.release.outputs['web--version'] }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

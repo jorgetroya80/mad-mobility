@@ -30,7 +30,7 @@ Que cada cambio que llegue a `main` esté validado automáticamente y que cada r
 | Husky          | 9.x                                                   | Git hooks                                                                    |
 | commitlint     | `@commitlint/cli` + `@commitlint/config-conventional` | Validar mensajes de commit                                                   |
 | lint-staged    | última                                                | Formato y lint de archivos en stage                                          |
-| release-please | `googleapis/release-please-action@v4`, modo manifest  | Versionado y releases                                                        |
+| release-please | `googleapis/release-please-action@v5`, modo manifest  | Versionado y releases                                                        |
 | Dependabot     | —                                                     | Actualización de dependencias npm (`web/` y raíz)                            |
 | actionlint     | `rhysd/actionlint`                                    | Lint de workflows                                                            |
 
@@ -163,7 +163,7 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 ### Release (`release.yml`)
 
 - Disparador: `push` a `main`.
-- Job `release-please`: `googleapis/release-please-action@v4` con `release-please-config.json` y `.release-please-manifest.json`. Expone `api--release_created`, `api--tag_name`, `web--release_created`, `web--tag_name`.
+- Job `release-please`: `googleapis/release-please-action@v5` con `release-please-config.json` y `.release-please-manifest.json`. Expone `api--release_created`, `api--tag_name`, `web--release_created`, `web--tag_name`.
 - Job `publish-api` (si `api--release_created` y existe `api/Dockerfile`): construye y publica `ghcr.io/jorgetroya80/mad-mobility-api:<versión>` y `:latest`. Permiso `packages: write`.
 - Job `publish-web` (si `web--release_created`): `pnpm --filter web build` y adjunta `web-dist.tar.gz` a la release.
 - Jobs `deploy-api` y `deploy-web`: placeholders que solo se ejecutan si la variable de repositorio `DEPLOY_ENABLED == 'true'`. Se completan en el módulo `deploy`.
@@ -244,3 +244,4 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 ## Changelog
 
 - 2026-10-03: contrato código primero (springdoc). `openapi/` contiene un archivo generado; el job `contract` hace lint y la comprobación de desajuste se reserva para `api-bicimad`. Sin impacto en el plan.
+- 2026-10-03: `release-please-action` pasa de `@v4` a `@v5` (última versión mayor; solo cambia el runtime a Node 24).
