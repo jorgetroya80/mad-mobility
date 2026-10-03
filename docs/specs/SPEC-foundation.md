@@ -168,6 +168,7 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 - Job `publish-web` (si `web--release_created`): `pnpm --filter web build` y adjunta `web-dist.tar.gz` a la release.
 - Jobs `deploy-api` y `deploy-web`: placeholders que solo se ejecutan si la variable de repositorio `DEPLOY_ENABLED == 'true'`. Se completan en el módulo `deploy`.
 - Publicación y despliegue van en el mismo workflow porque las releases creadas con `GITHUB_TOKEN` no disparan otros workflows.
+- release-please usa el secreto `RELEASE_PLEASE_TOKEN` (PAT fine-grained, solo este repositorio, permisos Contents, Pull requests e Issues en lectura y escritura). Con `GITHUB_TOKEN`, el PR de release no dispararía `ci-ok` ni `pr-title` y no se podría mergear con los checks requeridos.
 
 **`release-please-config.json`:**
 
@@ -245,3 +246,4 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 
 - 2026-10-03: contrato código primero (springdoc). `openapi/` contiene un archivo generado; el job `contract` hace lint y la comprobación de desajuste se reserva para `api-bicimad`. Sin impacto en el plan.
 - 2026-10-03: `release-please-action` pasa de `@v4` a `@v5` (última versión mayor; solo cambia el runtime a Node 24).
+- 2026-10-03: release-please usa un PAT (`RELEASE_PLEASE_TOKEN`) para que sus PRs disparen los checks requeridos.
