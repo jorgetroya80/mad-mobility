@@ -157,6 +157,7 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 - Job `web` (si `web` o `contract`): `pnpm/action-setup`, `actions/setup-node` (24, caché pnpm), `pnpm install --frozen-lockfile`, `lint`, `typecheck`, `test`, `build`. Se omite si `web/tsconfig.json` no existe.
 - Job `contract` (si `contract`): lint de `openapi/bicimad.json` (por ejemplo con Redocly CLI). Se omite si el archivo no existe.
 - Comprobación de desajuste del contrato: el job `api` regenera el OpenAPI con springdoc y falla si difiere de `openapi/bicimad.json`. El paso concreto se define en `api-bicimad`; aquí solo se reserva.
+- Job `tooling` (si cambian `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc`, `*.config.mjs` o `.prettierrc.json`): `pnpm install --frozen-lockfile` (aplica las políticas de `pnpm-workspace.yaml`, como `minimumReleaseAge`) y `prettier --check .`.
 - Job `workflows` (si `workflows`): `actionlint`.
 - Job `ci-ok`: depende de todos, `if: always()`, falla si alguno falló o se canceló; los omitidos cuentan como éxito. **Es el único check requerido** en la protección de `main`.
 
@@ -201,7 +202,7 @@ Resultado: un único PR de release ("chore: release main") con las versiones de 
 
 ### Dependabot (`dependabot.yml`)
 
-- Ecosistema `npm`, directorio `/` (workspace pnpm, cubre raíz y `web/`): semanal (lunes), un grupo para minor/patch y PRs separados para major, prefijo `chore(deps)`.
+- Ecosistema `npm`, directorio `/` (workspace pnpm, cubre raíz y `web/`): semanal (lunes), un grupo para minor/patch y PRs separados para major, prefijo `chore(deps)`, `cooldown` de 10 días, alineado con `minimumReleaseAge: 14400` (10 días) declarado en `pnpm-workspace.yaml`.
 - Ecosistema `github-actions`, directorio `/`: semanal (lunes), un único grupo, prefijo `ci(deps)`. Mantiene actualizados los SHA fijados y sus comentarios de versión.
 - Los prefijos pasan commitlint y `pr-title`, y no generan releases.
 - `api/` (Gradle) sigue fuera de Dependabot.
@@ -249,3 +250,4 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 - 2026-10-03: `release-please-action` pasa de `@v4` a `@v5` (última versión mayor; solo cambia el runtime a Node 24).
 - 2026-10-03: release-please usa `GITHUB_TOKEN` (sin PAT); el PR de release se cierra y reabre a mano para disparar los checks. Todas las acciones se fijan por SHA. Dependabot no cubre GitHub Actions, así que actualizar esos SHA es manual.
 - 2026-10-03: Dependabot cubre también `github-actions` (prefijo `ci(deps)`) para actualizar los SHA fijados.
+- 2026-10-03: Dependabot npm con `cooldown` de 10 días; nuevo job `tooling` en CI que valida la raíz del monorepo con `pnpm install --frozen-lockfile` y Prettier (el PR #12 de Dependabot pasó CI con una versión que la política local de 10 días rechaza; la política estaba solo en la configuración global de pnpm y ahora vive en `pnpm-workspace.yaml`).

@@ -1,2 +1,6 @@
 packages:
   - web
+
+# Only install package versions published at least 10 days ago (minutes).
+# Enforced in CI too; Dependabot uses a matching cooldown.
+minimumReleaseAge: 14400

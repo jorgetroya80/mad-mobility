@@ -7,6 +7,9 @@ updates:
       day: monday
     commit-message:
       prefix: chore(deps)
+    # Matches minimumReleaseAge (10 days) in pnpm-workspace.yaml
+    cooldown:
+      default-days: 10
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
