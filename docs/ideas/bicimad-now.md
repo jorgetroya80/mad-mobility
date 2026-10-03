@@ -169,3 +169,4 @@ emt-demo/
 ## Open Questions
 
 - Plataforma de despliegue (no prioritaria por ahora).
+
