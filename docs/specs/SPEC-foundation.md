@@ -1,7 +1,7 @@
 # Spec: foundation
 
 - Created: 2026-10-03
-- Status: **approved** (2026-10-03)
+- Status: **implemented** (2026-10-03)
 - Plan: [PLAN-foundation.md](../plans/PLAN-foundation.md)
 
 Módulo `foundation` del [Capability Map](CAPABILITY-MAP.md). Repositorio: [jorgetroya80/mad-mobility](https://github.com/jorgetroya80/mad-mobility) (público, vacío, rama por defecto `main`). Define el repositorio, las validaciones locales (Husky), la integración continua, el versionado y la publicación de artefactos **antes de escribir código de aplicación**.
