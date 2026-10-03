@@ -7,7 +7,7 @@ updates:
       day: monday
     commit-message:
       prefix: chore(deps)
-    # pnpm 12 rejects packages published less than ~10 days ago (minimumReleaseAge)
+    # Matches minimumReleaseAge (10 days) in pnpm-workspace.yaml
     cooldown:
       default-days: 10
     groups:

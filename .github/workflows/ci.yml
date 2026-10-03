@@ -121,7 +121,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      # Enforces pnpm 12 lockfile policies (e.g. minimumReleaseAge) on root dependencies
+      # Enforces lockfile policies from pnpm-workspace.yaml (e.g. minimumReleaseAge)
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prettier --check .
 
