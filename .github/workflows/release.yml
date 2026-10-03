@@ -26,9 +26,99 @@ jobs:
       web-release-created: ${{ steps.release.outputs['web--release_created'] }}
       web-tag-name: ${{ steps.release.outputs['web--tag_name'] }}
       web-version: ${{ steps.release.outputs['web--version'] }}
+      has-api-dockerfile: ${{ steps.exists.outputs.api-dockerfile }}
+      has-web-project: ${{ steps.exists.outputs.web-project }}
     steps:
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.release.outputs.releases_created == 'true'
+      - id: exists
+        name: Check which projects can be published
+        if: steps.release.outputs.releases_created == 'true'
+        run: |
+          {
+            echo "api-dockerfile=$([ -f api/Dockerfile ] && echo true || echo false)"
+            echo "web-project=$(ls web/vite.config.* >/dev/null 2>&1 && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+
+  publish-api:
+    name: publish-api
+    needs: release-please
+    if: needs.release-please.outputs.api-release-created == 'true' && needs.release-please.outputs.has-api-dockerfile == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.api-tag-name }}
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/jorgetroya80/mad-mobility-api
+          # Runs on push to main, not on a tag event: version comes from release-please
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.api-version }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: api
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  publish-web:
+    name: publish-web
+    needs: release-please
+    if: needs.release-please.outputs.web-release-created == 'true' && needs.release-please.outputs.has-web-project == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.web-tag-name }}
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web run build
+      - name: Attach build to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.web-tag-name }}
+        run: |
+          tar -czf web-dist.tar.gz -C web/dist .
+          gh release upload "$TAG" web-dist.tar.gz --clobber
+
+  # Placeholders until the deploy module picks a platform (set repo variable DEPLOY_ENABLED=true)
+  deploy-api:
+    name: deploy-api
+    needs: [release-please, publish-api]
+    if: vars.DEPLOY_ENABLED == 'true' && needs.publish-api.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploy api ${{ needs.release-please.outputs.api-version }} (platform not defined yet)"
+
+  deploy-web:
+    name: deploy-web
+    needs: [release-please, publish-web]
+    if: vars.DEPLOY_ENABLED == 'true' && needs.publish-web.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploy web ${{ needs.release-please.outputs.web-version }} (platform not defined yet)"

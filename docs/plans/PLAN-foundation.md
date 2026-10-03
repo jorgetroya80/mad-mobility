@@ -118,7 +118,7 @@ T1 raíz del repo
 
 ### Fase 3: Releases y dependencias
 
-- [ ] **T8: release-please** (M, ~40 min)
+- [x] **T8: release-please** (M, ~40 min)
   - Descripción: `release-please-config.json` y `.release-please-manifest.json` según la spec; placeholders `api/gradle.properties` (`version=0.0.0 # x-release-please-version`) y `web/package.json` (`name`, `version: 0.0.0`, `private: true`); `.github/workflows/release.yml` solo con el job `release-please`.
   - Aceptación:
     - Tras mergear un PR `feat(web): ...` que toca `web/`, release-please abre un PR de release que sube solo `web` a `0.1.0` y crea `web/CHANGELOG.md` (SC6).
