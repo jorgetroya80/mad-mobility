@@ -65,7 +65,7 @@ T1 raíz del repo
   - Archivos: `lint-staged.config.mjs`, `.prettierrc`, `.prettierignore`, `.husky/pre-commit`, `package.json`.
   - Dependencias: T2.
 
-- [ ] **T4: Hook pre-push de comprobación de tipos** (S, ~25 min)
+- [x] **T4: Hook pre-push de comprobación de tipos** (S, ~25 min)
   - Descripción: `scripts/typecheck-changed.sh` según la spec, script `typecheck:changed` en `package.json`, `.husky/pre-push`. Debe funcionar sin upstream (primer push) usando la raíz del repositorio como base.
   - Aceptación:
     - `shellcheck scripts/typecheck-changed.sh` sin avisos.
