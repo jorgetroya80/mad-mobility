@@ -103,7 +103,7 @@ T1 raíz del repo
   - Archivos: `.github/workflows/ci.yml`.
   - Dependencias: T5.
 
-- [ ] **T7: Validación del título del PR** (XS, ~15 min)
+- [x] **T7: Validación del título del PR** (XS, ~15 min)
   - Descripción: `.github/workflows/pr-title.yml` con `amannn/action-semantic-pull-request`, mismos tipos y scopes que commitlint, disparado en `opened`, `edited`, `synchronize`.
   - Aceptación:
     - Título `Update stuff` falla; `feat(web): add map` pasa (SC5).
