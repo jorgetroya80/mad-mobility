@@ -45,7 +45,7 @@ T1 raíz del repo
   - Archivos: `package.json`, `pnpm-workspace.yaml`, `.nvmrc`, `.gitignore`, `pnpm-lock.yaml`.
   - Dependencias: ninguna.
 
-- [ ] **T2: commitlint y hook commit-msg** (S, ~15 min)
+- [x] **T2: commitlint y hook commit-msg** (S, ~15 min)
   - Descripción: instalar Husky 9, `@commitlint/cli` y `@commitlint/config-conventional`; `commitlint.config.mjs` con los tipos y scopes de la spec; `.husky/commit-msg`.
   - Aceptación:
     - `git commit -m "update stuff"` se rechaza (SC1).
