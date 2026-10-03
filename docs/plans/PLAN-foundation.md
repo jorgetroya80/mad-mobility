@@ -127,7 +127,7 @@ T1 raíz del repo
   - Archivos: `release-please-config.json`, `.release-please-manifest.json`, `api/gradle.properties`, `web/package.json`, `.github/workflows/release.yml`.
   - Dependencias: T6.
 
-- [ ] **T9: Publicación de artefactos y deploy placeholders** (S, ~30 min)
+- [x] **T9: Publicación de artefactos y deploy placeholders** (S, ~30 min)
   - Descripción: añadir a `release.yml` los jobs `publish-api` (GHCR, guarda `api/Dockerfile`), `publish-web` (guarda `web/vite.config.*`, adjunta `web-dist.tar.gz`), `deploy-api` y `deploy-web` (solo si `vars.DEPLOY_ENABLED == 'true'`). Permisos por job.
   - Aceptación:
     - Al mergear el PR de release se crea la etiqueta `web-v0.1.0` y su GitHub Release (SC7, parte sin artefacto).
@@ -136,8 +136,8 @@ T1 raíz del repo
   - Archivos: `.github/workflows/release.yml`.
   - Dependencias: T8.
 
-- [ ] **T10: Dependabot para npm** (XS, ~10 min)
-  - Descripción: `.github/dependabot.yml` con ecosistema `npm`, directorio `/`, semanal (lunes), grupo minor/patch, prefijo `chore(deps)`.
+- [ ] **T10: Dependabot para npm y GitHub Actions** (XS, ~10 min)
+  - Descripción: `.github/dependabot.yml` con ecosistema `npm` (directorio `/`, semanal, grupo minor/patch, prefijo `chore(deps)`) y `github-actions` (semanal, un grupo, prefijo `ci(deps)`).
   - Aceptación:
     - Insights > Dependency graph > Dependabot muestra la configuración sin errores.
     - El primer PR de Dependabot pasa commitlint y `ci-ok` (SC9, se comprueba el lunes siguiente).
