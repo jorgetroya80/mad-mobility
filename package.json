@@ -1,0 +1,10 @@
+{
+  "name": "mad-mobility",
+  "private": true,
+  "description": "BiciMAD Now: Madrid mobility monorepo (Spring Boot API + React web)",
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {}
+}
