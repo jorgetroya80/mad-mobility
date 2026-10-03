@@ -5,15 +5,15 @@
 
 Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene su propia especificación en esta carpeta (`SPEC-<id>.md`). Los ids son estables y no se renombran.
 
-| Módulo | Responsabilidad | Depende de | Spec | Estado |
-|---|---|---|---|---|
-| `foundation` | Monorepo, Husky, commitlint, lint-staged, CI con GitHub Actions, release-please, Dependabot, publicación de artefactos | — | [SPEC-foundation.md](SPEC-foundation.md) | approved |
-| `contract` | Sustituido: el contrato OpenAPI se genera desde el código (springdoc) dentro de `api-bicimad` | — | — | obsolete (2026-10-03) |
-| `api-core` | `shared/emt`: autenticación, cliente HTTP resiliente, caché, cupo, health checks; proyecto Gradle base | foundation | — | pending |
-| `api-bicimad` | Módulo `bicimad`: dominio, casos de uso, endpoints `/v1/bicimad/*`; exporta `openapi/bicimad.json` con springdoc | api-core | — | pending |
-| `web-shell` | Proyecto Vite + React + Tailwind + TanStack Query, cliente API tipado (desde `openapi/bicimad.json`), mapa base, layout responsive | api-bicimad, foundation | — | pending |
-| `web-bicimad` | Mapa, lista, detalle, filtros y favoritos de estaciones | web-shell, api-bicimad | — | pending |
-| `deploy` | Despliegue en la plataforma elegida (por definir) | foundation | — | on hold |
+| Módulo        | Responsabilidad                                                                                                                    | Depende de              | Spec                                     | Estado                |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------- | --------------------- |
+| `foundation`  | Monorepo, Husky, commitlint, lint-staged, CI con GitHub Actions, release-please, Dependabot, publicación de artefactos             | —                       | [SPEC-foundation.md](SPEC-foundation.md) | approved              |
+| `contract`    | Sustituido: el contrato OpenAPI se genera desde el código (springdoc) dentro de `api-bicimad`                                      | —                       | —                                        | obsolete (2026-10-03) |
+| `api-core`    | `shared/emt`: autenticación, cliente HTTP resiliente, caché, cupo, health checks; proyecto Gradle base                             | foundation              | —                                        | pending               |
+| `api-bicimad` | Módulo `bicimad`: dominio, casos de uso, endpoints `/v1/bicimad/*`; exporta `openapi/bicimad.json` con springdoc                   | api-core                | —                                        | pending               |
+| `web-shell`   | Proyecto Vite + React + Tailwind + TanStack Query, cliente API tipado (desde `openapi/bicimad.json`), mapa base, layout responsive | api-bicimad, foundation | —                                        | pending               |
+| `web-bicimad` | Mapa, lista, detalle, filtros y favoritos de estaciones                                                                            | web-shell, api-bicimad  | —                                        | pending               |
+| `deploy`      | Despliegue en la plataforma elegida (por definir)                                                                                  | foundation              | —                                        | on hold               |
 
 ## Orden de construcción
 

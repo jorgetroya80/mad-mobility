@@ -55,7 +55,7 @@ T1 raíz del repo
   - Archivos: `package.json`, `commitlint.config.mjs`, `.husky/commit-msg`.
   - Dependencias: T1.
 
-- [ ] **T3: lint-staged, Prettier y hook pre-commit** (S, ~20 min)
+- [x] **T3: lint-staged, Prettier y hook pre-commit** (S, ~20 min)
   - Descripción: `lint-staged.config.mjs` con las reglas de la spec (las de `web/` y `api/` omitidas si el proyecto no existe), `.prettierrc`, `.prettierignore`, `.husky/pre-commit`.
   - Aceptación:
     - Un `.md` mal formateado sale formateado del commit (SC2).
@@ -159,15 +159,15 @@ T1 raíz del repo
 
 ## Riesgos y mitigaciones
 
-| Riesgo | Impacto | Mitigación |
-|---|---|---|
-| Dependabot no soporta todavía el lockfile de pnpm 12 | Medio | Comprobarlo en T10; si falla, fijar el formato de lockfile compatible o pasar a Renovate (requiere aprobación) |
-| release-please no crea el PR por falta de permisos | Alto | Permisos configurados en T5, antes de T8 |
-| Las releases creadas con `GITHUB_TOKEN` no disparan otros workflows | Medio | Publicación y deploy dentro de `release.yml` (T9) |
-| `ci-ok` cuenta un job omitido como fallo y bloquea PRs | Alto | Probarlo explícitamente en T6 con un PR solo de `docs/` |
-| Hooks lentos que invitan a usar `--no-verify` | Medio | Objetivos de tiempo medidos en T3 y T4 |
-| Proteger `main` antes de que existan los checks impide mergear | Medio | T11 va al final, después de T6 y T7 |
-| Java 24 sin parches | Bajo ahora | Registrado en la spec; no afecta a este módulo |
+| Riesgo                                                              | Impacto    | Mitigación                                                                                                     |
+| ------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
+| Dependabot no soporta todavía el lockfile de pnpm 12                | Medio      | Comprobarlo en T10; si falla, fijar el formato de lockfile compatible o pasar a Renovate (requiere aprobación) |
+| release-please no crea el PR por falta de permisos                  | Alto       | Permisos configurados en T5, antes de T8                                                                       |
+| Las releases creadas con `GITHUB_TOKEN` no disparan otros workflows | Medio      | Publicación y deploy dentro de `release.yml` (T9)                                                              |
+| `ci-ok` cuenta un job omitido como fallo y bloquea PRs              | Alto       | Probarlo explícitamente en T6 con un PR solo de `docs/`                                                        |
+| Hooks lentos que invitan a usar `--no-verify`                       | Medio      | Objetivos de tiempo medidos en T3 y T4                                                                         |
+| Proteger `main` antes de que existan los checks impide mergear      | Medio      | T11 va al final, después de T6 y T7                                                                            |
+| Java 24 sin parches                                                 | Bajo ahora | Registrado en la spec; no afecta a este módulo                                                                 |
 
 ## Paralelización
 
@@ -176,5 +176,3 @@ Un solo desarrollador: orden secuencial T1 -> T11. Si se quisiera paralelizar, T
 ## Estimación
 
 Unas 4 h en total, en 2 sesiones de fin de semana: Fase 1 (~1,5 h), Fases 2 y 3 (~2,5 h).
-
-

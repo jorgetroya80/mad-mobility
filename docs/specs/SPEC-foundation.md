@@ -20,19 +20,19 @@ Que cada cambio que llegue a `main` esté validado automáticamente y que cada r
 
 ## Tech Stack
 
-| Herramienta | Versión | Uso |
-|---|---|---|
-| Java | 24 (Eclipse Temurin) | Toolchain de Gradle y CI. Nota: no es LTS; su última actualización es 24.0.2 |
-| Spring Boot | 4.0.5 (fija) | Se usará desde `api-core`; aquí solo se fija en `gradle.properties` |
-| Gradle | wrapper (última 9.x compatible con Java 24) | Build de `api/` |
-| Node.js | 24 LTS | Tooling raíz y `web/` |
-| pnpm | 12.x (`packageManager: pnpm@12.8.1`) | Workspace raíz y `web/` |
-| Husky | 9.x | Git hooks |
-| commitlint | `@commitlint/cli` + `@commitlint/config-conventional` | Validar mensajes de commit |
-| lint-staged | última | Formato y lint de archivos en stage |
-| release-please | `googleapis/release-please-action@v4`, modo manifest | Versionado y releases |
-| Dependabot | — | Actualización de dependencias npm (`web/` y raíz) |
-| actionlint | `rhysd/actionlint` | Lint de workflows |
+| Herramienta    | Versión                                               | Uso                                                                          |
+| -------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Java           | 24 (Eclipse Temurin)                                  | Toolchain de Gradle y CI. Nota: no es LTS; su última actualización es 24.0.2 |
+| Spring Boot    | 4.0.5 (fija)                                          | Se usará desde `api-core`; aquí solo se fija en `gradle.properties`          |
+| Gradle         | wrapper (última 9.x compatible con Java 24)           | Build de `api/`                                                              |
+| Node.js        | 24 LTS                                                | Tooling raíz y `web/`                                                        |
+| pnpm           | 12.x (`packageManager: pnpm@12.8.1`)                  | Workspace raíz y `web/`                                                      |
+| Husky          | 9.x                                                   | Git hooks                                                                    |
+| commitlint     | `@commitlint/cli` + `@commitlint/config-conventional` | Validar mensajes de commit                                                   |
+| lint-staged    | última                                                | Formato y lint de archivos en stage                                          |
+| release-please | `googleapis/release-please-action@v4`, modo manifest  | Versionado y releases                                                        |
+| Dependabot     | —                                                     | Actualización de dependencias npm (`web/` y raíz)                            |
+| actionlint     | `rhysd/actionlint`                                    | Lint de workflows                                                            |
 
 ## Commands
 
@@ -114,11 +114,11 @@ feat(contract)!: rename need=docks to need=slots
 
 ### Hooks de Husky
 
-| Hook | Acción | Objetivo de tiempo |
-|---|---|---|
-| `commit-msg` | `pnpm exec commitlint --edit "$1"` | < 1 s |
-| `pre-commit` | `pnpm exec lint-staged` | < 10 s |
-| `pre-push` | `scripts/typecheck-changed.sh` | < 60 s |
+| Hook         | Acción                             | Objetivo de tiempo |
+| ------------ | ---------------------------------- | ------------------ |
+| `commit-msg` | `pnpm exec commitlint --edit "$1"` | < 1 s              |
+| `pre-commit` | `pnpm exec lint-staged`            | < 10 s             |
+| `pre-push`   | `scripts/typecheck-changed.sh`     | < 60 s             |
 
 **lint-staged (`pre-commit`):**
 
