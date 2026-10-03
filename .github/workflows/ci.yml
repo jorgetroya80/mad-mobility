@@ -26,6 +26,7 @@ jobs:
       web: ${{ steps.filter.outputs.web == 'true' && steps.exists.outputs.web == 'true' }}
       contract: ${{ steps.filter.outputs.contract == 'true' && steps.exists.outputs.contract == 'true' }}
       workflows: ${{ steps.filter.outputs.workflows }}
+      tooling: ${{ steps.filter.outputs.tooling }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: filter
@@ -45,6 +46,13 @@ jobs:
               - 'openapi/**'
             workflows:
               - '.github/workflows/**'
+            tooling:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.nvmrc'
+              - '*.config.mjs'
+              - '.prettierrc.json'
       - id: exists
         name: Check which projects exist
         run: |
@@ -101,6 +109,22 @@ jobs:
           node-version-file: .nvmrc
       - run: npx --yes @redocly/cli@2 lint openapi/bicimad.json
 
+  tooling:
+    name: Root tooling
+    needs: changes
+    if: needs.changes.outputs.tooling == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # Enforces pnpm 12 lockfile policies (e.g. minimumReleaseAge) on root dependencies
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --check .
+
   workflows:
     name: Lint workflows
     needs: changes
@@ -115,7 +139,7 @@ jobs:
 
   ci-ok:
     name: ci-ok
-    needs: [changes, api, web, contract, workflows]
+    needs: [changes, api, web, contract, tooling, workflows]
     if: always()
     runs-on: ubuntu-latest
     steps:
