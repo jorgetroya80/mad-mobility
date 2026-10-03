@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "include-component-in-tag": true,
+  "bump-minor-pre-major": true,
+  "separate-pull-requests": false,
+  "packages": {
+    "api": {
+      "release-type": "simple",
+      "component": "api",
+      "extra-files": [{ "type": "generic", "path": "gradle.properties" }]
+    },
+    "web": {
+      "release-type": "node",
+      "component": "web"
+    }
+  }
+}

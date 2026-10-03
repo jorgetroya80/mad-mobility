@@ -30,7 +30,7 @@ Que cada cambio que llegue a `main` esté validado automáticamente y que cada r
 | Husky          | 9.x                                                   | Git hooks                                                                    |
 | commitlint     | `@commitlint/cli` + `@commitlint/config-conventional` | Validar mensajes de commit                                                   |
 | lint-staged    | última                                                | Formato y lint de archivos en stage                                          |
-| release-please | `googleapis/release-please-action@v4`, modo manifest  | Versionado y releases                                                        |
+| release-please | `googleapis/release-please-action@v5`, modo manifest  | Versionado y releases                                                        |
 | Dependabot     | —                                                     | Actualización de dependencias npm (`web/` y raíz)                            |
 | actionlint     | `rhysd/actionlint`                                    | Lint de workflows                                                            |
 
@@ -163,11 +163,12 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 ### Release (`release.yml`)
 
 - Disparador: `push` a `main`.
-- Job `release-please`: `googleapis/release-please-action@v4` con `release-please-config.json` y `.release-please-manifest.json`. Expone `api--release_created`, `api--tag_name`, `web--release_created`, `web--tag_name`.
+- Job `release-please`: `googleapis/release-please-action@v5` con `release-please-config.json` y `.release-please-manifest.json`. Expone `api--release_created`, `api--tag_name`, `web--release_created`, `web--tag_name`.
 - Job `publish-api` (si `api--release_created` y existe `api/Dockerfile`): construye y publica `ghcr.io/jorgetroya80/mad-mobility-api:<versión>` y `:latest`. Permiso `packages: write`.
 - Job `publish-web` (si `web--release_created`): `pnpm --filter web build` y adjunta `web-dist.tar.gz` a la release.
 - Jobs `deploy-api` y `deploy-web`: placeholders que solo se ejecutan si la variable de repositorio `DEPLOY_ENABLED == 'true'`. Se completan en el módulo `deploy`.
 - Publicación y despliegue van en el mismo workflow porque las releases creadas con `GITHUB_TOKEN` no disparan otros workflows.
+- release-please usa el `GITHUB_TOKEN` automático (sin secretos), igual que en `artwork-search`. Como los eventos de ese token no inician workflows, el PR de release no ejecuta los checks requeridos por sí solo: **antes de mergearlo hay que cerrarlo y reabrirlo** (o editarlo). Por eso `ci.yml` escucha también el tipo `edited`.
 
 **`release-please-config.json`:**
 
@@ -220,7 +221,7 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 
 ## Boundaries
 
-- **Always:** Conventional Commits; permisos mínimos en cada workflow; acciones de terceros fijadas a una versión mayor (`@v4`) o SHA; hooks que no fallen si un proyecto aún no existe; `pnpm install --frozen-lockfile` en CI.
+- **Always:** Conventional Commits; permisos mínimos en cada workflow; todas las acciones fijadas por SHA de commit con la versión en un comentario (`uses: owner/action@<sha> # vX.Y.Z`) y las imágenes Docker por digest; hooks que no fallen si un proyecto aún no existe; `pnpm install --frozen-lockfile` en CI.
 - **Ask first:** añadir checks requeridos nuevos; cambiar la estrategia de versionado o los componentes de release-please; añadir secretos al repositorio; ampliar Dependabot a Gradle o Actions; hooks que superen los objetivos de tiempo.
 - **Never:** commitear `.env.local` o credenciales; usar `--no-verify` como práctica habitual; `pull_request_target` con checkout de código del PR; dar `write-all` a un workflow; desplegar desde un PR.
 
@@ -244,3 +245,5 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 ## Changelog
 
 - 2026-10-03: contrato código primero (springdoc). `openapi/` contiene un archivo generado; el job `contract` hace lint y la comprobación de desajuste se reserva para `api-bicimad`. Sin impacto en el plan.
+- 2026-10-03: `release-please-action` pasa de `@v4` a `@v5` (última versión mayor; solo cambia el runtime a Node 24).
+- 2026-10-03: release-please usa `GITHUB_TOKEN` (sin PAT); el PR de release se cierra y reabre a mano para disparar los checks. Todas las acciones se fijan por SHA. Dependabot no cubre GitHub Actions, así que actualizar esos SHA es manual.
