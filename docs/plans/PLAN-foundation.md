@@ -1,7 +1,7 @@
 # Plan: foundation
 
 - Created: 2026-10-03
-- Status: **approved** (2026-10-03)
+- Status: **implemented** (2026-10-03)
 - Spec: [SPEC-foundation.md](../specs/SPEC-foundation.md)
 
 ## Overview
@@ -77,8 +77,8 @@ T1 raíz del repo
 
 #### Checkpoint 1: hooks locales
 
-- [ ] SC1, SC2 y SC3 comprobados en local.
-- [ ] Revisión humana antes del primer push.
+- [x] SC1, SC2 y SC3 comprobados en local.
+- [x] Revisión humana antes del primer push.
 
 ### Fase 2: GitHub y CI
 
@@ -113,8 +113,8 @@ T1 raíz del repo
 
 #### Checkpoint 2: CI
 
-- [ ] SC4, SC5 y SC10 comprobados en GitHub.
-- [ ] Revisión humana.
+- [x] SC4, SC5 y SC10 comprobados en GitHub.
+- [x] Revisión humana.
 
 ### Fase 3: Releases y dependencias
 
@@ -136,7 +136,7 @@ T1 raíz del repo
   - Archivos: `.github/workflows/release.yml`.
   - Dependencias: T8.
 
-- [ ] **T10: Dependabot para npm y GitHub Actions** (XS, ~10 min)
+- [x] **T10: Dependabot para npm y GitHub Actions** (XS, ~10 min)
   - Descripción: `.github/dependabot.yml` con ecosistema `npm` (directorio `/`, semanal, grupo minor/patch, prefijo `chore(deps)`) y `github-actions` (semanal, un grupo, prefijo `ci(deps)`).
   - Aceptación:
     - Insights > Dependency graph > Dependabot muestra la configuración sin errores.
@@ -145,7 +145,7 @@ T1 raíz del repo
   - Archivos: `.github/dependabot.yml`.
   - Dependencias: T5.
 
-- [ ] **T11: Checks requeridos en `main`** (XS, ~10 min, **requiere confirmación**)
+- [x] **T11: Checks requeridos en `main`** (XS, ~10 min, **requiere confirmación**)
   - Descripción: añadir al ruleset de `main` (creado en T5) los checks requeridos `ci-ok` y `pr-title`.
   - Aceptación:
     - Un PR con `ci-ok` en rojo no se puede mergear.
@@ -155,8 +155,8 @@ T1 raíz del repo
 
 #### Checkpoint final
 
-- [ ] SC1-SC10 de la spec comprobados (SC7 completo y SC9 quedan pendientes de `web-shell` y del primer lunes, respectivamente).
-- [ ] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
+- [x] SC1-SC10 de la spec comprobados (SC7 completo y SC9 quedan pendientes de `web-shell` y del primer lunes, respectivamente).
+- [x] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
 
 ## Riesgos y mitigaciones
 
@@ -177,6 +177,13 @@ Un solo desarrollador: orden secuencial T1 -> T11. Si se quisiera paralelizar, T
 ## Estimación
 
 Unas 4 h en total, en 2 sesiones de fin de semana: Fase 1 (~1,5 h), Fases 2 y 3 (~2,5 h).
+
+## Resultado
+
+- SC1-SC6, SC8 y SC10 verificados (PRs #1-#16).
+- SC7: etiqueta `web-v0.1.0` y GitHub Release creadas; el artefacto `web-dist.tar.gz` se verificará cuando `web-shell` cree el proyecto Vite.
+- SC9: Dependabot abrió un PR agrupado `chore(deps)` (#12) que pasó commitlint y `ci-ok`; se cerró por la política de 10 días, ahora alineada con `cooldown`.
+- T11: con `ci-ok` en rojo, el merge queda bloqueado (PR #16, `BLOCKED`).
 
 ## Changelog
 
