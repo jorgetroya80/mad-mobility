@@ -82,7 +82,7 @@ T1 raíz del repo
 
 ### Fase 2: GitHub y CI
 
-- [ ] **T5: Commit raíz, protección básica de `main`, PR de T1-T4 y permisos de Actions** (S, ~20 min, **requiere confirmación**)
+- [x] **T5: Commit raíz, protección básica de `main`, PR de T1-T4 y permisos de Actions** (S, ~20 min, **requiere confirmación**)
   - Descripción: recolocar T1-T4 sobre un commit raíz vacío; push solo de ese commit a `main`; ruleset en `main` que exige PR y bloquea force push y borrado; en el repositorio solo squash merge y borrar ramas tras merge; push de `chore/foundation-hooks` y PR hacia `main`; permisos de Actions de solo lectura y permitir que Actions cree y apruebe PRs.
   - Aceptación:
     - `main` en GitHub contiene solo el commit raíz vacío hasta que se mergea el PR.
@@ -93,7 +93,7 @@ T1 raíz del repo
   - Archivos: ninguno (configuración remota).
   - Dependencias: T4.
 
-- [ ] **T6: Workflow de CI y actionlint** (M, ~45 min)
+- [x] **T6: Workflow de CI y actionlint** (M, ~45 min)
   - Descripción: `.github/workflows/ci.yml` con `concurrency`, `permissions: contents: read`, job `changes` (`dorny/paths-filter`), jobs `api`, `web`, `contract`, `workflows` con sus guardas y job agregador `ci-ok`.
   - Aceptación:
     - Un PR que solo cambia `docs/` ejecuta `changes` y `ci-ok` en verde, con `api` y `web` omitidos (SC4).

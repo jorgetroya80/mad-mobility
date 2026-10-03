@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      api: ${{ steps.filter.outputs.api == 'true' && steps.exists.outputs.api == 'true' }}
+      web: ${{ steps.filter.outputs.web == 'true' && steps.exists.outputs.web == 'true' }}
+      contract: ${{ steps.filter.outputs.contract == 'true' && steps.exists.outputs.contract == 'true' }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            api:
+              - 'api/**'
+              - 'openapi/**'
+            web:
+              - 'web/**'
+              - 'openapi/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            contract:
+              - 'openapi/**'
+            workflows:
+              - '.github/workflows/**'
+      - id: exists
+        name: Check which projects exist
+        run: |
+          {
+            echo "api=$([ -f api/build.gradle.kts ] && echo true || echo false)"
+            echo "web=$([ -f web/tsconfig.json ] && echo true || echo false)"
+            echo "contract=$([ -f openapi/bicimad.json ] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+
+  api:
+    name: API (Gradle)
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '24'
+      - uses: gradle/actions/setup-gradle@v6
+      - run: ./gradlew build
+
+  web:
+    name: Web (pnpm)
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web run lint
+      - run: pnpm --filter web run typecheck
+      - run: pnpm --filter web run test
+      - run: pnpm --filter web run build
+
+  contract:
+    name: OpenAPI lint
+    needs: changes
+    if: needs.changes.outputs.contract == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npx --yes @redocly/cli@2 lint openapi/bicimad.json
+
+  workflows:
+    name: Lint workflows
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: actionlint
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+
+  ci-ok:
+    name: ci-ok
+    needs: [changes, api, web, contract, workflows]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any required job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "One or more jobs failed or were cancelled."
+          exit 1
+      - run: echo "All jobs passed or were skipped."
