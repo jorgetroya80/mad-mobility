@@ -73,7 +73,7 @@ T1 esqueleto Gradle
   - Archivos: `application.yaml`, `build.gradle.kts`, `libs.versions.toml`, `ModularityTest.kt`, `HealthEndpointsTest.kt`.
   - Dependencias: T1.
 
-- [ ] **T3: Request id, logs JSON y CORS** (M, ~45 min)
+- [x] **T3: Request id, logs JSON y CORS** (M, ~45 min)
   - Descripción: `RequestIdFilter` (valida o genera, MDC `requestId`, cabecera en la respuesta), logging estructurado ECS por defecto y legible con el perfil `local`, `CorsConfig` desde `CORS_ALLOWED_ORIGINS`, `TestEmtController` mínimo para los tests web.
   - Aceptación:
     - SC11 parcial: toda respuesta lleva `X-Request-Id`; uno válido se devuelve igual; uno inválido se sustituye; la salida de log capturada es JSON con `requestId`.

@@ -11,6 +11,16 @@ spring:
     # Modules are shared and each modules/<name>, marked with @ApplicationModule + @PackageInfo
     detection-strategy: explicitly-annotated
 
+logging:
+  structured:
+    format:
+      console: ecs
+
+mad-mobility:
+  cors:
+    # Comma-separated list, e.g. https://bicimad.example.com
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+
 management:
   endpoints:
     web:
@@ -33,3 +43,14 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+
+---
+# Human-readable logs for local development: --spring.profiles.active=local
+spring:
+  config:
+    activate:
+      on-profile: local
+logging:
+  structured:
+    format:
+      console: ''
