@@ -20,6 +20,7 @@ jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 resilience4j-spring-boot4 = { module = "io.github.resilience4j:resilience4j-spring-boot4", version.ref = "resilience4j" }
+testcontainers = { module = "org.testcontainers:testcontainers" }
 # Versions managed by the Spring Modulith BOM
 spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
 spring-modulith-api = { module = "org.springframework.modulith:spring-modulith-api" }
