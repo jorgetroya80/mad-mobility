@@ -1,0 +1,36 @@
+{
+  "code": "01",
+  "description": "Token extend  into control-cache Data recovered OK",
+  "datetime": "2026-10-04T17:52:56.043141",
+  "data": [
+    {
+      "XClientId": "00000000-0000-0000-0000-00000000c1d0",
+      "nameApp": "fixture-app",
+      "updatedAt": "2026-09-30T14:01:25.2370000",
+      "userName": "fixture-user",
+      "lastUpdate": {
+        "$date": 1791045674701
+      },
+      "idUser": "00000000-0000-0000-0000-0000000005e2",
+      "priv": "U",
+      "tokenSecExpiration": 86399,
+      "email": "fixture@example.com",
+      "tokenDteExpiration": {
+        "$date": 1791132073701
+      },
+      "flagAdvise": true,
+      "deviceId": null,
+      "modeSession": "app",
+      "deviceModel": "no_model",
+      "accessToken": "00000000-0000-0000-0000-00000000a11d",
+      "apiCounter": {
+        "current": 0,
+        "dailyUse": 20000,
+        "owner": 0,
+        "licenceUse": "Please mention EMT Madrid MobilityLabs as data source. Thank you and enjoy!",
+        "aboutUses": "If you need to extend the daily use of this API, please, register your App in Mobilitylabs and use your own X-ClientId and  passKey instead of generic login (more info in https://mobilitylabs.emtmadrid.es/doc/new-app and https://apidocs.emtmadrid.es/#api-Block_1_User_identity-login)"
+      },
+      "username": "fixture-user"
+    }
+  ]
+}

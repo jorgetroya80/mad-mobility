@@ -89,7 +89,7 @@ T1 esqueleto Gradle
 
 ### Fase 2: Cliente EMT
 
-- [ ] **T4: Propiedades EMT y respuestas reales** (S, ~40 min, **requiere tus credenciales en `api/.env.local`**)
+- [x] **T4: Propiedades EMT y respuestas reales** (S, ~40 min, **requiere tus credenciales en `api/.env.local`**)
   - Descripción: `EmtProperties` validadas (`@Validated`: email+contraseña o clientId+passKey, base URL, timeouts), `api/.env.example`. Captura con `curl` de respuestas reales, anonimizadas (sin token ni email): login correcto, login con credenciales malas, estaciones de BiciMAD (recortadas a 3) y petición con token inválido. Se documenta en `src/test/resources/emt/README.md` qué código devuelve cada caso.
   - Aceptación:
     - SC2: sin credenciales, la app no arranca y el error nombra la variable que falta.
@@ -110,7 +110,7 @@ T1 esqueleto Gradle
   - Dependencias: T4.
 
 - [ ] **T6: `EmtHttpClient` sin resiliencia** (M, ~1 h)
-  - Descripción: `get(module, path, type)` sobre `RestClient` con timeouts (2 s conexión, 5 s lectura), cabecera `accessToken`, chequeo de `code` (`00`/`01` éxito), relogin y un reintento ante token inválido, `EmtProtocolError` y `EmtUnavailable` con motivo (`TIMEOUT`, `SERVER_ERROR`). Lógica probada con `MockRestServiceServer`; el timeout real, con WireMock.
+  - Descripción: `get(module, path, type)` sobre `RestClient` con timeouts (2 s conexión, 5 s lectura), cabecera `accessToken`, chequeo de `code` (`00`/`01` éxito) también en respuestas HTTP 200, relogin y un reintento ante token inválido (HTTP 401 con `code` `80`, cuyo cuerpo hay que leer), `EmtProtocolError` y `EmtUnavailable` con motivo (`TIMEOUT`, `SERVER_ERROR`). Lógica probada con `MockRestServiceServer`; el timeout real, con WireMock.
   - Aceptación:
     - SC7: token inválido provoca un login nuevo y un solo reintento; un código desconocido lanza `EmtProtocolError` con el código.
     - Una respuesta lenta (> 5 s) lanza `EmtUnavailable(TIMEOUT)`; un 500 lanza `EmtUnavailable(SERVER_ERROR)`.
@@ -220,3 +220,4 @@ Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3
 - 2026-10-04: WireMock dentro del proceso y `MockRestServiceServer` en lugar de Testcontainers con el módulo alpha de WireMock; Testcontainers solo para la imagen Docker (T11).
 - 2026-10-04: Java 25 LTS, Spring Boot 4.1.1, Kotlin 2.3.21, Gradle 9.3.1 y Spring Modulith 2.1.1 (ver changelog de la spec). T1 cambia `java-version` a `'25'` en `ci.yml`.
 - 2026-10-04: plan aprobado.
+- 2026-10-04: T4 captura los códigos reales de la EMT (ver `api/src/test/resources/emt/README.md`): credenciales malas = HTTP 200 + `89`; token inválido o ausente = HTTP 401 + `80`. T6 lo tiene en cuenta. Las credenciales se validan en el constructor de `EmtProperties` en lugar de con `@Validated`, para nombrar la variable que falta sin añadir Bean Validation.
