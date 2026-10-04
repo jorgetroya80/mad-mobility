@@ -1,0 +1,8 @@
+# Only build scripts, the wrapper and main sources are needed (see Dockerfile)
+*
+!gradlew
+!settings.gradle.kts
+!build.gradle.kts
+!gradle.properties
+!gradle/
+!src/main/

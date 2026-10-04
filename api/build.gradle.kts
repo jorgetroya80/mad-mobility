@@ -47,6 +47,7 @@ dependencies {
     testImplementation(libs.spring.modulith.starter.test)
     testImplementation(libs.wiremock.standalone)
     testImplementation(libs.mockk)
+    testImplementation(libs.testcontainers)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
@@ -56,13 +57,28 @@ tasks.jar {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    // The Docker image test is slow and needs Docker: it runs in its own task
+    useJUnitPlatform { excludeTags("docker") }
     // Full failure details in the console, so CI logs are enough to diagnose
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
     finalizedBy(tasks.jacocoTestReport)
+}
+
+val dockerImageTest by tasks.registering(Test::class) {
+    description = "Builds api/Dockerfile and checks the container (needs Docker)."
+    group = "verification"
+    testClassesDirs =
+        sourceSets.test
+            .get()
+            .output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform { includeTags("docker") }
+    // The test runs `docker build .` from the project directory
+    workingDir = projectDir
+    shouldRunAfter(tasks.test)
 }
 
 tasks.jacocoTestReport {
