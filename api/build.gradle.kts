@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.spring.boot.starter.webmvc)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.restclient)
+    implementation(libs.resilience4j.spring.boot4)
     // @ApplicationModule and @PackageInfo annotations
     implementation(libs.spring.modulith.core)
     implementation(libs.kotlin.reflect)
