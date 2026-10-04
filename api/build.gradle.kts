@@ -34,6 +34,7 @@ dependencyManagement {
 dependencies {
     implementation(libs.spring.boot.starter.webmvc)
     implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.restclient)
     // @ApplicationModule and @PackageInfo annotations
     implementation(libs.spring.modulith.core)
     implementation(libs.kotlin.reflect)
@@ -42,6 +43,7 @@ dependencies {
     testImplementation(libs.spring.boot.starter.webmvc.test)
     testImplementation(libs.spring.boot.starter.actuator.test)
     testImplementation(libs.spring.modulith.starter.test)
+    testImplementation(libs.wiremock.standalone)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
@@ -52,6 +54,11 @@ tasks.jar {
 
 tasks.test {
     useJUnitPlatform()
+    // Full failure details in the console, so CI logs are enough to diagnose
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
     finalizedBy(tasks.jacocoTestReport)
 }
 
