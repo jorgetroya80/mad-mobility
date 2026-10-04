@@ -1,0 +1,70 @@
+{
+  "code": "00",
+  "description": "3 bases recovered (fixture: trimmed from 678)",
+  "datetime": "2026-10-04T17:52:56.383251",
+  "data": [
+    {
+      "activate": 1,
+      "address": "Calle Fuencarral nº 106",
+      "dock_bikes": 2,
+      "free_bases": 23,
+      "geofenced_capacity": 20,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.7021354, 40.4285212]
+      },
+      "id": 1409,
+      "light": 0,
+      "name": "5 - Fuencarral",
+      "no_available": 0,
+      "number": "5",
+      "reservations_count": 0,
+      "tipo_estacionPBSC": "FIXED",
+      "total_bases": 27,
+      "virtualDelete": false,
+      "image": ""
+    },
+    {
+      "activate": 1,
+      "address": "Calle Goya, 20 ",
+      "dock_bikes": 0,
+      "free_bases": 0,
+      "geofenced_capacity": 0,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.6838415999999996, 40.4251493]
+      },
+      "id": 1493,
+      "image": "",
+      "light": 3,
+      "name": "90 - Metro Velázquez",
+      "no_available": 1,
+      "number": "90",
+      "reservations_count": 0,
+      "tipo_estacionPBSC": "FIXED",
+      "total_bases": 27,
+      "virtualDelete": false
+    },
+    {
+      "activate": 1,
+      "address": "Calle Paterna 55",
+      "dock_bikes": 17,
+      "free_bases": 9,
+      "geofenced_capacity": 20,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.68482, 40.340613]
+      },
+      "id": 2397,
+      "image": "",
+      "light": 2,
+      "name": "618 - Calle Paterna 55",
+      "no_available": 0,
+      "number": "618",
+      "reservations_count": 0,
+      "tipo_estacionPBSC": "FIXED",
+      "total_bases": 19,
+      "virtualDelete": false
+    }
+  ]
+}
