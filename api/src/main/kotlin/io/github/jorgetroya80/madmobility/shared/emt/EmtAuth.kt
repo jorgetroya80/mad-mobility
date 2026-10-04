@@ -119,7 +119,7 @@ class EmtAuth(
             try {
                 read()
             } catch (e: RestClientException) {
-                throw EmtProtocolError(null, "Unreadable EMT response: ${e.message}")
+                throw EmtProtocolError(null, "Unreadable EMT response: ${e.mostSpecificCause.message}", e)
             }
 
         internal fun unavailable(e: ResourceAccessException): EmtUnavailable {

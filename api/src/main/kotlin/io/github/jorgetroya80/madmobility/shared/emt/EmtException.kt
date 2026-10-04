@@ -24,4 +24,5 @@ class EmtUnavailable(
 class EmtProtocolError(
     val code: String?,
     message: String,
-) : EmtException(message)
+    cause: Throwable? = null,
+) : EmtException(message, cause)
