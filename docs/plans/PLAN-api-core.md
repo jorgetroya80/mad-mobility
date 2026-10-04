@@ -1,7 +1,7 @@
 # Plan: api-core
 
 - Created: 2026-10-04
-- Status: **approved** (2026-10-04)
+- Status: **implemented** (2026-10-04)
 - Spec: [SPEC-api-core.md](../specs/SPEC-api-core.md)
 
 ## Overview
@@ -84,8 +84,8 @@ T1 esqueleto Gradle
 
 #### Checkpoint 1: esqueleto
 
-- [ ] `./gradlew build` en verde en local y en CI.
-- [ ] Revisión humana antes de tocar la EMT.
+- [x] `./gradlew build` en verde en local y en CI.
+- [x] Revisión humana antes de tocar la EMT.
 
 ### Fase 2: Cliente EMT
 
@@ -130,8 +130,8 @@ T1 esqueleto Gradle
 
 #### Checkpoint 2: cliente EMT
 
-- [ ] SC2-SC7 comprobados.
-- [ ] Revisión humana: diseño del cliente y códigos de la EMT.
+- [x] SC2-SC7 comprobados.
+- [x] Revisión humana: diseño del cliente y códigos de la EMT.
 
 ### Fase 3: Cupo, caché y errores
 
@@ -166,8 +166,8 @@ T1 esqueleto Gradle
 
 #### Checkpoint 3: infraestructura completa
 
-- [ ] SC1-SC13 comprobados; `./gradlew build` en verde en CI.
-- [ ] Revisión humana antes de la entrega.
+- [x] SC1-SC13 comprobados; `./gradlew build` en verde en CI.
+- [x] Revisión humana antes de la entrega.
 
 ### Fase 4: Entrega
 
@@ -191,8 +191,8 @@ T1 esqueleto Gradle
 
 #### Checkpoint final
 
-- [ ] SC1-SC15 de la spec comprobados.
-- [ ] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
+- [x] SC1-SC15 de la spec comprobados.
+- [x] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
 
 ## Riesgos y mitigaciones
 
@@ -214,6 +214,14 @@ Un solo desarrollador: orden secuencial T1 → T12. T2 y T3 son independientes e
 
 Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3,5 h), Fase 3 (~2,5 h), Fase 4 (~1 h). Cada checkpoint es un buen punto para cortar la sesión.
 
+## Resultado
+
+- T1-T12 en `main` (PRs #20-#32); cada checkpoint revisado en su PR.
+- SC1-SC14 verificados con la suite (92 tests en `./gradlew build`) y `./gradlew dockerImageTest`; SC15 con `./gradlew smokeTest` contra la EMT real (678 estaciones).
+- Revisión del código T1-T10 con el agente `spring-boot-engineer`; sus arreglos entraron en el PR #30.
+- Límite conocido: SC5 (< 12 s) vale con un token válido; con login y relogin el peor caso ronda los 40 s.
+- Pendiente para `bus`: plantillas de URI y POST en `EmtHttpClient`. La imagen se verifica y publica en la primera release de `api`.
+
 ## Changelog
 
 - 2026-10-04: versión inicial.
@@ -231,3 +239,4 @@ Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3
 - 2026-10-04: revisión del código T1-T10 con el agente `spring-boot-engineer`; los arreglos van en el PR de T10 (ver changelog de la spec). También: margen de renovación del token `min(5 min, vida/2)`, métricas de cupo que se reinician a medianoche sin esperar a la siguiente llamada, caché que descarta entradas más viejas que `max-stale`, `spring-modulith-api` en lugar de `-core` (sin ArchUnit en el jar) y tests sin `sleep` ni timeouts cortos en el login. **Pendiente para el módulo `bus`:** `EmtHttpClient` con plantillas de URI y variables (la métrica `uri` tendría miles de valores con rutas como `/stops/1234/`) y soporte de POST (las llegadas de bus son POST).
 - 2026-10-04: en T11, `DockerImageTest` construye la imagen con la CLI de Docker (las cache mounts de Gradle necesitan BuildKit, que el builder de Testcontainers no usa) y va en su propia tarea `./gradlew dockerImageTest` (etiqueta `docker`, fuera de `test`), para ejecutar en local al tocar el `Dockerfile`. CI no construye la imagen en los PR (añadía ~2 min por PR de `api/`): `publish-api` la construye en cada release, la arranca, comprueba `/health/live`, `/health/ready` y el UID 10001, y solo entonces la publica. Riesgo aceptado: un `Dockerfile` roto se detecta al publicar, nunca se publica una imagen rota. Sin `HEALTHCHECK` en la imagen: el JRE de Temurin no trae curl ni wget. Imagen de 559 MB, casi todo la base `eclipse-temurin:25-jre`.
 - 2026-10-04: T12 pasa contra la EMT real (678 estaciones, mismos campos que los fixtures, token de ~24 h). El primer intento detectó que `.env.local` con valores entre comillas no funciona: Spring (formato properties) y `docker run --env-file` leen las comillas literalmente. `.env.example` lo avisa.
+- 2026-10-04: plan implementado.
