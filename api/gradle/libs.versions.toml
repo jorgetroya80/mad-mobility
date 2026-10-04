@@ -6,6 +6,7 @@ spotless = "8.10.3"
 spring-modulith = "2.1.1"
 wiremock = "3.13.2"
 mockk = "1.14.11"
+resilience4j = "2.4.0"
 
 [libraries]
 # Versions managed by the Spring Boot BOM
@@ -17,6 +18,7 @@ spring-boot-starter-actuator-test = { module = "org.springframework.boot:spring-
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+resilience4j-spring-boot4 = { module = "io.github.resilience4j:resilience4j-spring-boot4", version.ref = "resilience4j" }
 # Versions managed by the Spring Modulith BOM
 spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
 spring-modulith-core = { module = "org.springframework.modulith:spring-modulith-core" }

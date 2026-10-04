@@ -1,5 +1,7 @@
 package io.github.jorgetroya80.madmobility.shared.emt
 
+import io.github.jorgetroya80.madmobility.shared.emt.EmtWireMockTest.Companion.NO_RETRY
+import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -42,7 +44,7 @@ class EmtHttpClientTest {
     private val builder = RestClient.builder().baseUrl("https://emt.test")
     private val server = MockRestServiceServer.bindTo(builder).build()
     private val auth = mockk<EmtAuth>(relaxUnitFun = true)
-    private val client = EmtHttpClient(builder.build(), auth)
+    private val client = EmtHttpClient(builder.build(), auth, CircuitBreaker.ofDefaults("test"), NO_RETRY)
 
     private fun fixture(name: String) = requireNotNull(javaClass.getResource("/emt/$name")).readText()
 

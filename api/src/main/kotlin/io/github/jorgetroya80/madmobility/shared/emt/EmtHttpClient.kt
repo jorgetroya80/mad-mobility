@@ -1,5 +1,8 @@
 package io.github.jorgetroya80.madmobility.shared.emt
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
+import io.github.resilience4j.circuitbreaker.CircuitBreaker
+import io.github.resilience4j.retry.Retry
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.ResolvableType
@@ -17,9 +20,26 @@ import org.springframework.web.client.RestClient
 class EmtHttpClient(
     private val emtRestClient: RestClient,
     private val emtAuth: EmtAuth,
+    private val emtCircuitBreaker: CircuitBreaker,
+    private val emtRetry: Retry,
 ) {
-    /** GETs [path] for [module] and returns the EMT `data` array as [elementType] items. */
+    /**
+     * GETs [path] for [module] and returns the EMT `data` array as [elementType] items.
+     * Transport failures are retried once; repeated failures open the circuit breaker, which then
+     * fails fast with [EmtUnavailable.Reason.CIRCUIT_OPEN] without calling the EMT.
+     */
     fun <T : Any> get(
+        module: String,
+        path: String,
+        elementType: Class<T>,
+    ): List<T> =
+        try {
+            emtCircuitBreaker.executeSupplier { emtRetry.executeSupplier { getOnce(module, path, elementType) } }
+        } catch (e: CallNotPermittedException) {
+            throw EmtUnavailable(EmtUnavailable.Reason.CIRCUIT_OPEN, "EMT circuit breaker is open, not calling $module $path", e)
+        }
+
+    private fun <T : Any> getOnce(
         module: String,
         path: String,
         elementType: Class<T>,

@@ -5,6 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension
+import io.github.resilience4j.retry.Retry
+import io.github.resilience4j.retry.RetryConfig
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.web.client.RestClient
 import java.time.Clock
@@ -52,6 +54,9 @@ abstract class EmtWireMockTest {
     }
 
     companion object {
+        /** Single attempt, for tests that are not about retries. */
+        val NO_RETRY: Retry = Retry.of("no-retry", RetryConfig.custom<Any>().maxAttempts(1).build())
+
         const val LOGIN_PATH = "/v2/mobilitylabs/user/login/"
         const val TEST_EMAIL = "tester@example.com"
         const val TEST_PASSWORD = "super-secret-password"

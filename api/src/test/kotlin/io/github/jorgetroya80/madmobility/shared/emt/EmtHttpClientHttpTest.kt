@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.stubbing.Scenario
+import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -16,7 +17,12 @@ import java.time.Duration
 class EmtHttpClientHttpTest : EmtWireMockTest() {
     private fun client(props: EmtProperties = properties): EmtHttpClient {
         val restClient = restClient(props)
-        return EmtHttpClient(restClient, EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry()))
+        return EmtHttpClient(
+            restClient,
+            EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry()),
+            CircuitBreaker.ofDefaults("test"),
+            NO_RETRY,
+        )
     }
 
     private fun stubStations(

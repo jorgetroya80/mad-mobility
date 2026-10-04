@@ -119,7 +119,7 @@ T1 esqueleto Gradle
   - Archivos: `EmtHttpClient.kt`, `EmtException.kt`, `EmtHttpClientTest.kt`, `EmtHttpClientTimeoutTest.kt`.
   - Dependencias: T5.
 
-- [ ] **T7: Reintento y circuit breaker** (S, ~45 min)
+- [x] **T7: Reintento y circuit breaker** (S, ~45 min)
   - Descripción: Resilience4j 2.4.0 (`resilience4j-spring-boot4`): 1 reintento con 500 ms solo ante timeout, E/S o 5xx; circuit breaker único (ventana 10, 50 %, 30 s abierto, 2 en semiabierto) con `EmtUnavailable(CIRCUIT_OPEN)`; métricas de Resilience4j en Micrometer. Configuración en `application.yaml`.
   - Aceptación:
     - SC5: 500 + 200 termina en éxito con 2 llamadas; dos timeouts lanzan `EmtUnavailable` en menos de 12 s; un 4xx no se reintenta.
@@ -224,3 +224,4 @@ Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3
 - 2026-10-04: T5 implementa `invalidate(rejectedToken)` en lugar de `invalidate()`: solo descarta el token si sigue siendo el rechazado, para no tirar uno renovado por otra petición concurrente. Añade `spring-boot-starter-restclient` (parte de Spring Boot; en Boot 4 `RestClient.Builder` vive en su propio starter) y el bean `Clock` en Europe/Madrid.
 - 2026-10-04: en T5, el read timeout del cliente JDK de Spring cubre también la lectura del cuerpo; un error de E/S al leerlo se trata como `EmtUnavailable(SERVER_ERROR)`, no como `EmtProtocolError`. Los tests usan los timeouts de producción salvo el test de timeout (un timeout de 500 ms hacía fallar CI de forma intermitente).
 - 2026-10-04: en T6, `EmtHttpClient.get(module, path, elementType: Class<T>)` devuelve `List<T>` (el array `data` de la EMT) en lugar de `T`. Si la EMT rechaza también el token recién emitido, lanza `EmtProtocolError` con el código `80`. Se añade MockK para simular `EmtAuth` en los tests con `MockRestServiceServer`.
+- 2026-10-04: T7 confirma que `resilience4j-spring-boot4` 2.4.0 funciona con Boot 4.1.1 (riesgo cerrado). Orden: circuit breaker por fuera del reintento, así el circuito cuenta una petición lógica por intento de usuario y, abierto, no reintenta. `minimum-number-of-calls: 10`. Solo `EmtUnavailable` se reintenta y abre el circuito.
