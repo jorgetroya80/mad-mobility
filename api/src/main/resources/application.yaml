@@ -69,12 +69,16 @@ management:
       # Built-in liveness/readiness groups replaced by live/ready below
       probes:
         enabled: false
+      # Components and details are safe to expose: the emt component never includes secrets
+      show-details: always
       group:
         live:
           include: livenessState
         ready:
           include: readinessState
   health:
+    diskspace:
+      enabled: false
     livenessstate:
       enabled: true
     readinessstate:

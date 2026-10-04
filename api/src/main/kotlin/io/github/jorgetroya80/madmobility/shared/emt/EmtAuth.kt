@@ -40,6 +40,9 @@ class EmtAuth(
         }
     }
 
+    /** When the cached token will be renewed, or null if there is no valid token (for health details). */
+    fun tokenRenewsAt(): Instant? = token?.takeIf { clock.instant().isBefore(it.renewAt) }?.renewAt
+
     /** Drops [rejected] if it is still the cached token, so a token renewed meanwhile is kept. */
     fun invalidate(rejected: String) {
         loginLock.withLock {
