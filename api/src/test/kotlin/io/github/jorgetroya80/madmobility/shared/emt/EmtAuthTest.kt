@@ -22,8 +22,9 @@ import java.util.concurrent.TimeUnit
 class EmtAuthTest : EmtWireMockTest() {
     private val clock = MutableClock()
     private val meterRegistry = SimpleMeterRegistry()
+    private val quota = QuotaTracker(QuotaProperties(), clock, meterRegistry)
 
-    private fun auth(props: EmtProperties = properties) = EmtAuth(restClient(props), props, clock, meterRegistry)
+    private fun auth(props: EmtProperties = properties) = EmtAuth(restClient(props), props, clock, meterRegistry, quota)
 
     private fun loginCount() = wireMock.findAll(getRequestedFor(urlPathEqualTo(LOGIN_PATH))).size
 
@@ -185,5 +186,25 @@ class EmtAuthTest : EmtWireMockTest() {
 
         assertThatThrownBy { auth().accessToken() }
             .isInstanceOfSatisfying(EmtProtocolError::class.java) { assertThat(it.code).isEqualTo("42") }
+    }
+
+    @Test
+    fun `login consumes auth quota and records the usage reported by EMT`() {
+        stubLogin()
+
+        auth().accessToken()
+
+        assertThat(quota.used(EmtAuth.QUOTA_MODULE)).isEqualTo(1)
+        assertThat(meterRegistry.get("emt.quota.reported").gauge().value()).isEqualTo(0.0) // apiCounter.current in fixture
+    }
+
+    @Test
+    fun `no login when the quota is exhausted`() {
+        stubLogin()
+        val exhausted = QuotaTracker(QuotaProperties(globalDailyLimit = 0), clock, SimpleMeterRegistry())
+
+        assertThatThrownBy { EmtAuth(restClient(), properties, clock, meterRegistry, exhausted).accessToken() }
+            .isInstanceOf(EmtQuotaExceeded::class.java)
+        assertThat(loginCount()).isZero()
     }
 }

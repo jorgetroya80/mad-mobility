@@ -156,7 +156,7 @@ fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 
 ### `QuotaTracker`
 
-- `tryAcquire(module): Boolean`. Límites en configuración: `mad-mobility.quota.global-daily-limit` (por defecto 18.000, margen sobre 20.000) y `mad-mobility.quota.<module>.daily-limit`.
+- `tryAcquire(module): Boolean`. Límites en configuración: `mad-mobility.quota.global-daily-limit` (por defecto 18.000, margen sobre 20.000) y `mad-mobility.quota.modules.<module>.daily-limit`.
 - Devuelve `false` si se alcanza el límite del módulo o el global.
 - Los contadores se reinician a las 00:00 Europe/Madrid (ver Open Questions).
 - Si la respuesta de login de la EMT informa del consumo (`apiCounter` o similar), se publica como métrica aparte para compararla con el contador local.

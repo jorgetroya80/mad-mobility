@@ -23,6 +23,7 @@ class EmtAuth(
     private val properties: EmtProperties,
     private val clock: Clock,
     private val meterRegistry: MeterRegistry,
+    private val quotaTracker: QuotaTracker,
 ) {
     private data class Token(
         val value: String,
@@ -49,6 +50,7 @@ class EmtAuth(
     private fun validToken(): String? = token?.takeIf { clock.instant().isBefore(it.renewAt) }?.value
 
     private fun login(): Token {
+        if (!quotaTracker.tryAcquire(QUOTA_MODULE)) throw EmtQuotaExceeded(QUOTA_MODULE, quotaTracker.resetsAt())
         val response =
             try {
                 emtRestClient
@@ -80,6 +82,7 @@ class EmtAuth(
             throw EmtProtocolError(body?.code, "Unexpected EMT login response (HTTP ${status.value()}, $detail)")
         }
         record("success")
+        login.apiCounter?.current?.let(quotaTracker::reportEmtUsage)
         val renewAt = clock.instant().plusSeconds(login.tokenSecExpiration).minus(RENEW_MARGIN)
         log.info("EMT login OK, token renews at {}", renewAt)
         return Token(login.accessToken, renewAt)
@@ -104,10 +107,18 @@ class EmtAuth(
     private data class LoginData(
         val accessToken: String,
         val tokenSecExpiration: Long,
+        val apiCounter: ApiCounter? = null,
+    )
+
+    private data class ApiCounter(
+        val current: Long?,
     )
 
     companion object {
         private val log = LoggerFactory.getLogger(EmtAuth::class.java)
+
+        /** Logins consume EMT quota too, accounted under this module name. */
+        const val QUOTA_MODULE = "auth"
         private const val LOGIN_PATH = "/v2/mobilitylabs/user/login/"
         private val RENEW_MARGIN: Duration = Duration.ofMinutes(5)
         private val LOGIN_RESPONSE = object : ParameterizedTypeReference<EmtResponse<LoginData>>() {}

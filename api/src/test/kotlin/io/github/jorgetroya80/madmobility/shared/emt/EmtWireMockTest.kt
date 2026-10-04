@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.web.client.RestClient
 import java.time.Clock
@@ -54,6 +55,9 @@ abstract class EmtWireMockTest {
     }
 
     companion object {
+        /** Quota large enough to never interfere with tests that are not about quota. */
+        fun unlimitedQuota(clock: Clock = MutableClock()) = QuotaTracker(QuotaProperties(), clock, SimpleMeterRegistry())
+
         /** Single attempt, for tests that are not about retries. */
         val NO_RETRY: Retry = Retry.of("no-retry", RetryConfig.custom<Any>().maxAttempts(1).build())
 

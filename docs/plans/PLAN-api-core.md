@@ -135,7 +135,7 @@ T1 esqueleto Gradle
 
 ### Fase 3: Cupo, caché y errores
 
-- [ ] **T8: `QuotaTracker`** (S, ~45 min)
+- [x] **T8: `QuotaTracker`** (S, ~45 min)
   - Descripción: contadores diarios por módulo y global (18.000 por defecto), reinicio a las 00:00 Europe/Madrid con `Clock`, integración en `EmtHttpClient` (sin cupo no hay llamada; el login cuenta como módulo `auth`), métricas `emt.quota.used` y `emt.quota.limit`, y métrica aparte del consumo que informe la EMT si viene en el login.
   - Aceptación:
     - SC9 parcial: con el cupo de un módulo agotado, `EmtHttpClient` lanza `EmtQuotaExceeded` y WireMock no recibe la petición.
@@ -225,3 +225,4 @@ Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3
 - 2026-10-04: en T5, el read timeout del cliente JDK de Spring cubre también la lectura del cuerpo; un error de E/S al leerlo se trata como `EmtUnavailable(SERVER_ERROR)`, no como `EmtProtocolError`. Los tests usan los timeouts de producción salvo el test de timeout (un timeout de 500 ms hacía fallar CI de forma intermitente).
 - 2026-10-04: en T6, `EmtHttpClient.get(module, path, elementType: Class<T>)` devuelve `List<T>` (el array `data` de la EMT) en lugar de `T`. Si la EMT rechaza también el token recién emitido, lanza `EmtProtocolError` con el código `80`. Se añade MockK para simular `EmtAuth` en los tests con `MockRestServiceServer`.
 - 2026-10-04: T7 confirma que `resilience4j-spring-boot4` 2.4.0 funciona con Boot 4.1.1 (riesgo cerrado). Orden: circuit breaker por fuera del reintento, así el circuito cuenta una petición lógica por intento de usuario y, abierto, no reintenta. `minimum-number-of-calls: 10`. Solo `EmtUnavailable` se reintenta y abre el circuito.
+- 2026-10-04: en T8, los límites por módulo van en `mad-mobility.quota.modules.<module>.daily-limit` (no pueden compartir nivel con `global-daily-limit`); sin límite propio, un módulo solo tiene el global. Cada intento HTTP (también reintentos y relogins) consume cupo; `EmtQuotaExceeded` no se reintenta ni abre el circuito.

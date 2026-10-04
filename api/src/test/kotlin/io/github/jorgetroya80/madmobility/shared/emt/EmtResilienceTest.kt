@@ -49,7 +49,13 @@ class EmtResilienceTest : EmtWireMockTest() {
         retry: Retry = this.retry,
     ): EmtHttpClient {
         val restClient = restClient(props)
-        return EmtHttpClient(restClient, EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry()), circuitBreaker, retry)
+        return EmtHttpClient(
+            restClient,
+            EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry(), unlimitedQuota()),
+            circuitBreaker,
+            retry,
+            unlimitedQuota(),
+        )
     }
 
     private fun stationCalls() = wireMock.findAll(getRequestedFor(urlPathEqualTo(STATIONS))).size
