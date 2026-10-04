@@ -9,15 +9,18 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import org.springframework.web.util.DisconnectedClientHelper
 import java.net.URI
 import java.time.Clock
 import java.time.Duration
@@ -79,7 +82,19 @@ class ProblemDetailsHandler(
     fun handleUnexpected(
         e: Exception,
         request: HttpServletRequest,
-    ): ResponseEntity<ProblemDetail> {
+    ): ResponseEntity<ProblemDetail>? {
+        if (DisconnectedClientHelper.isClientDisconnectedException(e)) {
+            log.debug("Client disconnected on {}: {}", request.requestURI, e.message)
+            return null
+        }
+        // Module exceptions annotated with @ResponseStatus (e.g. 404) keep their status
+        AnnotatedElementUtils.findMergedAnnotation(e.javaClass, ResponseStatus::class.java)?.let { annotation ->
+            val status = HttpStatus.valueOf(annotation.code.value())
+            val detail = annotation.reason.ifBlank { status.reasonPhrase }
+            return ResponseEntity
+                .status(status)
+                .body(problem(status, Problem(URI.create("about:blank"), status.reasonPhrase, detail), request))
+        }
         log.error("Unexpected error on {}", request.requestURI, e)
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)

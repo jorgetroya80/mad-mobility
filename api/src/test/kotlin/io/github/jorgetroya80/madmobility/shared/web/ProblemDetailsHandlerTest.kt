@@ -25,6 +25,7 @@ class ProblemDetailsHandlerTest(
         "auth,         502, urn:mad-mobility:problem:emt-bad-response,    ''",
         "protocol,     502, urn:mad-mobility:problem:emt-bad-response,    ''",
         "unexpected,   500, urn:mad-mobility:problem:internal,            ''",
+        "not-found,    404, about:blank,                                  ''",
     )
     fun `maps errors to standard HTTP problems`(
         kind: String,

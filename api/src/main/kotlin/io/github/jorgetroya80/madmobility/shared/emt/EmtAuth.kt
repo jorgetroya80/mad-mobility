@@ -10,12 +10,15 @@ import org.springframework.web.client.RestClient
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Logs in to EMT MobilityLabs and caches the access token until shortly before it expires.
- * Concurrent callers that need a token share a single login (single-flight).
+ * Concurrent callers that need a token share a single login (single-flight) and its result or
+ * failure. Rejected credentials are remembered for a minute so the EMT is not asked again on
+ * every request (which would spend quota and could lock the account).
  */
 @Component
 class EmtAuth(
@@ -30,27 +33,52 @@ class EmtAuth(
         val renewAt: Instant,
     )
 
-    @Volatile private var token: Token? = null
-    private val loginLock = ReentrantLock()
+    private data class AuthFailure(
+        val error: EmtAuthFailed,
+        val until: Instant,
+    )
+
+    private val token = AtomicReference<Token?>()
+    private val inFlight = AtomicReference<CompletableFuture<Token>?>()
+
+    @Volatile private var authFailure: AuthFailure? = null
 
     fun accessToken(): String {
-        validToken()?.let { return it }
-        return loginLock.withLock {
-            validToken() ?: login().also { token = it }.value
+        validToken()?.let { return it.value }
+        authFailure?.takeIf { clock.instant().isBefore(it.until) }?.let { throw it.error }
+        val mine = CompletableFuture<Token>()
+        val running = inFlight.compareAndExchange(null, mine)
+        if (running != null) return join(running).value
+        try {
+            // Another caller may have logged in between our check and taking ownership
+            val fresh = validToken() ?: login().also { token.set(it) }.also { authFailure = null }
+            mine.complete(fresh)
+            return fresh.value
+        } catch (e: Throwable) {
+            if (e is EmtAuthFailed) authFailure = AuthFailure(e, clock.instant().plus(AUTH_FAILURE_BACKOFF))
+            mine.completeExceptionally(e)
+            throw e
+        } finally {
+            inFlight.compareAndSet(mine, null)
         }
     }
 
     /** When the cached token will be renewed, or null if there is no valid token (for health details). */
-    fun tokenRenewsAt(): Instant? = token?.takeIf { clock.instant().isBefore(it.renewAt) }?.renewAt
+    fun tokenRenewsAt(): Instant? = validToken()?.renewAt
 
     /** Drops [rejected] if it is still the cached token, so a token renewed meanwhile is kept. */
     fun invalidate(rejected: String) {
-        loginLock.withLock {
-            if (token?.value == rejected) token = null
-        }
+        token.updateAndGet { if (it?.value == rejected) null else it }
     }
 
-    private fun validToken(): String? = token?.takeIf { clock.instant().isBefore(it.renewAt) }?.value
+    private fun validToken(): Token? = token.get()?.takeIf { clock.instant().isBefore(it.renewAt) }
+
+    private fun join(running: CompletableFuture<Token>): Token =
+        try {
+            running.join()
+        } catch (e: CompletionException) {
+            throw e.cause ?: e
+        }
 
     private fun login(): Token {
         if (!quotaTracker.tryAcquire(QUOTA_MODULE)) throw EmtQuotaExceeded(QUOTA_MODULE, quotaTracker.resetsAt())
@@ -86,7 +114,9 @@ class EmtAuth(
         }
         record("success")
         login.apiCounter?.current?.let(quotaTracker::reportEmtUsage)
-        val renewAt = clock.instant().plusSeconds(login.tokenSecExpiration).minus(RENEW_MARGIN)
+        val lifetime = Duration.ofSeconds(login.tokenSecExpiration)
+        // Renew 5 min early, or halfway for short-lived tokens, so a token is always reused for a while
+        val renewAt = clock.instant().plus(lifetime).minus(minOf(RENEW_MARGIN, lifetime.dividedBy(2)))
         log.info("EMT login OK, token renews at {}", renewAt)
         return Token(login.accessToken, renewAt)
     }
@@ -124,6 +154,7 @@ class EmtAuth(
         const val QUOTA_MODULE = "auth"
         private const val LOGIN_PATH = "/v2/mobilitylabs/user/login/"
         private val RENEW_MARGIN: Duration = Duration.ofMinutes(5)
+        private val AUTH_FAILURE_BACKOFF: Duration = Duration.ofMinutes(1)
         private val LOGIN_RESPONSE = object : ParameterizedTypeReference<EmtResponse<LoginData>>() {}
     }
 }

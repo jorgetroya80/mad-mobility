@@ -56,6 +56,9 @@ resilience4j:
         # Only transport failures open the circuit; protocol/auth errors do not
         record-exceptions:
           - io.github.jorgetroya80.madmobility.shared.emt.EmtUnavailable
+        # Calls stopped by our own quota never reached the EMT: neither failure nor success
+        ignore-exceptions:
+          - io.github.jorgetroya80.madmobility.shared.emt.EmtQuotaExceeded
 
 management:
   endpoints:

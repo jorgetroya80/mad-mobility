@@ -28,6 +28,8 @@ data class CacheProperties(
     fun ttl(module: String): Duration = modules[module]?.ttl ?: ttl
 
     fun maxStale(module: String): Duration = modules[module]?.maxStale ?: maxStale
+
+    fun longestMaxStale(): Duration = (modules.values.mapNotNull { it.maxStale } + maxStale).max()
 }
 
 /** A cached value; [stale] means the EMT failed and this is the last good value from [updatedAt]. */
@@ -48,7 +50,13 @@ class CacheService(
     private val clock: Clock,
     private val meterRegistry: MeterRegistry,
 ) {
-    private val store: Cache<String, Cached<Any>> = Caffeine.newBuilder().maximumSize(MAX_ENTRIES).build()
+    // Entries older than every max-stale can never be served, so let Caffeine drop them
+    private val store: Cache<String, Cached<Any>> =
+        Caffeine
+            .newBuilder()
+            .maximumSize(MAX_ENTRIES)
+            .expireAfterWrite(properties.longestMaxStale())
+            .build()
     private val inFlight = ConcurrentHashMap<String, CompletableFuture<Cached<Any>>>()
 
     fun <T : Any> get(

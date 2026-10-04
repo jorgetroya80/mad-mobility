@@ -42,7 +42,8 @@ class QuotaTracker(
     private val reportedByEmt = AtomicLong(-1)
 
     init {
-        Gauge.builder("emt.quota.used", global) { it.get().toDouble() }.tag("module", ALL).register(meterRegistry)
+        // Gauges read through used*/rollOver so they show 0 right after midnight, not yesterday's count
+        Gauge.builder("emt.quota.used", this) { it.usedTotal().toDouble() }.tag("module", ALL).register(meterRegistry)
         Gauge.builder("emt.quota.limit") { properties.globalDailyLimit.toDouble() }.tag("module", ALL).register(meterRegistry)
         Gauge
             .builder("emt.quota.reported", reportedByEmt) { it.get().toDouble() }
@@ -82,8 +83,8 @@ class QuotaTracker(
 
     private fun counter(module: String): AtomicInteger =
         perModule.computeIfAbsent(module) { name ->
-            AtomicInteger().also { count ->
-                Gauge.builder("emt.quota.used", count) { it.get().toDouble() }.tag("module", name).register(meterRegistry)
+            AtomicInteger().also {
+                Gauge.builder("emt.quota.used", this) { it.used(name).toDouble() }.tag("module", name).register(meterRegistry)
                 Gauge.builder("emt.quota.limit") { limit(name).toDouble() }.tag("module", name).register(meterRegistry)
             }
         }

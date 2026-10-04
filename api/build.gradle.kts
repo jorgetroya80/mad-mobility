@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.resilience4j.spring.boot4)
     implementation(libs.caffeine)
     // @ApplicationModule and @PackageInfo annotations
-    implementation(libs.spring.modulith.core)
+    implementation(libs.spring.modulith.api)
     implementation(libs.kotlin.reflect)
     implementation(libs.jackson.module.kotlin)
 

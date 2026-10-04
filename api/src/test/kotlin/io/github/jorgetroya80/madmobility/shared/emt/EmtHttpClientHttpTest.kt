@@ -16,10 +16,11 @@ import java.time.Duration
 /** Real HTTP against WireMock with the real EmtAuth: timeouts and the relogin flow end to end. */
 class EmtHttpClientHttpTest : EmtWireMockTest() {
     private fun client(props: EmtProperties = properties): EmtHttpClient {
-        val restClient = restClient(props)
+        // Login always uses production timeouts so a slow cold login can't make timeout tests pass or flake
+        val authClient = restClient(properties)
         return EmtHttpClient(
-            restClient,
-            EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry(), unlimitedQuota()),
+            restClient(props),
+            EmtAuth(authClient, properties, MutableClock(), SimpleMeterRegistry(), unlimitedQuota()),
             CircuitBreaker.ofDefaults("test"),
             NO_RETRY,
             unlimitedQuota(),
@@ -70,6 +71,7 @@ class EmtHttpClientHttpTest : EmtWireMockTest() {
             .isInstanceOfSatisfying(EmtUnavailable::class.java) {
                 assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.TIMEOUT)
             }
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(STATIONS)))
     }
 
     @Test

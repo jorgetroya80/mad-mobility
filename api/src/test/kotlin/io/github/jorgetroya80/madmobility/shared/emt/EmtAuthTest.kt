@@ -207,4 +207,55 @@ class EmtAuthTest : EmtWireMockTest() {
             .isInstanceOf(EmtQuotaExceeded::class.java)
         assertThat(loginCount()).isZero()
     }
+
+    @Test
+    fun `concurrent callers share a failing login`() {
+        wireMock.stubFor(get(urlPathEqualTo(LOGIN_PATH)).willReturn(aResponse().withStatus(503).withFixedDelay(500)))
+        val auth = auth()
+        val start = CountDownLatch(1)
+        val executor = Executors.newVirtualThreadPerTaskExecutor()
+
+        val results = (1..50).map { executor.submit<Result<String>> { start.await().let { runCatching { auth.accessToken() } } } }
+        start.countDown()
+
+        assertThat(results.map { it.get(5, TimeUnit.SECONDS).exceptionOrNull() }).allSatisfy {
+            assertThat(it).isInstanceOf(EmtUnavailable::class.java)
+        }
+        assertThat(loginCount()).isEqualTo(1)
+        executor.shutdown()
+    }
+
+    @Test
+    fun `rejected credentials are not retried for a minute`() {
+        stubLogin("login-bad-credentials.json")
+        val auth = auth()
+
+        repeat(3) { assertThatThrownBy { auth.accessToken() }.isInstanceOf(EmtAuthFailed::class.java) }
+        assertThat(loginCount()).isEqualTo(1)
+
+        clock.advance(Duration.ofMinutes(1))
+        assertThatThrownBy { auth.accessToken() }.isInstanceOf(EmtAuthFailed::class.java)
+        assertThat(loginCount()).isEqualTo(2)
+    }
+
+    @Test
+    fun `short-lived tokens are renewed halfway instead of on every call`() {
+        wireMock.stubFor(
+            get(urlPathEqualTo(LOGIN_PATH)).willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(fixture("login-ok.json").replace("\"tokenSecExpiration\": 86399", "\"tokenSecExpiration\": 120")),
+            ),
+        )
+        val auth = auth()
+
+        auth.accessToken()
+        clock.advance(Duration.ofSeconds(59))
+        auth.accessToken()
+        assertThat(loginCount()).isEqualTo(1)
+
+        clock.advance(Duration.ofSeconds(1))
+        auth.accessToken()
+        assertThat(loginCount()).isEqualTo(2)
+    }
 }

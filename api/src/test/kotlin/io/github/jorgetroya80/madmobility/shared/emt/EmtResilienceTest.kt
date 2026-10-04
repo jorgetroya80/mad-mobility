@@ -48,10 +48,11 @@ class EmtResilienceTest : EmtWireMockTest() {
         props: EmtProperties = properties,
         retry: Retry = this.retry,
     ): EmtHttpClient {
-        val restClient = restClient(props)
+        // Login always uses production timeouts so a slow cold login can't make timeout tests pass or flake
+        val authClient = restClient(properties)
         return EmtHttpClient(
-            restClient,
-            EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry(), unlimitedQuota()),
+            restClient(props),
+            EmtAuth(authClient, properties, MutableClock(), SimpleMeterRegistry(), unlimitedQuota()),
             circuitBreaker,
             retry,
             unlimitedQuota(),
@@ -136,6 +137,39 @@ class EmtResilienceTest : EmtWireMockTest() {
         repeat(10) { runCatching { client.get("bicimad", STATIONS, Map::class.java) } }
 
         assertThat(circuitBreaker.state).isEqualTo(CircuitBreaker.State.CLOSED)
+    }
+
+    @Test
+    fun `calls stopped by the quota are neither failures nor successes for the circuit`() {
+        stubLogin()
+        val restClient = restClient()
+        val exhausted =
+            QuotaTracker(
+                QuotaProperties(modules = mapOf("bicimad" to QuotaProperties.ModuleQuota(0))),
+                MutableClock(),
+                SimpleMeterRegistry(),
+            )
+        val breaker =
+            CircuitBreaker.of(
+                "quota",
+                CircuitBreakerConfig
+                    .custom()
+                    .recordExceptions(EmtUnavailable::class.java)
+                    .ignoreExceptions(EmtQuotaExceeded::class.java)
+                    .build(),
+            )
+        val client =
+            EmtHttpClient(
+                restClient,
+                EmtAuth(restClient, properties, MutableClock(), SimpleMeterRegistry(), unlimitedQuota()),
+                breaker,
+                NO_RETRY,
+                exhausted,
+            )
+
+        repeat(3) { runCatching { client.get("bicimad", STATIONS, Map::class.java) } }
+
+        assertThat(breaker.metrics.numberOfBufferedCalls).isZero()
     }
 
     private companion object {
