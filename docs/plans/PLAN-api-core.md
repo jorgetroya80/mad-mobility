@@ -154,7 +154,7 @@ T1 esqueleto Gradle
   - Archivos: `CacheService.kt`, `application.yaml`, `build.gradle.kts`, `CacheServiceTest.kt`.
   - Dependencias: T8.
 
-- [ ] **T10: `ProblemDetailsHandler` y `EmtHealthIndicator`** (M, ~1 h)
+- [x] **T10: `ProblemDetailsHandler` y `EmtHealthIndicator`** (M, ~1 h)
   - Descripción: tabla de errores de la spec (504, 503 con `Retry-After`, 502, 500) en `application/problem+json` con `requestId` y sin el `code` de la EMT; componente `emt` en `/health` (circuito, token válido y caducidad, cupo usado), fuera de los grupos `live` y `ready`.
   - Aceptación:
     - SC12: cada error devuelve su código, `problem+json` y `Retry-After` donde toca; el cuerpo no contiene el `code` de la EMT.
@@ -227,3 +227,5 @@ Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3
 - 2026-10-04: T7 confirma que `resilience4j-spring-boot4` 2.4.0 funciona con Boot 4.1.1 (riesgo cerrado). Orden: circuit breaker por fuera del reintento, así el circuito cuenta una petición lógica por intento de usuario y, abierto, no reintenta. `minimum-number-of-calls: 10`. Solo `EmtUnavailable` se reintenta y abre el circuito.
 - 2026-10-04: en T8, los límites por módulo van en `mad-mobility.quota.modules.<module>.daily-limit` (no pueden compartir nivel con `global-daily-limit`); sin límite propio, un módulo solo tiene el global. Cada intento HTTP (también reintentos y relogins) consume cupo; `EmtQuotaExceeded` no se reintenta ni abre el circuito.
 - 2026-10-04: en T9, single-flight con un `CompletableFuture` compartido por clave: los que esperan reciben el mismo resultado o el mismo error (y su dato `stale`), así un fallo de la EMT no se repite en serie por cada petición. Cobertura de `shared` al cerrar T9: 98 % de líneas (umbral 80 %).
+- 2026-10-04: en T10, `Retry-After` con el circuito abierto usa la espera configurada (30 s) como cota superior: Resilience4j no expone el tiempo restante. Con el circuito abierto, el componente `emt` está `DOWN` y `/health` devuelve 503; `live` y `ready` no lo incluyen. `show-details: always` (el componente `emt` no tiene secretos) y `diskSpace` desactivado. Los errores del propio Spring MVC (404, 405...) también salen como `problem+json` con `requestId`.
+- 2026-10-04: revisión del código T1-T10 con el agente `spring-boot-engineer`; los arreglos van en el PR de T10 (ver changelog de la spec). También: margen de renovación del token `min(5 min, vida/2)`, métricas de cupo que se reinician a medianoche sin esperar a la siguiente llamada, caché que descarta entradas más viejas que `max-stale`, `spring-modulith-api` en lugar de `-core` (sin ArchUnit en el jar) y tests sin `sleep` ni timeouts cortos en el login. **Pendiente para el módulo `bus`:** `EmtHttpClient` con plantillas de URI y variables (la métrica `uri` tendría miles de valores con rutas como `/stops/1234/`) y soporte de POST (las llegadas de bus son POST).

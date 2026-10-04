@@ -6,8 +6,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -19,6 +19,27 @@ class CacheServiceTest {
     private val down = EmtUnavailable(EmtUnavailable.Reason.TIMEOUT, "EMT down")
 
     private fun load(value: String): () -> String = { calls.incrementAndGet().let { value } }
+
+    /**
+     * Starts [count] virtual threads running [task] and returns once all of them are parked, i.e. the
+     * first one is blocked inside the loader and the others are waiting for its result. No sleeps.
+     */
+    private fun <T> startAll(
+        count: Int,
+        task: () -> T,
+    ): List<CompletableFuture<T>> {
+        val futures = List(count) { CompletableFuture<T>() }
+        val threads =
+            futures.map { future ->
+                Thread.ofVirtual().start { runCatching(task).fold(future::complete, future::completeExceptionally) }
+            }
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+        while (threads.any { it.state != Thread.State.WAITING && it.state != Thread.State.TIMED_WAITING }) {
+            check(System.nanoTime() < deadline) { "workers did not block in time" }
+            Thread.onSpinWait()
+        }
+        return futures
+    }
 
     private fun gets(result: String) = meterRegistry.counter("emt.cache.gets", "module", "bicimad", "result", result).count()
 
@@ -92,15 +113,11 @@ class CacheServiceTest {
             release.await(5, TimeUnit.SECONDS)
             "v2"
         }
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
-
-        val results = (1..50).map { executor.submit<Cached<String>> { cache.get("bicimad", "stations", slowLoader) } }
-        Thread.sleep(200) // let all callers queue behind the first loader
+        val results = startAll(50) { cache.get("bicimad", "stations", slowLoader) }
         release.countDown()
 
         assertThat(results.map { it.get(5, TimeUnit.SECONDS).value }).containsOnly("v2")
         assertThat(calls.get()).isEqualTo(1)
-        executor.shutdown()
     }
 
     @Test
@@ -114,10 +131,7 @@ class CacheServiceTest {
             release.await(5, TimeUnit.SECONDS)
             throw down
         }
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
-
-        val results = (1..20).map { executor.submit<Cached<String>> { cache.get("bicimad", "stations", failingLoader) } }
-        Thread.sleep(200)
+        val results = startAll(20) { cache.get("bicimad", "stations", failingLoader) }
         release.countDown()
 
         assertThat(results.map { it.get(5, TimeUnit.SECONDS) }).allSatisfy {
@@ -125,7 +139,6 @@ class CacheServiceTest {
             assertThat(it.stale).isTrue()
         }
         assertThat(calls.get()).isEqualTo(1)
-        executor.shutdown()
     }
 
     @Test

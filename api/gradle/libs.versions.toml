@@ -22,7 +22,7 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 resilience4j-spring-boot4 = { module = "io.github.resilience4j:resilience4j-spring-boot4", version.ref = "resilience4j" }
 # Versions managed by the Spring Modulith BOM
 spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
-spring-modulith-core = { module = "org.springframework.modulith:spring-modulith-core" }
+spring-modulith-api = { module = "org.springframework.modulith:spring-modulith-api" }
 spring-modulith-starter-test = { module = "org.springframework.modulith:spring-modulith-starter-test" }
 wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
