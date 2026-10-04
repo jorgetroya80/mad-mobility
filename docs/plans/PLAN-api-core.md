@@ -99,7 +99,7 @@ T1 esqueleto Gradle
   - Archivos: `EmtProperties.kt`, `.env.example`, `EmtPropertiesTest.kt`, `src/test/resources/emt/*.json`, `src/test/resources/emt/README.md`.
   - Dependencias: T3.
 
-- [ ] **T5: `EmtAuth`** (M, ~1 h)
+- [x] **T5: `EmtAuth`** (M, ~1 h)
   - Descripción: login con las dos variantes de credenciales, token guardado hasta caducidad menos 5 min (`Clock` inyectado), single-flight, `invalidate()`, jerarquía `EmtException` inicial (`EmtAuthFailed`, `EmtUnavailable`). Clase base `EmtWireMockTest` con un servidor WireMock dentro del proceso, en puerto aleatorio y reiniciado entre tests.
   - Aceptación:
     - SC3: 50 peticiones concurrentes sin token producen exactamente 1 login en WireMock.
@@ -221,3 +221,4 @@ Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3
 - 2026-10-04: Java 25 LTS, Spring Boot 4.1.1, Kotlin 2.3.21, Gradle 9.3.1 y Spring Modulith 2.1.1 (ver changelog de la spec). T1 cambia `java-version` a `'25'` en `ci.yml`.
 - 2026-10-04: plan aprobado.
 - 2026-10-04: T4 captura los códigos reales de la EMT (ver `api/src/test/resources/emt/README.md`): credenciales malas = HTTP 200 + `89`; token inválido o ausente = HTTP 401 + `80`. T6 lo tiene en cuenta. Las credenciales se validan en el constructor de `EmtProperties` en lugar de con `@Validated`, para nombrar la variable que falta sin añadir Bean Validation.
+- 2026-10-04: T5 implementa `invalidate(rejectedToken)` en lugar de `invalidate()`: solo descarta el token si sigue siendo el rechazado, para no tirar uno renovado por otra petición concurrente. Añade `spring-boot-starter-restclient` (parte de Spring Boot; en Boot 4 `RestClient.Builder` vive en su propio starter) y el bean `Clock` en Europe/Madrid.

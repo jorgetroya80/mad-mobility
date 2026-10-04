@@ -3,10 +3,14 @@ package io.github.jorgetroya80.madmobility.shared.emt
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.boot.context.annotation.UserConfigurations
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class EmtPropertiesTest {
-    private val runner = ApplicationContextRunner().withConfiguration(UserConfigurations.of(EmtConfig::class.java))
+    @EnableConfigurationProperties(EmtProperties::class)
+    class PropertiesOnly
+
+    private val runner = ApplicationContextRunner().withConfiguration(UserConfigurations.of(PropertiesOnly::class.java))
 
     private fun failureMessage(vararg properties: String): String? {
         var message: String? = null
