@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
+import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.http.HttpTimeoutException
 import java.time.Clock
@@ -119,6 +120,11 @@ class EmtAuth(
             try {
                 read()
             } catch (e: RestClientException) {
+                // An I/O error while reading the body (dropped connection, read timeout) is a transport
+                // failure; anything else (malformed JSON) is a protocol error
+                if (generateSequence<Throwable>(e) { it.cause }.any { it is IOException }) {
+                    throw EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT connection failed while reading the response", e)
+                }
                 throw EmtProtocolError(null, "Unreadable EMT response: ${e.mostSpecificCause.message}", e)
             }
 

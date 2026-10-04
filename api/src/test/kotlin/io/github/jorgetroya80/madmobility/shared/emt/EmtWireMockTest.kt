@@ -14,12 +14,8 @@ import java.time.ZoneId
 
 /** Base for tests that need real HTTP against a fake EMT (in-process WireMock, reset between tests). */
 abstract class EmtWireMockTest {
-    protected val properties =
-        EmtProperties(
-            email = TEST_EMAIL,
-            password = TEST_PASSWORD,
-            readTimeout = Duration.ofMillis(500),
-        )
+    // Production timeouts: the read timeout also covers reading the body, so short values make slow CI flaky
+    protected val properties = EmtProperties(email = TEST_EMAIL, password = TEST_PASSWORD)
 
     protected fun restClient(props: EmtProperties = properties): RestClient =
         EmtConfig.emtRestClient(RestClient.builder(), wireMock.baseUrl(), props)

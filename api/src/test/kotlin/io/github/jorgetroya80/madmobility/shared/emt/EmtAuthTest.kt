@@ -42,7 +42,7 @@ class EmtAuthTest : EmtWireMockTest() {
     @Test
     fun `logs in with client id and pass key`() {
         stubLogin()
-        val props = EmtProperties(clientId = "my-client", passKey = "my-key", readTimeout = Duration.ofMillis(500))
+        val props = EmtProperties(clientId = "my-client", passKey = "my-key")
 
         auth(props).accessToken()
 
@@ -133,9 +133,10 @@ class EmtAuthTest : EmtWireMockTest() {
 
     @Test
     fun `slow answer throws EmtUnavailable with TIMEOUT`() {
-        stubLogin(delay = Duration.ofSeconds(2)) // read timeout is 500 ms in tests
+        stubLogin(delay = Duration.ofSeconds(1))
+        val props = EmtProperties(email = TEST_EMAIL, password = TEST_PASSWORD, readTimeout = Duration.ofMillis(200))
 
-        assertThatThrownBy { auth().accessToken() }
+        assertThatThrownBy { auth(props).accessToken() }
             .isInstanceOfSatisfying(EmtUnavailable::class.java) {
                 assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.TIMEOUT)
             }
@@ -149,6 +150,27 @@ class EmtAuthTest : EmtWireMockTest() {
             .isInstanceOfSatisfying(EmtUnavailable::class.java) {
                 assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.SERVER_ERROR)
             }
+    }
+
+    @Test
+    fun `connection failure while reading the body throws EmtUnavailable`() {
+        wireMock.stubFor(get(urlPathEqualTo(LOGIN_PATH)).willReturn(aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)))
+
+        assertThatThrownBy { auth().accessToken() }
+            .isInstanceOfSatisfying(EmtUnavailable::class.java) {
+                assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.SERVER_ERROR)
+            }
+    }
+
+    @Test
+    fun `malformed JSON throws EmtProtocolError`() {
+        wireMock.stubFor(
+            get(urlPathEqualTo(LOGIN_PATH)).willReturn(
+                aResponse().withHeader("Content-Type", "application/json").withBody("{not json"),
+            ),
+        )
+
+        assertThatThrownBy { auth().accessToken() }.isInstanceOf(EmtProtocolError::class.java)
     }
 
     @Test
