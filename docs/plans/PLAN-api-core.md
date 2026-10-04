@@ -64,7 +64,7 @@ T1 esqueleto Gradle
   - Archivos: `api/settings.gradle.kts`, `api/build.gradle.kts`, `api/gradle/libs.versions.toml`, `api/src/main/kotlin/.../MadMobilityApplication.kt`, `api/src/main/resources/application.yaml`, `.github/workflows/ci.yml` (+ wrapper generado y test de contexto).
   - Dependencias: ninguna.
 
-- [ ] **T2: Health, Actuator y verificación de módulos** (S, ~30 min)
+- [x] **T2: Health, Actuator y verificación de módulos** (S, ~30 min)
   - Descripción: grupos de health `live` y `ready` servidos en `/health/live` y `/health/ready` (base path de Actuator en `/`), exposición HTTP solo de `health` e `info`, `ModularityTest` con Spring Modulith 2.0.8 y la detección configurada para que `shared` y cada `modules/<x>` sean módulos.
   - Aceptación:
     - `/health/live` y `/health/ready` devuelven 200 `UP`; `/actuator/metrics` y `/metrics` devuelven 404.

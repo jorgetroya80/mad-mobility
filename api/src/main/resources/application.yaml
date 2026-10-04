@@ -7,3 +7,29 @@ spring:
   threads:
     virtual:
       enabled: true
+  modulith:
+    # Modules are shared and each modules/<name>, marked with @ApplicationModule + @PackageInfo
+    detection-strategy: explicitly-annotated
+
+management:
+  endpoints:
+    web:
+      # Serves /health, /health/live, /health/ready and /info
+      base-path: /
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      # Built-in liveness/readiness groups replaced by live/ready below
+      probes:
+        enabled: false
+      group:
+        live:
+          include: livenessState
+        ready:
+          include: readinessState
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
