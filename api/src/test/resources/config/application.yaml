@@ -1,0 +1,5 @@
+# Test overrides, merged over src/main/resources/application.yaml
+mad-mobility:
+  emt:
+    email: test@example.com
+    password: test-password

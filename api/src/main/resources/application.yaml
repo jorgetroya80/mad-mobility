@@ -17,6 +17,12 @@ logging:
       console: ecs
 
 mad-mobility:
+  emt:
+    base-url: ${EMT_BASE_URL:https://openapi.emtmadrid.es}
+    email: ${EMT_EMAIL:}
+    password: ${EMT_PASSWORD:}
+    client-id: ${EMT_CLIENT_ID:}
+    pass-key: ${EMT_PASS_KEY:}
   cors:
     # Comma-separated list, e.g. https://bicimad.example.com
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
