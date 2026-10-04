@@ -21,6 +21,15 @@ repositories {
     mavenCentral()
 }
 
+// Smoke test against the real EMT: own source set (no test resources, so no fake credentials)
+val smokeTest: SourceSet by sourceSets.creating {
+    compileClasspath += sourceSets.main.get().output
+    runtimeClasspath += sourceSets.main.get().output
+}
+
+configurations[smokeTest.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
+configurations[smokeTest.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+
 dependencyManagement {
     imports {
         mavenBom(
@@ -80,6 +89,23 @@ val dockerImageTest by tasks.registering(Test::class) {
     workingDir = projectDir
     shouldRunAfter(tasks.test)
 }
+
+val smokeTestTask =
+    tasks.register<Test>("smokeTest") {
+        description = "Calls the real EMT with the credentials in .env.local (manual, never in CI)."
+        group = "verification"
+        testClassesDirs = smokeTest.output.classesDirs
+        classpath = smokeTest.runtimeClasspath
+        useJUnitPlatform()
+        // application.yaml imports .env.local relative to the working directory
+        workingDir = projectDir
+        // Always hit the EMT when asked to, even if nothing changed
+        outputs.upToDateWhen { false }
+        testLogging {
+            events("passed", "skipped", "failed")
+            showStandardStreams = false
+        }
+    }
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
