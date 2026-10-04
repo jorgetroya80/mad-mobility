@@ -1,7 +1,7 @@
 # Spec: api-core
 
 - Created: 2026-10-04
-- Status: **approved** (2026-10-04)
+- Status: **implemented** (2026-10-04)
 - Plan: [PLAN-api-core.md](../plans/PLAN-api-core.md)
 
 Módulo `api-core` del [Capability Map](CAPABILITY-MAP.md). Crea el proyecto Gradle de `api/` y la infraestructura compartida `shared/emt` que usarán los módulos de dominio (`bicimad` primero, `bus` después). Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md).
@@ -284,3 +284,4 @@ class CacheService(
 - 2026-10-04: versiones revisadas antes de implementar: Java 25 LTS (Java 24 sin soporte desde 2025-09-22), Spring Boot 4.1.1 (4.0 pierde soporte el 2026-12-31), Kotlin 2.3.21 (la que gestiona Boot 4.1.1; genera bytecode de Java 25), Gradle 9.3.1 (máximo probado por el plugin Kotlin 2.3.21 es 9.3.0, y Java 25 requiere 9.1.0+).
 - 2026-10-04: códigos reales de la EMT capturados en T4: login correcto `00`/`01`; credenciales malas HTTP 200 + `89` (`EmtAuthFailed`); token inválido o ausente HTTP 401 + `80` (relogin). El código de cupo agotado sigue sin verificar. Detalle en `api/src/test/resources/emt/README.md`.
 - 2026-10-04: endurecimiento tras revisión (agente `spring-boot-engineer`): el login fallido también es single-flight (los que esperan comparten el error); credenciales rechazadas se recuerdan 1 min sin volver a llamar a la EMT; `EmtQuotaExceeded` se ignora en el circuit breaker; las excepciones con `@ResponseStatus` de los módulos conservan su código; las desconexiones del cliente no se registran como error. **Límite conocido de SC5:** los 12 s valen con un token válido; si además hay que hacer login y relogin, el peor caso de una petición ronda los 40 s (4 llamadas de 5 s por intento × 2 intentos). Se acepta para el MVP.
+- 2026-10-04: spec implementada (T1-T12, PRs #20-#32).
