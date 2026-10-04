@@ -72,12 +72,30 @@ jobs:
           tags: |
             type=semver,pattern={{version}},value=${{ needs.release-please.outputs.api-version }}
             type=raw,value=latest
+      # Build locally first: the image is only published if it passes the checks below
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: api
-          push: true
+          load: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - name: Check the image before publishing
+        env:
+          IMAGE: ghcr.io/jorgetroya80/mad-mobility-api:latest
+        run: |
+          docker run -d --name api-check -p 8080:8080 \
+            -e EMT_EMAIL=release-check@example.com -e EMT_PASSWORD=release-check "$IMAGE"
+          trap 'docker logs api-check 2>&1 | tail -50; docker rm -f api-check > /dev/null' EXIT
+          for _ in $(seq 1 60); do
+            curl -fsS localhost:8080/health/live > /dev/null && break
+            sleep 1
+          done
+          curl -fsS localhost:8080/health/live
+          curl -fsS localhost:8080/health/ready
+          test "$(docker exec api-check id -u)" = 10001
+      - name: Publish
+        run: docker push --all-tags ghcr.io/jorgetroya80/mad-mobility-api
 
   publish-web:
     name: publish-web
