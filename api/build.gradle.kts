@@ -36,6 +36,7 @@ dependencies {
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.restclient)
     implementation(libs.resilience4j.spring.boot4)
+    implementation(libs.caffeine)
     // @ApplicationModule and @PackageInfo annotations
     implementation(libs.spring.modulith.core)
     implementation(libs.kotlin.reflect)
@@ -66,6 +67,30 @@ tasks.test {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+}
+
+// Coverage gate for the shared infrastructure (spec: at least 80 % of lines in `shared`)
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+    classDirectories.setFrom(
+        sourceSets.main
+            .get()
+            .output.classesDirs
+            .asFileTree
+            .matching { include("io/github/jorgetroya80/madmobility/shared/**") },
+    )
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 spotless {

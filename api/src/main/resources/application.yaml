@@ -23,6 +23,10 @@ mad-mobility:
     password: ${EMT_PASSWORD:}
     client-id: ${EMT_CLIENT_ID:}
     pass-key: ${EMT_PASS_KEY:}
+  cache:
+    # Defaults for every module; override with cache.modules.<module>.ttl / max-stale
+    ttl: 60s
+    max-stale: 24h
   quota:
     # EMT allows 20,000 calls/day; keep a margin. Per-module caps: quota.modules.<module>.daily-limit
     global-daily-limit: 18000
