@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: mad-mobility-api
+  config:
+    # Local secrets (KEY=VALUE), ignored by git; see .env.example
+    import: optional:file:.env.local[.properties]
+  threads:
+    virtual:
+      enabled: true

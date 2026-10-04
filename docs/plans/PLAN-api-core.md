@@ -54,7 +54,7 @@ T1 esqueleto Gradle
 
 ### Fase 1: Esqueleto
 
-- [ ] **T1: Proyecto Gradle mínimo** (M, ~45 min)
+- [x] **T1: Proyecto Gradle mínimo** (M, ~45 min)
   - Descripción: wrapper 9.3.1, `settings.gradle.kts`, `build.gradle.kts` (plugins de Kotlin, Spring Boot, Spotless con ktlint y JaCoCo solo con informe; toolchain Java 25; `version` leída de `gradle.properties`), `gradle/libs.versions.toml`, `MadMobilityApplication.kt`, `application.yaml` (hilos virtuales, `spring.config.import=optional:file:.env.local[.properties]`), test de arranque de contexto.
   - Aceptación:
     - `./gradlew build` pasa en local.
