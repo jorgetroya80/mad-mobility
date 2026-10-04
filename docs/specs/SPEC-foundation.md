@@ -202,8 +202,9 @@ Resultado: un único PR de release ("chore: release main") con las versiones de 
 
 ### Dependabot (`dependabot.yml`)
 
-- Ecosistema `npm`, directorio `/` (workspace pnpm, cubre raíz y `web/`): semanal (lunes), un grupo para minor/patch y PRs separados para major, prefijo `chore(deps)`, `cooldown` de 10 días, alineado con `minimumReleaseAge: 14400` (10 días) declarado en `pnpm-workspace.yaml`.
-- Ecosistema `github-actions`, directorio `/`: semanal (lunes), un único grupo, prefijo `ci(deps)`. Mantiene actualizados los SHA fijados y sus comentarios de versión.
+Dependabot (alertas y security updates) se activa desde la configuración del repositorio. No hay actualizaciones de versión programadas.
+
+- `dependabot.yml` solo fija los prefijos: `chore(deps)` para `npm` y `ci(deps)` para `github-actions`, con `open-pull-requests-limit: 0` para desactivar las actualizaciones de versión.
 - Los prefijos pasan commitlint y `pr-title`, y no generan releases.
 - `api/` (Gradle) sigue fuera de Dependabot.
 
@@ -237,7 +238,7 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 6. Tras mergear un `feat(web): ...` en `main`, release-please abre o actualiza un PR que sube solo `web` (0.0.0 -> 0.1.0) y modifica `web/CHANGELOG.md`.
 7. Al mergear el PR de release se crea la etiqueta `web-v0.1.0` y una GitHub Release; `publish-web` adjunta `web-dist.tar.gz` (cuando exista el proyecto `web`).
 8. Los jobs `deploy-*` aparecen como omitidos mientras `DEPLOY_ENABLED` no sea `true`.
-9. Dependabot abre como máximo un PR agrupado semanal de minor/patch con prefijo `chore(deps)`.
+9. ~~Dependabot abre como máximo un PR agrupado semanal de minor/patch con prefijo `chore(deps)`.~~ Retirado el 2026-10-04: no hay actualizaciones de versión programadas.
 10. `actionlint` no reporta errores.
 
 ## Open Questions
@@ -251,3 +252,4 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 - 2026-10-03: release-please usa `GITHUB_TOKEN` (sin PAT); el PR de release se cierra y reabre a mano para disparar los checks. Todas las acciones se fijan por SHA. Dependabot no cubre GitHub Actions, así que actualizar esos SHA es manual.
 - 2026-10-03: Dependabot cubre también `github-actions` (prefijo `ci(deps)`) para actualizar los SHA fijados.
 - 2026-10-03: Dependabot npm con `cooldown` de 10 días; nuevo job `tooling` en CI que valida la raíz del monorepo con `pnpm install --frozen-lockfile` y Prettier (el PR #12 de Dependabot pasó CI con una versión que la política local de 10 días rechaza; la política estaba solo en la configuración global de pnpm y ahora vive en `pnpm-workspace.yaml`).
+- 2026-10-04: Dependabot se gestiona desde la configuración del repositorio (alertas y security updates). `dependabot.yml` queda mínimo: solo prefijos de commit y `open-pull-requests-limit: 0`, sin actualizaciones de versión semanales ni `cooldown`. SC9 retirado.

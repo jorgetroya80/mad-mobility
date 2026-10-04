@@ -1,26 +1,20 @@
+# Dependabot is enabled from the repository settings (alerts and security updates).
+# This file only sets commit prefixes so security PRs pass commitlint and pr-title.
+# open-pull-requests-limit: 0 disables scheduled version updates.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-      day: monday
+    open-pull-requests-limit: 0
     commit-message:
       prefix: chore(deps)
-    # Matches minimumReleaseAge (10 days) in pnpm-workspace.yaml
-    cooldown:
-      default-days: 10
-    groups:
-      npm-minor-patch:
-        update-types: [minor, patch]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-      day: monday
+    open-pull-requests-limit: 0
     commit-message:
       prefix: ci(deps)
-    groups:
-      actions:
-        patterns: ['*']

@@ -189,3 +189,4 @@ Unas 4 h en total, en 2 sesiones de fin de semana: Fase 1 (~1,5 h), Fases 2 y 3 
 
 - 2026-10-03: no se hace push de código a `main`. T5 crea un commit raíz vacío, protege `main` exigiendo PR y sube T1-T4 como PR; T11 solo añade los checks requeridos.
 - 2026-10-03: T10 amplía el alcance: `cooldown` de 10 días en Dependabot npm y job `tooling` en CI, y `minimumReleaseAge: 14400` en `pnpm-workspace.yaml`, tras detectar que Dependabot propone versiones que la política de 10 días (antes solo global) rechaza.
+- 2026-10-04: Dependabot pasa a gestionarse desde la configuración del repositorio; `dependabot.yml` queda solo con prefijos de commit y sin actualizaciones de versión (ver SPEC). T10 y SC9 quedan como histórico.
