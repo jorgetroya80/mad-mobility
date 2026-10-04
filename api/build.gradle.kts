@@ -54,6 +54,11 @@ tasks.jar {
 
 tasks.test {
     useJUnitPlatform()
+    // Full failure details in the console, so CI logs are enough to diagnose
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
     finalizedBy(tasks.jacocoTestReport)
 }
 
