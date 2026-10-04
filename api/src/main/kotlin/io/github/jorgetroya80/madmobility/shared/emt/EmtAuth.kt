@@ -7,10 +7,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
-import org.springframework.web.client.RestClientException
-import java.io.IOException
-import java.net.SocketTimeoutException
-import java.net.http.HttpTimeoutException
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -61,12 +57,12 @@ class EmtAuth(
                     .headers(::addCredentials)
                     .exchange { _, res ->
                         // 5xx bodies are not EMT JSON; anything else carries the EMT envelope
-                        val body = if (res.statusCode.is5xxServerError) null else readBody { res.bodyTo(LOGIN_RESPONSE) }
+                        val body = if (res.statusCode.is5xxServerError) null else EmtErrors.readBody { res.bodyTo(LOGIN_RESPONSE) }
                         body to res.statusCode
                     }
             } catch (e: ResourceAccessException) {
                 record("unavailable")
-                throw unavailable(e)
+                throw EmtErrors.unavailable(e)
             }
         val (body, status) = response
         if (status.is5xxServerError) {
@@ -115,26 +111,5 @@ class EmtAuth(
         private const val LOGIN_PATH = "/v2/mobilitylabs/user/login/"
         private val RENEW_MARGIN: Duration = Duration.ofMinutes(5)
         private val LOGIN_RESPONSE = object : ParameterizedTypeReference<EmtResponse<LoginData>>() {}
-
-        internal fun <T> readBody(read: () -> T): T =
-            try {
-                read()
-            } catch (e: RestClientException) {
-                // An I/O error while reading the body (dropped connection, read timeout) is a transport
-                // failure; anything else (malformed JSON) is a protocol error
-                if (generateSequence<Throwable>(e) { it.cause }.any { it is IOException }) {
-                    throw EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT connection failed while reading the response", e)
-                }
-                throw EmtProtocolError(null, "Unreadable EMT response: ${e.mostSpecificCause.message}", e)
-            }
-
-        internal fun unavailable(e: ResourceAccessException): EmtUnavailable {
-            val timedOut = generateSequence<Throwable>(e) { it.cause }.any { it is HttpTimeoutException || it is SocketTimeoutException }
-            return if (timedOut) {
-                EmtUnavailable(EmtUnavailable.Reason.TIMEOUT, "EMT did not answer in time", e)
-            } else {
-                EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT could not be reached", e)
-            }
-        }
     }
 }

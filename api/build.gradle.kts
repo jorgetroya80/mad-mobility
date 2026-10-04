@@ -44,6 +44,7 @@ dependencies {
     testImplementation(libs.spring.boot.starter.actuator.test)
     testImplementation(libs.spring.modulith.starter.test)
     testImplementation(libs.wiremock.standalone)
+    testImplementation(libs.mockk)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
