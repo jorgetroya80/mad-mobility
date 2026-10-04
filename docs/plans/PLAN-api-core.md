@@ -109,7 +109,7 @@ T1 esqueleto Gradle
   - Archivos: `EmtAuth.kt`, `EmtException.kt`, `EmtWireMockTest.kt`, `EmtAuthTest.kt`, `libs.versions.toml`.
   - Dependencias: T4.
 
-- [ ] **T6: `EmtHttpClient` sin resiliencia** (M, ~1 h)
+- [x] **T6: `EmtHttpClient` sin resiliencia** (M, ~1 h)
   - Descripción: `get(module, path, type)` sobre `RestClient` con timeouts (2 s conexión, 5 s lectura), cabecera `accessToken`, chequeo de `code` (`00`/`01` éxito) también en respuestas HTTP 200, relogin y un reintento ante token inválido (HTTP 401 con `code` `80`, cuyo cuerpo hay que leer), `EmtProtocolError` y `EmtUnavailable` con motivo (`TIMEOUT`, `SERVER_ERROR`). Lógica probada con `MockRestServiceServer`; el timeout real, con WireMock.
   - Aceptación:
     - SC7: token inválido provoca un login nuevo y un solo reintento; un código desconocido lanza `EmtProtocolError` con el código.
@@ -223,3 +223,4 @@ Unas 9 h en total, en 3 o 4 sesiones de fin de semana: Fase 1 (~2 h), Fase 2 (~3
 - 2026-10-04: T4 captura los códigos reales de la EMT (ver `api/src/test/resources/emt/README.md`): credenciales malas = HTTP 200 + `89`; token inválido o ausente = HTTP 401 + `80`. T6 lo tiene en cuenta. Las credenciales se validan en el constructor de `EmtProperties` en lugar de con `@Validated`, para nombrar la variable que falta sin añadir Bean Validation.
 - 2026-10-04: T5 implementa `invalidate(rejectedToken)` en lugar de `invalidate()`: solo descarta el token si sigue siendo el rechazado, para no tirar uno renovado por otra petición concurrente. Añade `spring-boot-starter-restclient` (parte de Spring Boot; en Boot 4 `RestClient.Builder` vive en su propio starter) y el bean `Clock` en Europe/Madrid.
 - 2026-10-04: en T5, el read timeout del cliente JDK de Spring cubre también la lectura del cuerpo; un error de E/S al leerlo se trata como `EmtUnavailable(SERVER_ERROR)`, no como `EmtProtocolError`. Los tests usan los timeouts de producción salvo el test de timeout (un timeout de 500 ms hacía fallar CI de forma intermitente).
+- 2026-10-04: en T6, `EmtHttpClient.get(module, path, elementType: Class<T>)` devuelve `List<T>` (el array `data` de la EMT) en lugar de `T`. Si la EMT rechaza también el token recién emitido, lanza `EmtProtocolError` con el código `80`. Se añade MockK para simular `EmtAuth` en los tests con `MockRestServiceServer`.

@@ -129,7 +129,7 @@ Este módulo es proveedor; estos contratos son lo que consumen `api-bicimad` y `
 ### `EmtHttpClient`
 
 ```kotlin
-fun <T : Any> get(module: String, path: String, type: KClass<T>): T
+fun <T : Any> get(module: String, path: String, elementType: Class<T>): List<T>  // el array `data`
 ```
 
 - Añade la cabecera `accessToken`. Timeouts: conexión 2 s, lectura 5 s.
