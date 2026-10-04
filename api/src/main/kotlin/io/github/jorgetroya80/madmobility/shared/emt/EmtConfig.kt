@@ -14,7 +14,7 @@ import java.time.Clock
 import java.time.ZoneId
 
 @Configuration
-@EnableConfigurationProperties(EmtProperties::class, QuotaProperties::class)
+@EnableConfigurationProperties(EmtProperties::class, QuotaProperties::class, CacheProperties::class)
 class EmtConfig {
     /** EMT dates, quota resets and logs are in Madrid time. */
     @Bean

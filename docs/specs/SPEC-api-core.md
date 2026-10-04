@@ -148,7 +148,7 @@ data class Cached<T>(val value: T, val updatedAt: Instant, val stale: Boolean)
 fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 ```
 
-- TTL y antigüedad máxima por módulo en configuración (`mad-mobility.cache.<module>.ttl`, `max-stale`). Por defecto: TTL 60 s, `max-stale` 24 h.
+- TTL y antigüedad máxima por módulo en configuración (`mad-mobility.cache.ttl` / `max-stale` por defecto, `mad-mobility.cache.modules.<module>.ttl` / `max-stale` por módulo). Por defecto: TTL 60 s, `max-stale` 24 h.
 - Dentro del TTL devuelve el valor sin llamar a `loader`.
 - Fuera del TTL llama a `loader` una sola vez aunque haya peticiones concurrentes (single-flight).
 - Si `loader` lanza `EmtException` y hay un valor anterior más reciente que `max-stale`, devuelve ese valor con `stale = true` y su `updatedAt` original. Si no lo hay, propaga la excepción.
