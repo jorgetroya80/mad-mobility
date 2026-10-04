@@ -19,9 +19,10 @@ class EmtHttpClientHttpTest : EmtWireMockTest() {
         val restClient = restClient(props)
         return EmtHttpClient(
             restClient,
-            EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry()),
+            EmtAuth(restClient, props, MutableClock(), SimpleMeterRegistry(), unlimitedQuota()),
             CircuitBreaker.ofDefaults("test"),
             NO_RETRY,
+            unlimitedQuota(),
         )
     }
 

@@ -22,6 +22,7 @@ class EmtHttpClient(
     private val emtAuth: EmtAuth,
     private val emtCircuitBreaker: CircuitBreaker,
     private val emtRetry: Retry,
+    private val quotaTracker: QuotaTracker,
 ) {
     /**
      * GETs [path] for [module] and returns the EMT `data` array as [elementType] items.
@@ -46,12 +47,12 @@ class EmtHttpClient(
     ): List<T> {
         val responseType = responseType(elementType)
         val token = emtAuth.accessToken()
-        val (body, status) = call(path, token, responseType)
+        val (body, status) = call(module, path, token, responseType)
         if (body?.code != EmtResponse.CODE_TOKEN_INVALID) return dataOrThrow(module, path, body, status)
 
         log.info("EMT rejected the access token for {} {}, logging in again", module, path)
         emtAuth.invalidate(token)
-        val (retryBody, retryStatus) = call(path, emtAuth.accessToken(), responseType)
+        val (retryBody, retryStatus) = call(module, path, emtAuth.accessToken(), responseType)
         if (retryBody?.code == EmtResponse.CODE_TOKEN_INVALID) {
             throw EmtProtocolError(retryBody.code, "EMT rejected a freshly issued access token ($module $path)")
         }
@@ -59,11 +60,13 @@ class EmtHttpClient(
     }
 
     private fun <T> call(
+        module: String,
         path: String,
         token: String,
         responseType: ParameterizedTypeReference<EmtResponse<T>>,
-    ): Pair<EmtResponse<T>?, HttpStatusCode> =
-        try {
+    ): Pair<EmtResponse<T>?, HttpStatusCode> {
+        if (!quotaTracker.tryAcquire(module)) throw EmtQuotaExceeded(module, quotaTracker.resetsAt())
+        return try {
             emtRestClient
                 .get()
                 .uri(path)
@@ -78,6 +81,7 @@ class EmtHttpClient(
         } catch (e: ResourceAccessException) {
             throw EmtErrors.unavailable(e)
         }
+    }
 
     private fun <T> dataOrThrow(
         module: String,
