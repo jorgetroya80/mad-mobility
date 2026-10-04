@@ -20,19 +20,19 @@ Que cada cambio que llegue a `main` esté validado automáticamente y que cada r
 
 ## Tech Stack
 
-| Herramienta    | Versión                                               | Uso                                                                          |
-| -------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Java           | 24 (Eclipse Temurin)                                  | Toolchain de Gradle y CI. Nota: no es LTS; su última actualización es 24.0.2 |
-| Spring Boot    | 4.0.5 (fija)                                          | Se usará desde `api-core`; aquí solo se fija en `gradle.properties`          |
-| Gradle         | wrapper (última 9.x compatible con Java 24)           | Build de `api/`                                                              |
-| Node.js        | 24 LTS                                                | Tooling raíz y `web/`                                                        |
-| pnpm           | 12.x (`packageManager: pnpm@12.8.1`)                  | Workspace raíz y `web/`                                                      |
-| Husky          | 9.x                                                   | Git hooks                                                                    |
-| commitlint     | `@commitlint/cli` + `@commitlint/config-conventional` | Validar mensajes de commit                                                   |
-| lint-staged    | última                                                | Formato y lint de archivos en stage                                          |
-| release-please | `googleapis/release-please-action@v5`, modo manifest  | Versionado y releases                                                        |
-| Dependabot     | —                                                     | Actualización de dependencias npm (`web/` y raíz)                            |
-| actionlint     | `rhysd/actionlint`                                    | Lint de workflows                                                            |
+| Herramienta    | Versión                                               | Uso                                               |
+| -------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| Java           | 25 LTS (Eclipse Temurin)                              | Toolchain de Gradle y CI                          |
+| Spring Boot    | 4.1.1                                                 | Se usa desde `api-core`                           |
+| Gradle         | wrapper 9.3.1                                         | Build de `api/`                                   |
+| Node.js        | 24 LTS                                                | Tooling raíz y `web/`                             |
+| pnpm           | 12.x (`packageManager: pnpm@12.8.1`)                  | Workspace raíz y `web/`                           |
+| Husky          | 9.x                                                   | Git hooks                                         |
+| commitlint     | `@commitlint/cli` + `@commitlint/config-conventional` | Validar mensajes de commit                        |
+| lint-staged    | última                                                | Formato y lint de archivos en stage               |
+| release-please | `googleapis/release-please-action@v5`, modo manifest  | Versionado y releases                             |
+| Dependabot     | —                                                     | Actualización de dependencias npm (`web/` y raíz) |
+| actionlint     | `rhysd/actionlint`                                    | Lint de workflows                                 |
 
 ## Commands
 
@@ -153,7 +153,7 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 - Disparadores: `pull_request` y `push` a `main`. `concurrency` por rama, cancelando ejecuciones anteriores.
 - Permisos mínimos por defecto (`contents: read`).
 - Job `changes`: `dorny/paths-filter` con filtros `api`, `web`, `contract`, `workflows`.
-- Job `api` (si `api` o `contract`): `actions/setup-java` (Temurin 24), `gradle/actions/setup-gradle`, `./gradlew -p api build`. Se omite si `api/build.gradle.kts` no existe.
+- Job `api` (si `api` o `contract`): `actions/setup-java` (Temurin 25), `gradle/actions/setup-gradle`, `./gradlew -p api build`. Se omite si `api/build.gradle.kts` no existe.
 - Job `web` (si `web` o `contract`): `pnpm/action-setup`, `actions/setup-node` (24, caché pnpm), `pnpm install --frozen-lockfile`, `lint`, `typecheck`, `test`, `build`. Se omite si `web/tsconfig.json` no existe.
 - Job `contract` (si `contract`): lint de `openapi/bicimad.json` (por ejemplo con Redocly CLI). Se omite si el archivo no existe.
 - Comprobación de desajuste del contrato: el job `api` regenera el OpenAPI con springdoc y falla si difiere de `openapi/bicimad.json`. El paso concreto se define en `api-bicimad`; aquí solo se reserva.
@@ -253,3 +253,4 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 - 2026-10-03: Dependabot cubre también `github-actions` (prefijo `ci(deps)`) para actualizar los SHA fijados.
 - 2026-10-03: Dependabot npm con `cooldown` de 10 días; nuevo job `tooling` en CI que valida la raíz del monorepo con `pnpm install --frozen-lockfile` y Prettier (el PR #12 de Dependabot pasó CI con una versión que la política local de 10 días rechaza; la política estaba solo en la configuración global de pnpm y ahora vive en `pnpm-workspace.yaml`).
 - 2026-10-04: Dependabot se gestiona desde la configuración del repositorio (alertas y security updates). `dependabot.yml` queda mínimo: solo prefijos de commit y `open-pull-requests-limit: 0`, sin actualizaciones de versión semanales ni `cooldown`. SC9 retirado.
+- 2026-10-04: Java 25 LTS, Spring Boot 4.1.1 y Gradle 9.3.1 en lugar de Java 24, Boot 4.0.5 y la última 9.x, tras revisar compatibilidades en `api-core` (ver [SPEC-api-core.md](SPEC-api-core.md)). `ci.yml` cambia a Java 25 en la tarea T1 de `api-core`.

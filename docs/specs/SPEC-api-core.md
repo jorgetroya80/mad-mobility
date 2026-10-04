@@ -2,7 +2,7 @@
 
 - Created: 2026-10-04
 - Status: **approved** (2026-10-04)
-- Plan: pending
+- Plan: [PLAN-api-core.md](../plans/PLAN-api-core.md)
 
 Módulo `api-core` del [Capability Map](CAPABILITY-MAP.md). Crea el proyecto Gradle de `api/` y la infraestructura compartida `shared/emt` que usarán los módulos de dominio (`bicimad` primero, `bus` después). Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md).
 
@@ -24,27 +24,28 @@ Que un módulo de dominio solo tenga que traducir datos de la EMT a su modelo: t
 2. Spring MVC bloqueante con hilos virtuales (`spring.threads.virtual.enabled=true`), sin corrutinas ni WebFlux.
 3. La autenticación EMT acepta email/contraseña o `X-ClientId` + `passKey`; se elige según las variables de entorno presentes.
 4. Contadores de cupo en memoria: un reinicio los pone a cero. Aceptable con una sola instancia y el TTL de 60 s (~1.440 llamadas/día de 20.000).
-5. Los tests de integración necesitan Docker en local (Testcontainers). Los runners `ubuntu-latest` de GitHub ya lo traen.
+5. Solo el test de la imagen Docker necesita Docker en local (Testcontainers). Los runners `ubuntu-latest` de GitHub ya lo traen.
 
 ## Tech Stack
 
-| Herramienta       | Versión                                           | Uso                                                               |
-| ----------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
-| Java              | 24 (Eclipse Temurin)                              | Toolchain de Gradle, imagen Docker                                |
-| Kotlin            | 2.2.x (la que exija Spring Boot 4.0.5)            | Lenguaje                                                          |
-| Spring Boot       | 4.0.5                                             | Web MVC, Actuator, validación, `RestClient`, logging estructurado |
-| Spring Modulith   | 2.0.x (compatible con Boot 4.0)                   | Verificación de módulos en tests                                  |
-| Resilience4j      | 2.x (módulos core; starter si existe para Boot 4) | Retry y circuit breaker del cliente EMT                           |
-| Caffeine          | 3.x                                               | Almacenamiento de `CacheService`                                  |
-| Micrometer        | gestionado por Boot                               | Métricas vía Actuator                                             |
-| Gradle            | wrapper 9.x                                       | Build                                                             |
-| Spotless + ktlint | última estable                                    | Formato (ya lo invoca `lint-staged`)                              |
-| JUnit Jupiter     | gestionado por Boot                               | Tests                                                             |
-| MockK + AssertJ   | última estable                                    | Dobles de prueba y aserciones                                     |
-| Testcontainers    | 2.x + módulo WireMock                             | EMT simulada en tests de integración                              |
-| JaCoCo            | plugin de Gradle                                  | Cobertura                                                         |
+| Herramienta                      | Versión                                           | Uso                                                               |
+| -------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
+| Java                             | 25 LTS (Eclipse Temurin)                          | Toolchain de Gradle, imagen Docker                                |
+| Kotlin                           | 2.3.21 (la que gestiona Spring Boot 4.1.1)        | Lenguaje                                                          |
+| Spring Boot                      | 4.1.1                                             | Web MVC, Actuator, validación, `RestClient`, logging estructurado |
+| Spring Modulith                  | 2.1.x (línea de Boot 4.1)                         | Verificación de módulos en tests                                  |
+| Resilience4j                     | 2.x (módulos core; starter si existe para Boot 4) | Retry y circuit breaker del cliente EMT                           |
+| Caffeine                         | 3.x                                               | Almacenamiento de `CacheService`                                  |
+| Micrometer                       | gestionado por Boot                               | Métricas vía Actuator                                             |
+| Gradle                           | wrapper 9.3.1                                     | Build (máximo probado con el plugin Kotlin 2.3.21)                |
+| Spotless + ktlint                | última estable                                    | Formato (ya lo invoca `lint-staged`)                              |
+| JUnit Jupiter                    | gestionado por Boot                               | Tests                                                             |
+| MockK + AssertJ                  | última estable                                    | Dobles de prueba y aserciones                                     |
+| WireMock (`wiremock-standalone`) | 3.x                                               | EMT simulada por HTTP real, dentro del proceso del test           |
+| Testcontainers                   | gestionado por Boot                               | Test de la imagen Docker construida                               |
+| JaCoCo                           | plugin de Gradle                                  | Cobertura                                                         |
 
-Las versiones exactas se fijan en `gradle/libs.versions.toml` durante el plan, comprobando compatibilidad con Boot 4.0.5 y la política de antigüedad mínima de 10 días.
+Las versiones exactas se fijan en `gradle/libs.versions.toml` durante el plan, comprobando compatibilidad con Boot 4.1.1 y la política de antigüedad mínima de 10 días.
 
 ## Commands
 
@@ -52,7 +53,7 @@ Las versiones exactas se fijan en `gradle/libs.versions.toml` durante el plan, c
 cd api
 
 ./gradlew build                   # compila, spotlessCheck, tests (unitarios + integración), jacoco
-./gradlew test                    # solo tests (requiere Docker para los de integración)
+./gradlew test                    # solo tests (el de la imagen Docker requiere Docker)
 ./gradlew spotlessApply           # formatea
 ./gradlew smokeTest               # llama a la EMT real; requiere credenciales en .env.local (manual)
 ./gradlew bootRun                 # arranca en :8080, lee .env.local si existe
@@ -191,7 +192,7 @@ fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 
 ### Docker
 
-- Build con `eclipse-temurin:24-jdk` (`./gradlew bootJar`), runtime con `eclipse-temurin:24-jre`, ambas fijadas por digest.
+- Build con `eclipse-temurin:25-jdk` (`./gradlew bootJar`), runtime con `eclipse-temurin:25-jre`, ambas fijadas por digest.
 - Capas de Spring Boot (`jarmode=tools extract`), usuario no root, `EXPOSE 8080`.
 
 ## Code Style
@@ -231,13 +232,15 @@ class CacheService(
 
 ## Testing Strategy
 
-| Nivel       | Herramientas                                           | Qué cubre                                                                                                                      |
-| ----------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| Unitario    | JUnit, MockK, AssertJ, `Clock` fijo                    | `CacheService` (TTL, stale, `max-stale`, single-flight), `QuotaTracker` (límites, reinicio), `EmtAuth` (margen, single-flight) |
-| Integración | `@SpringBootTest` + Testcontainers (WireMock como EMT) | Login y cabeceras, reintento, timeout, circuit breaker, chequeo de `code`, relogin, cupo agotado sin llamada a la EMT          |
-| Web         | `@SpringBootTest` + `MockMvc`                          | `/health/*`, CORS, `X-Request-Id`, problem+json, ausencia de secretos en logs                                                  |
-| Modularidad | Spring Modulith `ApplicationModules.verify()`          | `shared` sin dependencias de `modules`; módulos sin dependencias entre sí                                                      |
-| Smoke       | source set `smokeTest`, credenciales reales            | Login real y una llamada a BiciMAD; confirma que los fixtures siguen el formato real. Manual, nunca en CI                      |
+| Nivel       | Herramientas                                    | Qué cubre                                                                                                                      |
+| ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Unitario    | JUnit, MockK, AssertJ, `Clock` fijo             | `CacheService` (TTL, stale, `max-stale`, single-flight), `QuotaTracker` (límites, reinicio), `EmtAuth` (margen, single-flight) |
+| Cliente     | `MockRestServiceServer` (`spring-test`)         | Lógica de `EmtHttpClient` sin red: chequeo de `code`, relogin, mapeo de errores, cupo agotado sin llamada a la EMT             |
+| Integración | `@SpringBootTest` + WireMock dentro del proceso | HTTP real: login y cabeceras, timeouts, reintento, circuit breaker, concurrencia (single-flight)                               |
+| Imagen      | Testcontainers                                  | La imagen de `api/Dockerfile` arranca como no root y `/health/live` responde 200                                               |
+| Web         | `@SpringBootTest` + `MockMvc`                   | `/health/*`, CORS, `X-Request-Id`, problem+json, ausencia de secretos en logs                                                  |
+| Modularidad | Spring Modulith `ApplicationModules.verify()`   | `shared` sin dependencias de `modules`; módulos sin dependencias entre sí                                                      |
+| Smoke       | source set `smokeTest`, credenciales reales     | Login real y una llamada a BiciMAD; confirma que los fixtures siguen el formato real. Manual, nunca en CI                      |
 
 - Fixtures en `src/test/resources/emt/`, capturados de la EMT real y sin token.
 - Los tests de concurrencia (single-flight) usan `CountDownLatch` y comprueban el número de llamadas en WireMock, sin `sleep`.
@@ -265,7 +268,7 @@ class CacheService(
 11. Toda respuesta lleva `X-Request-Id`; un valor válido recibido se devuelve igual; los logs JSON incluyen `requestId`; ninguna línea de log de los tests contiene la contraseña, el `passKey` ni el token.
 12. Cada error de la tabla de `ProblemDetailsHandler` devuelve su código HTTP y `application/problem+json` sin el `code` de la EMT; `503` por cupo o circuito abierto incluye `Retry-After`.
 13. Un preflight CORS desde un origen permitido recibe las cabeceras CORS; desde otro origen, no.
-14. `docker build` funciona; el contenedor arranca como usuario no root y `/health/live` responde 200.
+14. `docker build` funciona; un test con Testcontainers comprueba que el contenedor arranca como usuario no root y `/health/live` responde 200.
 15. `./gradlew smokeTest` pasa contra la EMT real con credenciales locales (una vez, manual, resultado anotado en el PR).
 
 ## Open Questions
@@ -277,3 +280,5 @@ class CacheService(
 - 2026-10-04: versión inicial.
 - 2026-10-04: resueltas dos preguntas. El cupo se reinicia a las 00:00 Europe/Madrid. Los códigos de la EMT (token inválido, cupo agotado) se fijan con respuestas reales capturadas en el smoke test y solo se usan internamente; la API responde con códigos HTTP estándar (tabla en `ProblemDetailsHandler`).
 - 2026-10-04: paquete base `io.github.jorgetroya80.madmobility` confirmado. Spec aprobada.
+- 2026-10-04: tests sin Docker salvo el de la imagen: `MockRestServiceServer` para la lógica del cliente y WireMock dentro del proceso para HTTP real (timeouts, reintento, circuit breaker, concurrencia); Testcontainers solo prueba la imagen Docker. Se descarta el módulo alpha de WireMock para Testcontainers.
+- 2026-10-04: versiones revisadas antes de implementar: Java 25 LTS (Java 24 sin soporte desde 2025-09-22), Spring Boot 4.1.1 (4.0 pierde soporte el 2026-12-31), Kotlin 2.3.21 (la que gestiona Boot 4.1.1; genera bytecode de Java 25), Gradle 9.3.1 (máximo probado por el plugin Kotlin 2.3.21 es 9.3.0, y Java 25 requiere 9.1.0+).

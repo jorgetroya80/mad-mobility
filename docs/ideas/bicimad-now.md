@@ -14,7 +14,7 @@ El valor de portfolio está en lo que no se ve: monolito modular con arquitectur
 
 ## Architecture (Backend)
 
-**Stack:** Kotlin + Spring Boot 4.0.5 (Java 24 Temurin) sobre JVM estándar (sin GraalVM native image), Spring Modulith, Resilience4j, Caffeine, springdoc-openapi.
+**Stack:** Kotlin 2.3 + Spring Boot 4.1.1 (Java 25 LTS Temurin) sobre JVM estándar (sin GraalVM native image), Spring Modulith, Resilience4j, Caffeine, springdoc-openapi.
 
 ```
 api/
