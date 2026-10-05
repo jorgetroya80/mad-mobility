@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.2.0...api-v0.3.0) (2026-10-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** `/v1/bicimad/stations/{id}` is replaced by `/v1/bicimad/stations/{number}`. The next api release (and the client package) will be 0.3.0.
+
+### Features
+
+* **api:** look up bicimad stations by number ([#39](https://github.com/jorgetroya80/mad-mobility/issues/39)) ([b530669](https://github.com/jorgetroya80/mad-mobility/commit/b5306694d9e75b35951585d911d3253c13435480))
+
 ## [0.2.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.1.0...api-v0.2.0) (2026-10-05)
 
 
