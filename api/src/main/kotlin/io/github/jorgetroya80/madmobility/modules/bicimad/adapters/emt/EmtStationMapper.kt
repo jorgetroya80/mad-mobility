@@ -5,8 +5,9 @@ import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Occupancy
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Station
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationStatus
 import org.slf4j.LoggerFactory
+import java.util.Locale
 
-/** Anticorruption layer: translates EMT stations to the domain, discarding deleted or broken ones. */
+/** Anticorruption layer: translates EMT stations to the domain, discarding deleted, broken or duplicate-number ones. */
 object EmtStationMapper {
     private val log = LoggerFactory.getLogger(EmtStationMapper::class.java)
 
@@ -30,8 +31,13 @@ object EmtStationMapper {
             LIGHT_UNKNOWN to Occupancy.UNKNOWN,
         )
 
-    fun toDomain(stations: List<EmtStation>): List<Station> =
-        stations.filterNot { it.virtualDelete == true }.mapNotNull { toStationOrNull(it) ?: discard(it) }
+    fun toDomain(stations: List<EmtStation>): List<Station> {
+        val seenNumbers = mutableSetOf<String>()
+        return stations
+            .filterNot { it.virtualDelete == true }
+            .mapNotNull { toStationOrNull(it) ?: discard(it) }
+            .filter { seenNumbers.add(it.number.lowercase(Locale.ROOT)) || discardDuplicate(it) }
+    }
 
     private fun toStationOrNull(emt: EmtStation): Station? {
         val location = emt.geometry?.coordinates?.let(::locationOrNull) ?: return null
@@ -62,6 +68,11 @@ object EmtStationMapper {
     private fun discard(emt: EmtStation): Station? {
         log.warn("Discarding EMT BiciMAD station id={}: missing required field or invalid coordinates", emt.id)
         return null
+    }
+
+    private fun discardDuplicate(station: Station): Boolean {
+        log.warn("Discarding EMT BiciMAD station id={}: duplicate number {}", station.id, station.number)
+        return false
     }
 
     private fun statusOf(emt: EmtStation): StationStatus =

@@ -25,7 +25,7 @@ T1 número único en el mapper
 
 ## Task List
 
-- [ ] **T1: Número de estación único** (S, ~20 min)
+- [x] **T1: Número de estación único** (S, ~20 min)
   - Descripción: `EmtStationMapper` descarta las estaciones cuyo `number` ya apareció (sin distinguir mayúsculas), con un `WARN` que incluye el `id` y el número, y conserva la primera.
   - Aceptación:
     - Dos estaciones con el número `25A` y `25a`: se conserva la primera y hay exactamente un `WARN`.
@@ -76,3 +76,4 @@ Unos 95 min en una sesión: T1 (~20 min), T2 (~45 min), T3 (~30 min).
 
 - 2026-10-05: versión inicial.
 - 2026-10-05: plan aprobado.
+- 2026-10-05: T1 implementada. La comprobación de duplicados se hace después de descartar las estaciones borradas e incompletas, así que estas no reservan su número. Compara sin distinguir mayúsculas (`Locale.ROOT`) y se queda con la primera estación.
