@@ -2,6 +2,7 @@ package io.github.jorgetroya80.madmobility.modules.bicimad.http
 
 import io.github.jorgetroya80.madmobility.modules.bicimad.application.FindNearbyStations
 import io.github.jorgetroya80.madmobility.modules.bicimad.application.GetStation
+import io.github.jorgetroya80.madmobility.shared.web.ProblemBody
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.headers.Header
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -26,29 +26,29 @@ import org.springframework.web.bind.annotation.RestController
 @ApiResponse(
     responseCode = "400",
     description = "Invalid parameter.",
-    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemDetail::class))],
+    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
 )
 @ApiResponse(
     responseCode = "429",
     description = "Too many requests from this client.",
     headers = [Header(name = HttpHeaders.RETRY_AFTER, description = "Seconds to wait.", schema = Schema(type = "integer"))],
-    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemDetail::class))],
+    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
 )
 @ApiResponse(
     responseCode = "502",
     description = "EMT Madrid returned an unexpected response and there is no cached copy.",
-    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemDetail::class))],
+    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
 )
 @ApiResponse(
     responseCode = "503",
     description = "EMT Madrid is unavailable or its daily quota is exhausted, and there is no cached copy.",
     headers = [Header(name = HttpHeaders.RETRY_AFTER, description = "Seconds to wait, when known.", schema = Schema(type = "integer"))],
-    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemDetail::class))],
+    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
 )
 @ApiResponse(
     responseCode = "504",
     description = "EMT Madrid did not answer in time and there is no cached copy.",
-    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemDetail::class))],
+    content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
 )
 class StationsController(
     private val findNearbyStations: FindNearbyStations,
@@ -71,7 +71,7 @@ class StationsController(
     @ApiResponse(
         responseCode = "404",
         description = "No station with this id.",
-        content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemDetail::class))],
+        content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
     )
     fun station(
         @Parameter(description = "Station id (`id` in the list).") @PathVariable id: Int,

@@ -26,6 +26,10 @@ springdoc:
   # Query objects such as StationsQuery are documented as one parameter per property
   default-flat-param-object: true
   default-produces-media-type: application/json
+  # Nullable response properties are omitted (@JsonInclude NON_NULL), never null: keep their plain type
+  model-converters:
+    kotlin-nullable-property-customizer:
+      enabled: false
   open-api:
     info:
       title: Mad Mobility API

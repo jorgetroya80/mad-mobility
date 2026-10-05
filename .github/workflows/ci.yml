@@ -24,7 +24,6 @@ jobs:
     outputs:
       api: ${{ steps.filter.outputs.api == 'true' && steps.exists.outputs.api == 'true' }}
       web: ${{ steps.filter.outputs.web == 'true' && steps.exists.outputs.web == 'true' }}
-      contract: ${{ steps.filter.outputs.contract == 'true' && steps.exists.outputs.contract == 'true' }}
       workflows: ${{ steps.filter.outputs.workflows }}
       tooling: ${{ steps.filter.outputs.tooling }}
     steps:
@@ -35,15 +34,13 @@ jobs:
           filters: |
             api:
               - 'api/**'
-              - 'openapi/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
             web:
               - 'web/**'
-              - 'openapi/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
-            contract:
-              - 'openapi/**'
             workflows:
               - '.github/workflows/**'
             tooling:
@@ -59,7 +56,6 @@ jobs:
           {
             echo "api=$([ -f api/build.gradle.kts ] && echo true || echo false)"
             echo "web=$([ -f web/tsconfig.json ] && echo true || echo false)"
-            echo "contract=$([ -f openapi/bicimad.json ] && echo true || echo false)"
           } >> "$GITHUB_OUTPUT"
 
   api:
@@ -78,6 +74,16 @@ jobs:
           java-version: '25'
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - run: ./gradlew build
+      - run: ./gradlew generateOpenApi
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: npx --yes @redocly/cli@2 lint build/openapi/bicimad.json
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @jorgetroya80/bicimad-client run generate
+      - run: pnpm --filter @jorgetroya80/bicimad-client run build
 
   web:
     name: Web (pnpm)
@@ -96,18 +102,6 @@ jobs:
       - run: pnpm --filter web run typecheck
       - run: pnpm --filter web run test
       - run: pnpm --filter web run build
-
-  contract:
-    name: OpenAPI lint
-    needs: changes
-    if: needs.changes.outputs.contract == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .nvmrc
-      - run: npx --yes @redocly/cli@2 lint openapi/bicimad.json
 
   tooling:
     name: Root tooling
@@ -139,7 +133,7 @@ jobs:
 
   ci-ok:
     name: ci-ok
-    needs: [changes, api, web, contract, tooling, workflows]
+    needs: [changes, api, web, tooling, workflows]
     if: always()
     runs-on: ubuntu-latest
     steps:

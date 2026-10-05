@@ -18,9 +18,10 @@ changed=$(git diff --name-only $range)
 
 check_web=false
 check_api=false
+check_client=false
 grep -q '^web/' <<<"$changed" && check_web=true
 grep -q '^api/' <<<"$changed" && check_api=true
-grep -q '^openapi/' <<<"$changed" && { check_web=true; check_api=true; }
+grep -q '^api/client/' <<<"$changed" && check_client=true
 
 if $check_web; then
   if [ -f web/tsconfig.json ]; then
@@ -40,6 +41,13 @@ if $check_api; then
   fi
 fi
 
+if $check_client; then
+  echo "pre-push: type-checking api/client against the generated OpenAPI"
+  ./api/gradlew -p api generateOpenApi
+  pnpm --filter @jorgetroya80/bicimad-client run generate
+  pnpm --filter @jorgetroya80/bicimad-client exec tsc --noEmit
+fi
+
 if ! $check_web && ! $check_api; then
-  echo "pre-push: no api/, web/ or openapi/ changes, nothing to type-check"
+  echo "pre-push: no api/ or web/ changes, nothing to type-check"
 fi

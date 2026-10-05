@@ -1,7 +1,8 @@
 pnpm-lock.yaml
 **/CHANGELOG.md
 .release-please-manifest.json
-openapi/*.json
+api/client/openapi.json
+api/client/src/schema.d.ts
 node_modules/
 build/
 dist/

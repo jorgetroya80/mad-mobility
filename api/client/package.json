@@ -1,0 +1,36 @@
+{
+  "name": "@jorgetroya80/bicimad-client",
+  "version": "0.0.0",
+  "description": "Typed client for the BiciMAD Now public API",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jorgetroya80/mad-mobility.git",
+    "directory": "api/client"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "files": [
+    "dist",
+    "openapi.json"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "cp ../build/openapi/bicimad.json openapi.json && openapi-typescript openapi.json --output src/schema.d.ts",
+    "build": "tsc && cp src/schema.d.ts dist/"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~5.9.3"
+  }
+}
