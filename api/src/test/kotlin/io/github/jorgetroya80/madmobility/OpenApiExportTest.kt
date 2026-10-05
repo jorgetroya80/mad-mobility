@@ -68,6 +68,24 @@ class OpenApiExportTest(
     }
 
     @Test
+    fun `documents the station detail by its number as a string with the number pattern`() {
+        val paths = apiDocument().path("paths")
+
+        assertThat(paths.propertyNames()).contains(STATION_PATH).doesNotContain(STATION_BY_ID_PATH)
+        val parameter =
+            paths
+                .path(STATION_PATH)
+                .path("get")
+                .path("parameters")
+                .single()
+        assertThat(parameter.path("name").asString()).isEqualTo("number")
+        assertThat(parameter.path("in").asString()).isEqualTo("path")
+        assertThat(parameter.at("/schema/type").asString()).isEqualTo("string")
+        assertThat(parameter.at("/schema/pattern").asString()).isEqualTo("^[0-9]+[A-Za-z]?$")
+        assertThat(parameter.at("/schema/example")).isEqualTo(StringNode.valueOf("538"))
+    }
+
+    @Test
     fun `documents every error with the problem body the API returns`() {
         val document = apiDocument()
 
@@ -100,6 +118,8 @@ class OpenApiExportTest(
         const val PUBLIC_API_PREFIX = "/v1/"
         const val OUTPUT_PROPERTY = "openapi.output"
         const val PROBLEM_SCHEMA = "#/components/schemas/Problem"
+        const val STATION_PATH = "/v1/bicimad/stations/{number}"
+        const val STATION_BY_ID_PATH = "/v1/bicimad/stations/{id}"
         val RESPONSE_SCHEMAS = listOf("StationsResponse", "StationDetailResponse", "StationResponse")
 
         // Kotlin nullable properties of the responses; every other property is always present

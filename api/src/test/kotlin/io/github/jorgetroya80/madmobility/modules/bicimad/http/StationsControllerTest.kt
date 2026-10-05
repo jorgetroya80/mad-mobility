@@ -250,10 +250,10 @@ class StationsControllerTest(
     }
 
     @Test
-    fun `station by id has the station, freshness in whole seconds and source, without distanceMeters`() {
-        every { provider.snapshot() } returns StationSnapshot(listOf(FUENCARRAL), UPDATED_AT, stale = true)
+    fun `station by number has the station, freshness in whole seconds and source, without distanceMeters`() {
+        every { provider.snapshot() } returns StationSnapshot(listOf(FUENCARRAL, HAENDEL), UPDATED_AT, stale = true)
 
-        val result = mvc.get().uri("$STATIONS/1409").exchange()
+        val result = mvc.get().uri("$STATIONS/538").exchange()
 
         assertThat(result).hasStatusOk().hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
         val body = json(result.response.contentAsString)
@@ -261,17 +261,28 @@ class StationsControllerTest(
         assertThat(body.path("updatedAt").asString()).isEqualTo("2026-10-05T10:15:00Z")
         assertThat(body.path("stale").asBoolean()).isTrue()
         assertThat(body.path("source").asString()).isEqualTo("EMT Madrid MobilityLabs")
-        assertThat(body.path("station")).isEqualTo(json(STATION_JSON))
+        assertThat(body.path("station")).isEqualTo(json(HAENDEL_JSON))
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["25A", "25a"])
+    fun `station number with a letter is found in any case`(number: String) {
+        given(station("25"), station("25A"), station("25B"))
+
+        val result = mvc.get().uri("$STATIONS/$number").exchange()
+
+        assertThat(result).hasStatusOk()
+        assertThat(json(result.response.contentAsString).at("/station/number").asString()).isEqualTo("25A")
     }
 
     @Test
-    fun `unknown station id is a 404 problem with the request id`() {
-        given(station("1"))
+    fun `unknown station number is a 404 problem with the request id`() {
+        given(FUENCARRAL.copy(id = 999))
 
         val result =
             mvc
                 .get()
-                .uri("$STATIONS/999999")
+                .uri("$STATIONS/999")
                 .header(RequestIdFilter.HEADER, "req-404")
                 .exchange()
 
@@ -279,12 +290,15 @@ class StationsControllerTest(
         assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-404")
     }
 
-    @Test
-    fun `non-numeric station id is a 400 problem with the request id`() {
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["abc", "5-A", "538AB", "A5", "5.json"])
+    fun `malformed station number is a 400 problem with the request id`(number: String) {
+        given(station("5"))
+
         val result =
             mvc
                 .get()
-                .uri("$STATIONS/abc")
+                .uri("$STATIONS/$number")
                 .header(RequestIdFilter.HEADER, "req-400")
                 .exchange()
 
@@ -346,10 +360,10 @@ class StationsControllerTest(
     private companion object {
         const val STATIONS = "/v1/bicimad/stations"
         val UPDATED_AT: Instant = Instant.parse("2026-10-05T10:15:00.123456Z")
-        val STATION_JSON =
+        val HAENDEL_JSON =
             """
-            {"id":1409,"number":"5","name":"Fuencarral","address":"Calle Fuencarral nº 106","lat":40.4285212,"lon":-3.7021354,
-             "status":"OPERATIONAL","bikes":2,"freeDocks":23,"totalDocks":27,"occupancy":"LOW"}
+            {"id":2131,"number":"538","name":"Haendel - Silvano","address":"Calle Fuencarral nº 106","lat":40.4285212,
+             "lon":-3.7021354,"status":"OPERATIONAL","bikes":2,"freeDocks":23,"totalDocks":27,"occupancy":"LOW"}
             """.trimIndent()
         const val SOL_LAT = 40.4168
         const val SOL_LON = -3.7038
@@ -372,5 +386,6 @@ class StationsControllerTest(
                 status = StationStatus.OPERATIONAL,
                 occupancy = Occupancy.LOW,
             )
+        val HAENDEL = FUENCARRAL.copy(id = 2131, number = "538", name = "Haendel - Silvano")
     }
 }

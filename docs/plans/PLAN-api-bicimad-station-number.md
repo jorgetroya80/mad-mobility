@@ -34,7 +34,7 @@ T1 número único en el mapper
   - Archivos: `adapters/emt/EmtStationMapper.kt`, `EmtStationMapperTest.kt`.
   - Dependencias: ninguna.
 
-- [ ] **T2: Detalle por número** (M, ~45 min)
+- [x] **T2: Detalle por número** (M, ~45 min)
   - Descripción: `GetStation` busca por número sin distinguir mayúsculas; `StationNotFound` recibe el número. El controlador expone `/{number}` como `String`, valida el patrón `^[0-9]+[A-Za-z]?$` (400 problem+json si no cumple) y documenta el parámetro en el OpenAPI (`string`, patrón, ejemplo `538`). Commit `feat(api)!` con `BREAKING CHANGE:` en el cuerpo.
   - Aceptación:
     - SC2 y SC3: `25a` → `25A`; `abc`, `5-A` y `538AB` → 400; `999` → 404; todos con `requestId`.
@@ -77,3 +77,4 @@ Unos 95 min en una sesión: T1 (~20 min), T2 (~45 min), T3 (~30 min).
 - 2026-10-05: versión inicial.
 - 2026-10-05: plan aprobado.
 - 2026-10-05: T1 implementada. La comprobación de duplicados se hace después de descartar las estaciones borradas e incompletas, así que estas no reservan su número. Compara sin distinguir mayúsculas (`Locale.ROOT`) y se queda con la primera estación.
+- 2026-10-05: T2 implementada. `GetStation` busca por número sin distinguir mayúsculas, y el controlador valida `^[0-9]+[A-Za-z]?$` con 400 problem+json. El ejemplo `538` va en el `schema` del parámetro, porque en `@Parameter` springdoc lo escribía como número. Los tests cubren `25A`/`25a`, y `5.json` da 400: Spring no quita extensiones de la ruta.

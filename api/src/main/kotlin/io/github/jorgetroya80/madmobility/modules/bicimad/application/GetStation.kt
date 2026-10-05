@@ -6,15 +6,17 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import java.time.Instant
+import java.util.Locale
 
-/** The station with the given id from the current snapshot; deleted stations are not in it, so they are not found. */
+/** The station with the given number (ignoring case) from the current snapshot; deleted stations are not in it, so they are not found. */
 @Service
 class GetStation(
     private val provider: StationProvider,
 ) {
-    operator fun invoke(id: Int): FoundStation {
+    operator fun invoke(number: String): FoundStation {
         val snapshot = provider.snapshot()
-        val station = snapshot.stations.find { it.id == id } ?: throw StationNotFound(id)
+        val key = number.lowercase(Locale.ROOT)
+        val station = snapshot.stations.find { it.number.lowercase(Locale.ROOT) == key } ?: throw StationNotFound(number)
         return FoundStation(station, snapshot.updatedAt, snapshot.stale)
     }
 }
@@ -27,5 +29,5 @@ data class FoundStation(
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 class StationNotFound(
-    id: Int,
-) : RuntimeException("BiciMAD station $id not found")
+    number: String,
+) : RuntimeException("BiciMAD station $number not found")

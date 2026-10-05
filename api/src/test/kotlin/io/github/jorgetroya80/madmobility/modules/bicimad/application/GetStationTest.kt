@@ -18,29 +18,38 @@ class GetStationTest {
     private val getStation = GetStation(provider)
 
     @Test
-    fun `returns the station with the given id`() {
-        given(station(id = 1), station(id = 2))
+    fun `returns the station with the given number`() {
+        given(station(id = 1, number = "5"), station(id = 2, number = "538"))
 
-        val result = getStation(2)
+        val result = getStation("538")
 
-        assertThat(result.station).isEqualTo(station(id = 2))
+        assertThat(result.station).isEqualTo(station(id = 2, number = "538"))
+    }
+
+    @Test
+    fun `number ignores case`() {
+        given(station(id = 1, number = "25B"), station(id = 2, number = "25A"))
+
+        val result = getStation("25a")
+
+        assertThat(result.station.number).isEqualTo("25A")
     }
 
     @Test
     fun `passes the snapshot freshness through`() {
-        given(station(id = 1), stale = true)
+        given(station(id = 1, number = "5"), stale = true)
 
-        val result = getStation(1)
+        val result = getStation("5")
 
         assertThat(result.updatedAt).isEqualTo(UPDATED_AT)
         assertThat(result.stale).isTrue()
     }
 
     @Test
-    fun `unknown id is not found`() {
-        given(station(id = 1))
+    fun `unknown number is not found`() {
+        given(station(id = 999, number = "5"))
 
-        assertThatThrownBy { getStation(99) }.isInstanceOf(StationNotFound::class.java).hasMessageContaining("99")
+        assertThatThrownBy { getStation("999") }.isInstanceOf(StationNotFound::class.java).hasMessageContaining("999")
     }
 
     private fun given(
@@ -50,19 +59,21 @@ class GetStationTest {
         every { provider.snapshot() } returns StationSnapshot(stations.toList(), UPDATED_AT, stale)
     }
 
-    private fun station(id: Int) =
-        Station(
-            id = id,
-            number = "$id",
-            name = "Station $id",
-            address = "Address",
-            location = GeoPoint(40.4168, -3.7038),
-            bikes = 1,
-            freeDocks = 1,
-            totalDocks = 2,
-            status = StationStatus.OPERATIONAL,
-            occupancy = Occupancy.LOW,
-        )
+    private fun station(
+        id: Int,
+        number: String,
+    ) = Station(
+        id = id,
+        number = number,
+        name = "Station $id",
+        address = "Address",
+        location = GeoPoint(40.4168, -3.7038),
+        bikes = 1,
+        freeDocks = 1,
+        totalDocks = 2,
+        status = StationStatus.OPERATIONAL,
+        occupancy = Occupancy.LOW,
+    )
 
     private companion object {
         val UPDATED_AT: Instant = Instant.parse("2026-10-05T10:15:00Z")
