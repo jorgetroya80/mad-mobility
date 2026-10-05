@@ -50,7 +50,7 @@ T10 smoke test + cierre (tras T9)
 
 ### Fase 1: Endpoints
 
-- [ ] **T1: Capa anticorrupción** (M, ~1 h)
+- [x] **T1: Capa anticorrupción** (M, ~1 h)
   - Descripción: `modules/bicimad/ModuleMetadata.kt` (`@ApplicationModule`), dominio (`Station`, `StationStatus`, `Occupancy`), `EmtStation` con el formato real y `EmtStationMapper` con la tabla de la spec: nombre sin prefijo, `[lon, lat]` → `lat`/`lon`, `activate`/`no_available` → `status`, `light` → `occupancy`, `virtualDelete` descartadas, valores desconocidos → `UNKNOWN` + `WARN`, estaciones incompletas descartadas + `WARN`.
   - Aceptación:
     - SC2 (parte de traducción): las 3 estaciones del fixture producen los valores esperados, incluidos `light = 3` → `UNKNOWN` y `no_available = 1` → `NO_SERVICE`.
@@ -195,3 +195,4 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 
 - 2026-10-05: versión inicial.
 - 2026-10-05: plan aprobado.
+- 2026-10-05: T1 implementada. El módulo se declara con `id = "bicimad"` y `allowedDependencies = ["shared"]` (`"shared :: *"` rechaza los subpaquetes `emt` y `web` aunque `shared` sea OPEN). `EmtStationMapper` es un `object` sin estado. Son obligatorios `id`, `number`, `name`, `address`, `dock_bikes`, `free_bases`, `total_bases` y dos coordenadas; si falta cualquiera, la estación se descarta con un solo `WARN`. Si faltan `activate` o `no_available`, la estación es `NO_SERVICE`; si falta `light`, la ocupación es `UNKNOWN`. El rango de las coordenadas lo valida `GeoPoint` en T3.

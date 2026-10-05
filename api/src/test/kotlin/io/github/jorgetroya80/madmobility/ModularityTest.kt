@@ -18,4 +18,11 @@ class ModularityTest {
 
         assertThat(shared.getDirectDependencies(modules).uniqueModules()).isEmpty()
     }
+
+    @Test
+    fun `bicimad only depends on shared`() {
+        val bicimad = modules.getModuleByName("bicimad").orElseThrow()
+
+        assertThat(bicimad.getDirectDependencies(modules).uniqueModules().map { it.identifier.toString() }).isSubsetOf("shared")
+    }
 }
