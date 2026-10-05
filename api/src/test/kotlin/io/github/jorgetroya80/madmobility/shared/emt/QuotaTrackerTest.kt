@@ -9,6 +9,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.concurrent.Executors
 
 class QuotaTrackerTest {
     private val madrid = ZoneId.of("Europe/Madrid")
@@ -106,5 +107,38 @@ class QuotaTrackerTest {
                 .gauge()
                 .value(),
         ).isEqualTo(18_000.0)
+    }
+
+    @Test
+    fun `module gauge counts repeated use and reads zero after midnight`() {
+        val tracker = tracker(QuotaProperties())
+        repeat(3) { tracker.tryAcquire("bicimad") }
+        val used = meterRegistry.find("emt.quota.used").tag("module", "bicimad").gauges()
+        assertThat(used).hasSize(1)
+        assertThat(used.single().value()).isEqualTo(3.0)
+
+        clock.advance(Duration.ofSeconds(2)) // 00:00:00
+
+        assertThat(used.single().value()).isZero()
+        assertThat(
+            meterRegistry
+                .get("emt.quota.used")
+                .tag("module", "all")
+                .gauge()
+                .value(),
+        ).isZero()
+    }
+
+    @Test
+    fun `concurrent acquires never exceed the limit`() {
+        val tracker = tracker(QuotaProperties(globalDailyLimit = 50))
+
+        val granted =
+            Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                (1..100).map { executor.submit<Boolean> { tracker.tryAcquire("bicimad") } }.map { it.get() }
+            }
+
+        assertThat(granted.count { it }).isEqualTo(50)
+        assertThat(tracker.usedTotal()).isEqualTo(50)
     }
 }

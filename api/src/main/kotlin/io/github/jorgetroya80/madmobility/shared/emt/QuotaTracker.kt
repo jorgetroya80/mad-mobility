@@ -7,8 +7,6 @@ import org.springframework.stereotype.Component
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -37,8 +35,8 @@ class QuotaTracker(
 ) {
     private val lock = ReentrantLock()
     private var day: LocalDate = today()
-    private val global = AtomicInteger()
-    private val perModule = ConcurrentHashMap<String, AtomicInteger>()
+    private var global = 0
+    private val perModule = HashMap<String, Int>()
     private val reportedByEmt = AtomicLong(-1)
 
     init {
@@ -55,12 +53,12 @@ class QuotaTracker(
     fun tryAcquire(module: String): Boolean =
         lock.withLock {
             rollOverIfNewDay()
-            val moduleCount = counter(module)
-            if (global.get() >= properties.globalDailyLimit || moduleCount.get() >= limit(module)) {
+            val moduleCount = moduleCount(module)
+            if (global >= properties.globalDailyLimit || moduleCount >= limit(module)) {
                 false
             } else {
-                global.incrementAndGet()
-                moduleCount.incrementAndGet()
+                global++
+                perModule[module] = moduleCount + 1
                 true
             }
         }
@@ -70,9 +68,17 @@ class QuotaTracker(
         if (!tryAcquire(module)) throw EmtQuotaExceeded(module, resetsAt())
     }
 
-    fun used(module: String): Int = lock.withLock { rollOverIfNewDay().let { perModule[module]?.get() ?: 0 } }
+    fun used(module: String): Int =
+        lock.withLock {
+            rollOverIfNewDay()
+            perModule[module] ?: 0
+        }
 
-    fun usedTotal(): Int = lock.withLock { rollOverIfNewDay().let { global.get() } }
+    fun usedTotal(): Int =
+        lock.withLock {
+            rollOverIfNewDay()
+            global
+        }
 
     fun limit(module: String): Int = properties.modules[module]?.dailyLimit ?: properties.globalDailyLimit
 
@@ -86,20 +92,23 @@ class QuotaTracker(
     /** Records the usage the EMT reports on login, to compare it with the local counters. */
     fun reportEmtUsage(current: Long) = reportedByEmt.set(current)
 
-    private fun counter(module: String): AtomicInteger =
-        perModule.computeIfAbsent(module) { name ->
-            AtomicInteger().also {
-                Gauge.builder("emt.quota.used", this) { it.used(name).toDouble() }.tag("module", name).register(meterRegistry)
-                Gauge.builder("emt.quota.limit") { limit(name).toDouble() }.tag("module", name).register(meterRegistry)
-            }
+    private fun moduleCount(module: String): Int =
+        perModule.getOrPut(module) {
+            registerGauges(module)
+            0
         }
+
+    private fun registerGauges(module: String) {
+        Gauge.builder("emt.quota.used", this) { it.used(module).toDouble() }.tag("module", module).register(meterRegistry)
+        Gauge.builder("emt.quota.limit") { limit(module).toDouble() }.tag("module", module).register(meterRegistry)
+    }
 
     private fun rollOverIfNewDay() {
         val today = today()
         if (today != day) {
             day = today
-            global.set(0)
-            perModule.values.forEach { it.set(0) }
+            global = 0
+            perModule.replaceAll { _, _ -> 0 }
         }
     }
 
