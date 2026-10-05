@@ -8,7 +8,10 @@ import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Occupancy
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Station
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationStatus
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
+
+private fun Instant.toWholeSeconds(): Instant = truncatedTo(ChronoUnit.SECONDS)
 
 data class StationsResponse(
     val stations: List<StationResponse>,
@@ -19,7 +22,8 @@ data class StationsResponse(
     companion object {
         const val SOURCE = "EMT Madrid MobilityLabs"
 
-        fun from(result: NearbyStations) = StationsResponse(result.stations.map(StationResponse::from), result.updatedAt, result.stale)
+        fun from(result: NearbyStations) =
+            StationsResponse(result.stations.map(StationResponse::from), result.updatedAt.toWholeSeconds(), result.stale)
     }
 }
 
@@ -31,7 +35,8 @@ data class StationDetailResponse(
     val source: String = StationsResponse.SOURCE,
 ) {
     companion object {
-        fun from(result: FoundStation) = StationDetailResponse(StationResponse.from(result.station), result.updatedAt, result.stale)
+        fun from(result: FoundStation) =
+            StationDetailResponse(StationResponse.from(result.station), result.updatedAt.toWholeSeconds(), result.stale)
     }
 }
 

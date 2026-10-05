@@ -21,6 +21,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.assertj.MockMvcTester
 import tools.jackson.databind.JsonNode
@@ -82,7 +83,7 @@ class StationsControllerTest(
     }
 
     @Test
-    fun `carries freshness and source with an ISO 8601 UTC timestamp`() {
+    fun `carries freshness and source with an ISO 8601 UTC timestamp in whole seconds`() {
         every { provider.snapshot() } returns StationSnapshot(listOf(FUENCARRAL), UPDATED_AT, stale = true)
 
         val body =
@@ -243,7 +244,7 @@ class StationsControllerTest(
     }
 
     @Test
-    fun `station by id has the station, freshness and source, without distanceMeters`() {
+    fun `station by id has the station, freshness in whole seconds and source, without distanceMeters`() {
         every { provider.snapshot() } returns StationSnapshot(listOf(FUENCARRAL), UPDATED_AT, stale = true)
 
         val result = mvc.get().uri("$STATIONS/1409").exchange()
@@ -285,6 +286,30 @@ class StationsControllerTest(
         assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-400")
     }
 
+    @Test
+    fun `revalidating with the received ETag is a 304 with no-cache`() {
+        given(station("1"))
+        val etag =
+            checkNotNull(
+                mvc
+                    .get()
+                    .uri(STATIONS)
+                    .exchange()
+                    .response
+                    .getHeader(HttpHeaders.ETAG),
+            )
+
+        val result =
+            mvc
+                .get()
+                .uri(STATIONS)
+                .header(HttpHeaders.IF_NONE_MATCH, etag)
+                .exchange()
+
+        assertThat(result).hasStatus(304).hasHeader(HttpHeaders.CACHE_CONTROL, "no-cache")
+        assertThat(result.response.contentAsByteArray).isEmpty()
+    }
+
     private fun given(vararg stations: Station) {
         every { provider.snapshot() } returns StationSnapshot(stations.toList(), UPDATED_AT, stale = false)
     }
@@ -314,7 +339,7 @@ class StationsControllerTest(
 
     private companion object {
         const val STATIONS = "/v1/bicimad/stations"
-        val UPDATED_AT: Instant = Instant.parse("2026-10-05T10:15:00Z")
+        val UPDATED_AT: Instant = Instant.parse("2026-10-05T10:15:00.123456Z")
         val STATION_JSON =
             """
             {"id":1409,"number":"5","name":"Fuencarral","address":"Calle Fuencarral nº 106","lat":40.4285212,"lon":-3.7021354,

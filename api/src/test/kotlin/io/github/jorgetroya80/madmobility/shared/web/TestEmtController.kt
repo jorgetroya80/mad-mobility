@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import java.time.Clock
 import java.time.Duration
 
@@ -41,6 +42,7 @@ class TestEmtController(
             "quota" -> EmtQuotaExceeded("bicimad", clock.instant().plus(Duration.ofSeconds(90)))
             "auth" -> EmtAuthFailed("EMT rejected the configured credentials (code=89, description=Invalid user)")
             "not-found" -> TestNotFound()
+            "bad-request" -> ResponseStatusException(HttpStatus.BAD_REQUEST, "bad query")
             "protocol" -> EmtProtocolError("42", "Unexpected EMT response (code=42, description=secret internal)")
             else -> IllegalStateException("boom: internal detail")
         }
