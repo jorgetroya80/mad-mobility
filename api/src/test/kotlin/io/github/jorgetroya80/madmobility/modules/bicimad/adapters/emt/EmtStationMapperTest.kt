@@ -126,6 +126,41 @@ class EmtStationMapperTest {
     }
 
     @Test
+    fun `station repeating a number in another case is discarded with a warning`(output: CapturedOutput) {
+        val stations =
+            EmtStationMapper.toDomain(
+                listOf(emtStation(id = 1, number = "25A"), emtStation(id = 2, number = "25a")),
+            )
+
+        assertThat(stations.map { it.id to it.number }).containsExactly(1 to "25A")
+        assertThat(output.out.lines().filter { "WARN" in it }).singleElement().satisfies({
+            assertThat(it).contains("id=2", "25a")
+        })
+    }
+
+    @Test
+    fun `deleted or incomplete station does not reserve its number`(output: CapturedOutput) {
+        val stations =
+            EmtStationMapper.toDomain(
+                listOf(
+                    emtStation(id = 1, number = "7", virtualDelete = true),
+                    emtStation(id = 2, number = "7", dockBikes = null),
+                    emtStation(id = 3, number = "7"),
+                ),
+            )
+
+        assertThat(stations.map { it.id }).containsExactly(3)
+        assertThat(output.out.lines().filter { "WARN" in it && "duplicate" in it }).isEmpty()
+    }
+
+    @Test
+    fun `fixture stations are translated without warnings`(output: CapturedOutput) {
+        EmtStationMapper.toDomain(fixtureStations())
+
+        assertThat(output.out.lines().filter { "WARN" in it }).isEmpty()
+    }
+
+    @Test
     fun `name without the number prefix is kept as is`() {
         val station = EmtStationMapper.toDomain(listOf(emtStation(number = "5", name = "Fuencarral"))).single()
 

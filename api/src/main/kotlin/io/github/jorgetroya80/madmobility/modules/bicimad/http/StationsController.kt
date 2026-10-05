@@ -12,11 +12,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirements
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/v1/bicimad/stations")
@@ -65,15 +67,29 @@ class StationsController(
     @ApiResponse(responseCode = "200", description = "The stations.")
     fun stations(query: StationsQuery): StationsResponse = StationsResponse.from(findNearbyStations(query.area(), query.need()))
 
-    @GetMapping("/{id}")
+    @GetMapping("/{number}")
     @Operation(operationId = "getStation", summary = "Get a station")
     @ApiResponse(responseCode = "200", description = "The station.")
     @ApiResponse(
         responseCode = "404",
-        description = "No station with this id.",
+        description = "No station with this number.",
         content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
     )
     fun station(
-        @Parameter(description = "Station id (`id` in the list).") @PathVariable id: Int,
-    ): StationDetailResponse = StationDetailResponse.from(getStation(id))
+        @Parameter(
+            description = "Station number, as shown on the station (`number` in the list); case-insensitive.",
+            schema = Schema(type = "string", pattern = STATION_NUMBER_PATTERN, example = "538"),
+        )
+        @PathVariable number: String,
+    ): StationDetailResponse {
+        if (!number.matches(STATION_NUMBER)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "number must match $STATION_NUMBER_PATTERN")
+        }
+        return StationDetailResponse.from(getStation(number))
+    }
+
+    private companion object {
+        const val STATION_NUMBER_PATTERN = "^[0-9]+[A-Za-z]?$"
+        val STATION_NUMBER = Regex(STATION_NUMBER_PATTERN)
+    }
 }
