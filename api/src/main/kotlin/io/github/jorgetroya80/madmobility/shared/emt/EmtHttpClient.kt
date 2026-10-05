@@ -33,47 +33,50 @@ class EmtHttpClient(
         module: String,
         path: String,
         elementType: Class<T>,
-    ): List<T> =
-        try {
-            emtCircuitBreaker.executeSupplier { emtRetry.executeSupplier { getOnce(module, path, elementType) } }
+    ): List<T> {
+        val request = EmtRequest(module, path)
+        return try {
+            emtCircuitBreaker.executeSupplier { emtRetry.executeSupplier { getOnce(request, elementType) } }
         } catch (e: CallNotPermittedException) {
-            throw EmtUnavailable(EmtUnavailable.Reason.CIRCUIT_OPEN, "EMT circuit breaker is open, not calling $module $path", e)
+            throw EmtUnavailable(EmtUnavailable.Reason.CIRCUIT_OPEN, "EMT circuit breaker is open, not calling $request", e)
         }
+    }
 
     private fun <T : Any> getOnce(
-        module: String,
-        path: String,
+        request: EmtRequest,
         elementType: Class<T>,
     ): List<T> {
         val responseType = responseType(elementType)
         val token = emtAuth.accessToken()
-        val (body, status) = call(module, path, token, responseType)
-        if (body?.code != EmtResponse.CODE_TOKEN_INVALID) return dataOrThrow(module, path, body, status)
+        val (body, status) = call(request, token, responseType)
+        if (body?.code != EmtResponse.CODE_TOKEN_INVALID) return dataOrThrow(request, body, status)
 
-        log.info("EMT rejected the access token for {} {}, logging in again", module, path)
+        log.info("EMT rejected the access token for {}, logging in again", request)
         emtAuth.invalidate(token)
-        val (retryBody, retryStatus) = call(module, path, emtAuth.accessToken(), responseType)
+        val (retryBody, retryStatus) = call(request, emtAuth.accessToken(), responseType)
         if (retryBody?.code == EmtResponse.CODE_TOKEN_INVALID) {
-            throw EmtProtocolError(retryBody.code, "EMT rejected a freshly issued access token ($module $path)")
+            throw EmtProtocolError(retryBody.code, "EMT rejected a freshly issued access token ($request)")
         }
-        return dataOrThrow(module, path, retryBody, retryStatus)
+        return dataOrThrow(request, retryBody, retryStatus)
     }
 
     private fun <T> call(
-        module: String,
-        path: String,
+        request: EmtRequest,
         token: String,
         responseType: ParameterizedTypeReference<EmtResponse<T>>,
     ): Pair<EmtResponse<T>?, HttpStatusCode> {
-        quotaTracker.acquire(module)
+        quotaTracker.acquire(request.module)
         return try {
             emtRestClient
                 .get()
-                .uri(path)
+                .uri(request.path)
                 .header(ACCESS_TOKEN_HEADER, token)
                 .exchange { _, res ->
                     if (res.statusCode.is5xxServerError) {
-                        throw EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT answered HTTP ${res.statusCode.value()} for $path")
+                        throw EmtUnavailable(
+                            EmtUnavailable.Reason.SERVER_ERROR,
+                            "EMT answered HTTP ${res.statusCode.value()} for ${request.path}",
+                        )
                     }
                     // EMT errors (e.g. invalid token on HTTP 401) carry the JSON envelope; other bodies are not readable
                     EmtErrors.readBody { res.bodyTo(responseType) } to res.statusCode
@@ -84,20 +87,26 @@ class EmtHttpClient(
     }
 
     private fun <T> dataOrThrow(
-        module: String,
-        path: String,
+        request: EmtRequest,
         body: EmtResponse<T>?,
         status: HttpStatusCode,
     ): List<T> {
         if (body != null && body.isSuccess) return body.data.orEmpty()
         throw EmtProtocolError(
             body?.code,
-            "Unexpected EMT response for $module $path (HTTP ${status.value()}, code=${body?.code}, description=${body?.description})",
+            "Unexpected EMT response for $request (HTTP ${status.value()}, code=${body?.code}, description=${body?.description})",
         )
     }
 
     private fun <T> responseType(elementType: Class<T>): ParameterizedTypeReference<EmtResponse<T>> =
         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(EmtResponse::class.java, elementType).type)
+
+    private data class EmtRequest(
+        val module: String,
+        val path: String,
+    ) {
+        override fun toString() = "$module $path"
+    }
 
     private companion object {
         val log = LoggerFactory.getLogger(EmtHttpClient::class.java)
