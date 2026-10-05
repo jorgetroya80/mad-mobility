@@ -88,8 +88,11 @@ class ProblemDetailsHandler(
             is EmtUnavailable -> {
                 when (e.reason) {
                     EmtUnavailable.Reason.TIMEOUT -> HttpStatus.GATEWAY_TIMEOUT to EMT_TIMEOUT
-                    EmtUnavailable.Reason.SERVER_ERROR -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
-                    EmtUnavailable.Reason.CIRCUIT_OPEN -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
+
+                    EmtUnavailable.Reason.SERVER_ERROR,
+                    EmtUnavailable.Reason.CONNECTION_FAILED,
+                    EmtUnavailable.Reason.CIRCUIT_OPEN,
+                    -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
                 }
             }
 

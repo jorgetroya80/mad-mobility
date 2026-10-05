@@ -149,7 +149,7 @@ class EmtAuthTest : EmtWireMockTest() {
 
         assertThatThrownBy { auth().accessToken() }
             .isInstanceOfSatisfying(EmtUnavailable::class.java) {
-                assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.SERVER_ERROR)
+                assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.CONNECTION_FAILED)
             }
     }
 
@@ -159,7 +159,7 @@ class EmtAuthTest : EmtWireMockTest() {
 
         assertThatThrownBy { auth().accessToken() }
             .isInstanceOfSatisfying(EmtUnavailable::class.java) {
-                assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.SERVER_ERROR)
+                assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.CONNECTION_FAILED)
             }
     }
 
