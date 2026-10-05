@@ -40,41 +40,10 @@ class ProblemDetailsHandler(
         request: HttpServletRequest,
     ): ResponseEntity<ProblemDetail> {
         log.warn("EMT failure on {}: {}", request.requestURI, e.message)
-        val (status, problem) =
-            when (e) {
-                is EmtUnavailable -> {
-                    when (e.reason) {
-                        EmtUnavailable.Reason.TIMEOUT -> HttpStatus.GATEWAY_TIMEOUT to EMT_TIMEOUT
-                        EmtUnavailable.Reason.SERVER_ERROR -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
-                        EmtUnavailable.Reason.CIRCUIT_OPEN -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
-                    }
-                }
-
-                is EmtQuotaExceeded -> {
-                    HttpStatus.SERVICE_UNAVAILABLE to QUOTA_EXHAUSTED
-                }
-
-                is EmtAuthFailed, is EmtProtocolError -> {
-                    HttpStatus.BAD_GATEWAY to EMT_BAD_RESPONSE
-                }
-            }
-        val retryAfter =
-            when {
-                e is EmtQuotaExceeded -> {
-                    Duration.between(clock.instant(), e.resetsAt)
-                }
-
-                e is EmtUnavailable && e.reason == EmtUnavailable.Reason.CIRCUIT_OPEN -> {
-                    Duration.ofMillis(emtCircuitBreaker.circuitBreakerConfig.waitIntervalFunctionInOpenState.apply(1))
-                }
-
-                else -> {
-                    null
-                }
-            }
+        val (status, problem) = statusAndProblem(e)
         return ResponseEntity
             .status(status)
-            .apply { retryAfter?.let { header(HttpHeaders.RETRY_AFTER, it.toSecondsCeil().toString()) } }
+            .apply { retryAfter(e)?.let { header(HttpHeaders.RETRY_AFTER, it.toSecondsCeil().toString()) } }
             .body(problem(status, problem, request))
     }
 
@@ -112,6 +81,40 @@ class ProblemDetailsHandler(
         // The body may only be built inside super (from the ErrorResponse), so decorate the result
         super.handleExceptionInternal(ex, body, headers, statusCode, request)?.also {
             (it.body as? ProblemDetail)?.setProperty(REQUEST_ID, MDC.get(RequestIdFilter.MDC_KEY))
+        }
+
+    private fun statusAndProblem(e: EmtException): Pair<HttpStatus, Problem> =
+        when (e) {
+            is EmtUnavailable -> {
+                when (e.reason) {
+                    EmtUnavailable.Reason.TIMEOUT -> HttpStatus.GATEWAY_TIMEOUT to EMT_TIMEOUT
+                    EmtUnavailable.Reason.SERVER_ERROR -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
+                    EmtUnavailable.Reason.CIRCUIT_OPEN -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
+                }
+            }
+
+            is EmtQuotaExceeded -> {
+                HttpStatus.SERVICE_UNAVAILABLE to QUOTA_EXHAUSTED
+            }
+
+            is EmtAuthFailed, is EmtProtocolError -> {
+                HttpStatus.BAD_GATEWAY to EMT_BAD_RESPONSE
+            }
+        }
+
+    private fun retryAfter(e: EmtException): Duration? =
+        when {
+            e is EmtQuotaExceeded -> {
+                Duration.between(clock.instant(), e.resetsAt)
+            }
+
+            e is EmtUnavailable && e.reason == EmtUnavailable.Reason.CIRCUIT_OPEN -> {
+                Duration.ofMillis(emtCircuitBreaker.circuitBreakerConfig.waitIntervalFunctionInOpenState.apply(1))
+            }
+
+            else -> {
+                null
+            }
         }
 
     private fun problem(
