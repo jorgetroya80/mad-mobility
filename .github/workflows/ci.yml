@@ -131,9 +131,41 @@ jobs:
         with:
           args: -color
 
+  pr-title:
+    name: pr-title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Keep in sync with commitlint.config.mjs
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            test
+            docs
+            build
+            ci
+            chore
+            revert
+          scopes: |
+            api
+            web
+            ci
+            deps
+            docs
+            repo
+          requireScope: false
+
   ci-ok:
     name: ci-ok
-    needs: [changes, api, web, tooling, workflows]
+    needs: [changes, api, web, tooling, workflows, pr-title]
     if: always()
     runs-on: ubuntu-latest
     steps:

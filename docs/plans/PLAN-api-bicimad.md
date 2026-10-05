@@ -167,7 +167,7 @@ T10 smoke test + cierre (tras T9)
 
 #### Checkpoint final
 
-- [x] SC1-SC11 y SC13 de la spec comprobados. SC12 (publicación) se confirma en la primera release de `api` tras el merge.
+- [x] SC1-SC13 de la spec comprobados. SC12 se confirmó en la release `api-v0.2.0`.
 - [x] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
 
 ## Riesgos y mitigaciones
@@ -195,7 +195,8 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 
 - T1-T10 en la rama `feat/api-bicimad`, un commit por tarea, en el PR #36 (squash merge).
 - SC1-SC11 y SC13 verificados: `./gradlew build` (182 tests, JaCoCo ≥ 80 % en `shared` y en `modules/bicimad`, este al 99 %), `generateOpenApi` + `redocly lint` sin avisos, `dockerImageTest`, `bootRun` contra la EMT real y `./gradlew smokeTest` (678 estaciones válidas, 0 descartadas).
-- Pendiente: SC12 (primera publicación real del cliente) y el README y la licencia del paquete del cliente (decisión del usuario).
+- SC12 confirmado en la release `api-v0.2.0` (2026-10-05): `publish-api-client` publicó `@jorgetroya80/bicimad-client@0.2.0` en GitHub Packages sin configuración manual, junto con la imagen 0.2.0.
+- Pendiente: el README y la licencia del paquete del cliente (decisión del usuario).
 
 ## Changelog
 
@@ -212,3 +213,4 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 - 2026-10-05: T8 implementada, con la opción A aprobada por el usuario para el esquema. `distanceMeters` deja de ser `integer | null` al desactivar `springdoc.model-converters.kotlin-nullable-property-customizer` (solo configuración). Los errores apuntan a un esquema `Problem` documental (`shared/web/ProblemBody.kt`) con `requestId` al primer nivel y sin `properties`; `OpenApiExportTest` comprueba los dos arreglos. Las versiones del cliente son openapi-fetch 0.17.0, openapi-typescript 7.13.0 y typescript 5.9.3 (`~5.9.3`). `build` copia `schema.d.ts` a `dist/`, porque `tsc` no emite los `.d.ts` de entrada. Los archivos generados del cliente van en `.prettierignore`. El hook pre-push compila el cliente si cambia `api/client/` y ya no mira `openapi/`. CI: el job `API (Gradle)` genera, pasa el lint y compila el cliente; también se ejecuta si cambian `pnpm-lock.yaml` o `pnpm-workspace.yaml`. Se eliminan el job `contract` y los filtros `openapi/**`. Prueba del guardián de tipos: al renombrar el esquema `Problem` en el API fallan el test de exportación y `tsc` del cliente.
 - 2026-10-05: T9 implementada. `publish-api-client` en `release.yml`, independiente de `publish-api`, con `packages: write` a nivel de job. La versión del API llega por `env` (sin `${{ }}` dentro de `run`) y se fija con `pnpm version --no-git-tag-version --no-git-checks`, porque pnpm 12 comprueba git incluso sin tag. No usa `cache: pnpm`, para que un job que publica no restaure cachés ajenas. `pnpm publish --dry-run` en local da `@jorgetroya80/bicimad-client@0.2.0` con 5 archivos. Pendiente para la primera release real: confirmar SC12 y, si GitHub Packages lo pide, enlazar el paquete al repo. El README y la licencia del paquete se dejan para más adelante (decisión del usuario).
 - 2026-10-05: T10 implementada. `EmtSmokeTest` traduce las estaciones reales con `EmtStationMapper`: 678 válidas y 0 descartadas, con una sola llamada a estaciones por ejecución. Plan implementado.
+- 2026-10-05: SC12 confirmado en la release `api-v0.2.0` (workflow Release 37338194784): `@jorgetroya80/bicimad-client@0.2.0` publicado. No hizo falta enlazar el paquete al repo a mano.
