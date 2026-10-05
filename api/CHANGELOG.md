@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.1.0...api-v0.2.0) (2026-10-05)
+
+
+### Features
+
+* **api:** add bicimad module ([#36](https://github.com/jorgetroya80/mad-mobility/issues/36)) ([a740ef0](https://github.com/jorgetroya80/mad-mobility/commit/a740ef02ec915a0d0a0a811f21ef6b5f86128f32))
+
 ## 0.1.0 (2026-10-04)
 
 
