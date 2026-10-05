@@ -11,8 +11,6 @@ import org.springframework.web.client.RestClient
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionException
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -40,28 +38,15 @@ class EmtAuth(
     )
 
     private val token = AtomicReference<Token?>()
-    private val inFlight = AtomicReference<CompletableFuture<Token>?>()
+    private val logins = SingleFlight<Token>()
 
     @Volatile private var authFailure: AuthFailure? = null
 
     fun accessToken(): String {
         validToken()?.let { return it.value }
         authFailure?.takeIf { clock.instant().isBefore(it.until) }?.let { throw it.error }
-        val mine = CompletableFuture<Token>()
-        val running = inFlight.compareAndExchange(null, mine)
-        if (running != null) return join(running).value
-        try {
-            // Another caller may have logged in between our check and taking ownership
-            val fresh = validToken() ?: login().also { token.set(it) }.also { authFailure = null }
-            mine.complete(fresh)
-            return fresh.value
-        } catch (e: Throwable) {
-            if (e is EmtAuthFailed) authFailure = AuthFailure(e, clock.instant().plus(AUTH_FAILURE_BACKOFF))
-            mine.completeExceptionally(e)
-            throw e
-        } finally {
-            inFlight.compareAndSet(mine, null)
-        }
+        // Another caller may have logged in between our check and taking ownership
+        return logins.run(LOGIN_KEY) { validToken() ?: renewToken() }.value
     }
 
     /** When the cached token will be renewed, or null if there is no valid token (for health details). */
@@ -74,11 +59,12 @@ class EmtAuth(
 
     private fun validToken(): Token? = token.get()?.takeIf { clock.instant().isBefore(it.renewAt) }
 
-    private fun join(running: CompletableFuture<Token>): Token =
+    private fun renewToken(): Token =
         try {
-            running.join()
-        } catch (e: CompletionException) {
-            throw e.cause ?: e
+            login().also { token.set(it) }.also { authFailure = null }
+        } catch (e: EmtAuthFailed) {
+            authFailure = AuthFailure(e, clock.instant().plus(AUTH_FAILURE_BACKOFF))
+            throw e
         }
 
     private fun login(): Token {
@@ -165,6 +151,7 @@ class EmtAuth(
 
         /** Logins consume EMT quota too, accounted under this module name. */
         const val QUOTA_MODULE = "auth"
+        private const val LOGIN_KEY = "token"
         private const val LOGIN_PATH = "/v2/mobilitylabs/user/login/"
         private val RENEW_MARGIN: Duration = Duration.ofMinutes(5)
         private val AUTH_FAILURE_BACKOFF: Duration = Duration.ofMinutes(1)
