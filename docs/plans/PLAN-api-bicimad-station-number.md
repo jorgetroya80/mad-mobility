@@ -1,7 +1,7 @@
 # Plan: api-bicimad — detalle por número de estación
 
 - Created: 2026-10-05
-- Status: **approved** (2026-10-05)
+- Status: **implemented** (2026-10-05)
 - Spec: [SPEC-api-bicimad-station-number.md](../specs/SPEC-api-bicimad-station-number.md)
 
 ## Overview
@@ -44,7 +44,7 @@ T1 número único en el mapper
   - Archivos: `application/GetStation.kt`, `http/StationsController.kt`, `GetStationTest.kt`, `StationsControllerTest.kt`, `OpenApiExportTest.kt`.
   - Dependencias: T1.
 
-- [ ] **T3: Documentación, uso real y cierre** (S, ~30 min, **requiere `api/.env.local`**)
+- [x] **T3: Documentación, uso real y cierre** (S, ~30 min, **requiere `api/.env.local`**)
   - Descripción: `SPEC-api-bicimad.md` (contrato del detalle, SC5 y enlace a esta spec) y la línea del identificador en `docs/ideas/bicimad-now.md`. Comprobación con `bootRun` contra la EMT real de `/stations/538`, y `./gradlew smokeTest`. Investigar por qué una consulta del 2026-10-05 devolvió 557 estaciones en vez de 678 (cambio real de la EMT o estaciones descartadas) y anotar el resultado. Spec y plan a **implemented**.
   - Aceptación:
     - SC1: `/stations/538` → 200 "Haendel - Silvano" con la EMT real.
@@ -56,7 +56,7 @@ T1 número único en el mapper
 
 ### Checkpoint final
 
-- [ ] SC1-SC5 comprobados; CI en verde en el PR.
+- [x] SC1-SC5 comprobados; CI en verde en el PR.
 - [ ] Revisión humana del título del PR (`feat(api)!: …`) antes del squash merge.
 - [ ] SC6 se confirma en la release 0.3.0.
 
@@ -78,3 +78,4 @@ Unos 95 min en una sesión: T1 (~20 min), T2 (~45 min), T3 (~30 min).
 - 2026-10-05: plan aprobado.
 - 2026-10-05: T1 implementada. La comprobación de duplicados se hace después de descartar las estaciones borradas e incompletas, así que estas no reservan su número. Compara sin distinguir mayúsculas (`Locale.ROOT`) y se queda con la primera estación.
 - 2026-10-05: T2 implementada. `GetStation` busca por número sin distinguir mayúsculas, y el controlador valida `^[0-9]+[A-Za-z]?$` con 400 problem+json. El ejemplo `538` va en el `schema` del parámetro, porque en `@Parameter` springdoc lo escribía como número. Los tests cubren `25A`/`25a`, y `5.json` da 400: Spring no quita extensiones de la ruta.
+- 2026-10-05: T3 implementada. Con la EMT real, `/stations/538` devuelve 200 "Haendel - Silvano", `/stations/25a` devuelve la `25A`, `abc` da 400 y `2131` (el id antiguo) da 404. `smokeTest` pasa con 678 estaciones válidas y 0 descartadas. Las 557 estaciones no se reproducen: tanto la lista como el smoke test devuelven 678. Aquella consulta venía de la app de IntelliJ, con otro directorio de trabajo y otras credenciales; la causa más probable es una respuesta parcial de la EMT. Queda abierta para más adelante una pregunta: ¿rechazar, como `EmtProtocolError`, una respuesta con muchas menos estaciones que la última buena? Así se seguiría sirviendo la caché anterior. Plan implementado.

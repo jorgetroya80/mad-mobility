@@ -11,7 +11,7 @@ Módulo `api-bicimad` del [Capability Map](CAPABILITY-MAP.md). Añade el módulo
 Que cualquier cliente sepa en una sola petición qué estaciones de BiciMAD cercanas tienen bicis o anclajes libres, con datos normalizados (sin rarezas de la EMT) y servidos desde caché.
 
 - Como usuario del frontend, quiero las estaciones cerca de un punto, ordenadas por lo que necesito (bici o anclaje) y por distancia, para decidir en menos de 5 s a cuál ir.
-- Como usuario del frontend, quiero el detalle de una estación por su `id`, para abrir un enlace compartido (`?station=1409`).
+- Como usuario del frontend, quiero el detalle de una estación por su número (el que veo en la estación), para abrir un enlace compartido (`?station=538`).
 - Como usuario, quiero saber si los datos son antiguos (`stale`) y de cuándo son (`updatedAt`), porque la EMT puede no responder.
 - Como desarrollador del frontend, quiero instalar un paquete npm versionado con el cliente tipado, para que un cambio del contrato rompa mi build y no la app en producción.
 - Como mantenedor, quiero limitar las peticiones por IP sin dependencias nuevas, para que un cliente abusivo no agote el cupo ni la CPU.
@@ -85,7 +85,9 @@ Todas las respuestas de éxito incluyen `updatedAt` (ISO 8601, UTC), `stale` y `
 }
 ```
 
-### `GET /v1/bicimad/stations/{id}`
+### `GET /v1/bicimad/stations/{number}`
+
+Por número de estación, sin distinguir mayúsculas (`538`, `25A`); cambiado desde `{id}` en la 0.3.0, ver [SPEC-api-bicimad-station-number.md](SPEC-api-bicimad-station-number.md).
 
 `{ "station": { ... }, "updatedAt", "stale", "source" }`, mismo objeto `station` sin `distanceMeters`.
 
@@ -111,11 +113,11 @@ Todas las respuestas de éxito incluyen `updatedAt` (ISO 8601, UTC), `stale` y `
 
 Formato RFC 9457 de api-core. Propios del módulo:
 
-| Caso                                                                                                                    | HTTP                  |
-| ----------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `near` mal formado o fuera de rango, `radius` fuera de rango, `radius` sin `near`, `need` desconocido, `id` no numérico | `400`                 |
-| `id` inexistente (o con `virtualDelete`)                                                                                | `404`                 |
-| Rate limit superado                                                                                                     | `429` + `Retry-After` |
+| Caso                                                                                                                                              | HTTP                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `near` mal formado o fuera de rango, `radius` fuera de rango, `radius` sin `near`, `need` desconocido, `number` que no cumple `^[0-9]+[A-Za-z]?$` | `400`                 |
+| `number` inexistente (o con `virtualDelete`)                                                                                                      | `404`                 |
+| Rate limit superado                                                                                                                               | `429` + `Retry-After` |
 
 Los errores de la EMT sin caché siguen la tabla de `ProblemDetailsHandler`.
 
@@ -157,7 +159,7 @@ cd api
 ./gradlew bootRun
 
 curl -s 'localhost:8080/v1/bicimad/stations?near=40.4168,-3.7038&radius=500&need=docks'
-curl -s localhost:8080/v1/bicimad/stations/1409
+curl -s localhost:8080/v1/bicimad/stations/538
 curl -s -o /dev/null -w '%{http_code}\n' -H 'If-None-Match: <etag>' localhost:8080/v1/bicimad/stations   # 304
 curl -s localhost:8080/v3/api-docs        # solo con bootRun; Swagger UI en /swagger-ui.html
 
@@ -261,7 +263,7 @@ data class GeoPoint(val lat: Double, val lon: Double) {
 2. Con el fixture, `GET /v1/bicimad/stations` devuelve las estaciones válidas con los campos y valores de la tabla de traducción (incluido `light = 3` → `UNKNOWN` y `no_available = 1` → `NO_SERVICE`).
 3. `near=40.4168,-3.7038&radius=500` devuelve solo estaciones a ≤ 500 m, ordenadas por `distanceMeters` ascendente.
 4. Con `need=docks`, las estaciones `OPERATIONAL` con `freeDocks > 0` van antes que las demás; ninguna estación desaparece respecto a la misma consulta sin `need`.
-5. `radius=6000`, `radius` sin `near`, `near=abc`, `need=car` e `id=abc` devuelven `400` problem+json; `id` inexistente devuelve `404`.
+5. `radius=6000`, `radius` sin `near`, `near=abc`, `need=car` y el número `abc` devuelven `400` problem+json; un número inexistente devuelve `404`.
 6. Dos peticiones en 60 s producen una sola llamada a la EMT en WireMock; con la EMT caída y caché previa, la respuesta lleva `stale: true` y el `updatedAt` original.
 7. Una segunda petición con el `ETag` recibido devuelve `304` sin cuerpo; todas las respuestas `200` de `/v1/**` llevan `Cache-Control: no-cache`.
 8. La petición 61 de una IP en el mismo segundo devuelve `429` con `Retry-After`; otra IP sigue recibiendo `200`; `/health/live` nunca devuelve `429`.
@@ -283,3 +285,4 @@ data class GeoPoint(val lat: Double, val lon: Double) {
 - 2026-10-05: ajustes durante la implementación (detalle en el changelog del plan). `name` y `address` llegan sin espacios en los extremos. Las estaciones con coordenadas inválidas se descartan. `updatedAt` va en segundos enteros. `Cache-Control: no-cache` también se aplica a los errores de `/v1/**`. El 429 usa el tipo `urn:mad-mobility:problem:rate-limited`. Los errores se documentan con un esquema `Problem` (`requestId` al primer nivel) y `distanceMeters` como entero opcional. `/info` muestra la versión del build. El README y la licencia del cliente quedan pendientes.
 - 2026-10-05: spec implementada (T1-T10, PR #36). SC12 se confirma en la primera release de `api`.
 - 2026-10-05: SC12 confirmado en la release `api-v0.2.0`: `@jorgetroya80/bicimad-client@0.2.0` publicado en GitHub Packages.
+- 2026-10-05: el detalle pasa de `/stations/{id}` a `/stations/{number}` (cambio incompatible, 0.3.0). Motivo y análisis en [SPEC-api-bicimad-station-number.md](SPEC-api-bicimad-station-number.md).

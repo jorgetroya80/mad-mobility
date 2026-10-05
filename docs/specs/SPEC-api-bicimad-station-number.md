@@ -1,7 +1,7 @@
 # Spec: api-bicimad — detalle por número de estación
 
 - Created: 2026-10-05
-- Status: **approved** (2026-10-05)
+- Status: **implemented** (2026-10-05)
 - Plan: [PLAN-api-bicimad-station-number.md](../plans/PLAN-api-bicimad-station-number.md)
 
 Cambio del módulo `api-bicimad` del [Capability Map](CAPABILITY-MAP.md). Corrige el contrato definido en [SPEC-api-bicimad.md](SPEC-api-bicimad.md): el detalle de una estación se pide por su **número** (la etiqueta visible en la estación), no por el `id` interno de la EMT.
@@ -102,3 +102,4 @@ Las de [SPEC-api-bicimad.md](SPEC-api-bicimad.md#boundaries). Además:
 
 - 2026-10-05: versión inicial, tras detectar que `/stations/538` devolvía 404.
 - 2026-10-05: spec aprobada.
+- 2026-10-05: spec implementada. SC1-SC5 comprobados; SC6 se confirma en la release 0.3.0.

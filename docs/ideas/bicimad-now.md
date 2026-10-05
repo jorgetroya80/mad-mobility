@@ -46,8 +46,8 @@ api/
 **Contrato:**
 
 - `GET /v1/bicimad/stations?near=lat,lon&radius=500&need=bikes|docks`
-- `GET /v1/bicimad/stations/{id}`
-- JSON plano con `lat`/`lon` (no GeoJSON). Identificador: `id` de la EMT; `number` se muestra como etiqueta.
+- `GET /v1/bicimad/stations/{number}`
+- JSON plano con `lat`/`lon` (no GeoJSON). Identificador público: `number` de la estación (el que ve el usuario, p. ej. `538` o `25A`); el `id` de la EMT solo se incluye como dato. Corregido el 2026-10-05, ver [SPEC-api-bicimad-station-number.md](../specs/SPEC-api-bicimad-station-number.md).
 - Errores con RFC 9457 (`application/problem+json`).
 - Cada respuesta incluye `updatedAt`, `stale` y `source: "EMT Madrid MobilityLabs"` (exigido por la licencia).
 
@@ -84,7 +84,7 @@ web/src/
 - Organización por feature, espejo de los módulos del backend. `features/bicimad` no importa de `features/bus`; lo compartido va en `shared/`.
 - Estado de servidor solo en TanStack Query: `refetchInterval` de 60 s (igual que el TTL del backend), sin consultas con la pestaña oculta, refetch al recuperar el foco, reintentos automáticos.
 - Sin store global: estado de UI local, favoritos en `localStorage`.
-- Estado en la URL (`?station=1409&need=docks`): enlaces compartibles y botón atrás funcional.
+- Estado en la URL (`?station=538&need=docks`): enlaces compartibles y botón atrás funcional.
 - Tipos generados desde el OpenAPI: si el contrato cambia, el build de TypeScript falla.
 
 **Responsive (mobile-first):**
