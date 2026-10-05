@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * SC14: builds api/Dockerfile with the Docker CLI (BuildKit, needed for cache mounts) and checks the
- * container serves /health/live as a non-root user. Needs Docker; run with ./gradlew dockerImageTest.
+ * container serves /health/live as a non-root user. SC10 (api-bicimad): no springdoc routes in the image. Needs Docker; run with ./gradlew dockerImageTest.
  */
 @Tag("docker")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,13 +51,16 @@ class DockerImageTest {
     @Test
     fun `serves liveness and readiness`() {
         listOf("/health/live", "/health/ready").forEach { path ->
-            val response =
-                HttpClient.newHttpClient().send(
-                    HttpRequest.newBuilder(URI.create("http://${container.host}:${container.getMappedPort(8080)}$path")).build(),
-                    HttpResponse.BodyHandlers.ofString(),
-                )
+            val response = get(path)
             assertThat(response.statusCode()).isEqualTo(200)
             assertThat(response.body()).contains("\"UP\"")
+        }
+    }
+
+    @Test
+    fun `does not serve the OpenAPI document or Swagger UI`() {
+        listOf("/v3/api-docs", "/swagger-ui.html").forEach { path ->
+            assertThat(get(path).statusCode()).`as`(path).isEqualTo(404)
         }
     }
 
@@ -66,6 +69,12 @@ class DockerImageTest {
         assertThat(container.execInContainer("id", "-u").stdout.trim()).isEqualTo("10001")
         assertThat(container.execInContainer("touch", "/app/app.jar").exitCode).isNotZero()
     }
+
+    private fun get(path: String): HttpResponse<String> =
+        HttpClient.newHttpClient().send(
+            HttpRequest.newBuilder(URI.create("http://${container.host}:${container.getMappedPort(8080)}$path")).build(),
+            HttpResponse.BodyHandlers.ofString(),
+        )
 
     private companion object {
         const val IMAGE = "mad-mobility-api:test"

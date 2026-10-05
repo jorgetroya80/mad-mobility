@@ -7,12 +7,14 @@ import io.github.jorgetroya80.madmobility.modules.bicimad.application.NearbyStat
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Occupancy
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Station
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationStatus
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
 private fun Instant.toWholeSeconds(): Instant = truncatedTo(ChronoUnit.SECONDS)
 
+@Schema(requiredProperties = ["stations", "updatedAt", "stale", "source"])
 data class StationsResponse(
     val stations: List<StationResponse>,
     val updatedAt: Instant,
@@ -28,6 +30,7 @@ data class StationsResponse(
 }
 
 /** A single station: same object as in the list, never with `distanceMeters`. */
+@Schema(requiredProperties = ["station", "updatedAt", "stale", "source"])
 data class StationDetailResponse(
     val station: StationResponse,
     val updatedAt: Instant,
@@ -40,6 +43,9 @@ data class StationDetailResponse(
     }
 }
 
+@Schema(
+    requiredProperties = ["id", "number", "name", "address", "lat", "lon", "status", "bikes", "freeDocks", "totalDocks", "occupancy"],
+)
 data class StationResponse(
     val id: Int,
     val number: String,
@@ -52,7 +58,9 @@ data class StationResponse(
     val freeDocks: Int,
     val totalDocks: Int,
     val occupancy: Occupancy,
-    @JsonInclude(JsonInclude.Include.NON_NULL) val distanceMeters: Int?,
+    @Schema(description = "Meters from `near`; only when `near` is given.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    val distanceMeters: Int?,
 ) {
     companion object {
         fun from(nearby: NearbyStation) = from(nearby.station, nearby.distanceMeters?.roundToInt())

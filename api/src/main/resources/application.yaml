@@ -2,8 +2,11 @@ spring:
   application:
     name: mad-mobility-api
   config:
-    # Local secrets (KEY=VALUE), ignored by git; see .env.example
-    import: optional:file:.env.local[.properties]
+    import:
+      # Local secrets (KEY=VALUE), ignored by git; see .env.example
+      - optional:file:.env.local[.properties]
+      # build.version and friends, written by Gradle (bootBuildInfo)
+      - optional:classpath:META-INF/build-info.properties
   threads:
     virtual:
       enabled: true
@@ -15,6 +18,25 @@ logging:
   structured:
     format:
       console: ecs
+
+# OpenAPI document and Swagger UI: springdoc is only on the classpath in bootRun and tests, so
+# production ignores this block (/v3/api-docs and /swagger-ui.html answer 404 there)
+springdoc:
+  paths-to-match: /v1/**
+  # Query objects such as StationsQuery are documented as one parameter per property
+  default-flat-param-object: true
+  default-produces-media-type: application/json
+  open-api:
+    info:
+      title: Mad Mobility API
+      version: ${build.version}
+      description: Real-time BiciMAD stations in Madrid, nearest first and ranked by what you need (a bike or a free dock).
+      license:
+        name: 'Datos: EMT Madrid MobilityLabs'
+        url: https://mobilitylabs.emtmadrid.es/
+    # Same origin as the document: the API runs wherever it is deployed
+    servers:
+      - url: /
 
 mad-mobility:
   emt:
