@@ -34,6 +34,10 @@ mad-mobility:
       # One stations call per cache TTL (60 s) is ~1,440/day; twice that as margin
       bicimad:
         daily-limit: 3000
+  rate-limit:
+    # Per-IP token bucket on /v1/**: bursts of up to capacity, then refill-per-second requests/s
+    capacity: 60
+    refill-per-second: 1
   cors:
     # Comma-separated list, e.g. https://bicimad.example.com
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}

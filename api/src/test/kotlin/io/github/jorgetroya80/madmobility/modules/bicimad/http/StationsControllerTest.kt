@@ -10,6 +10,8 @@ import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationStatus
 import io.github.jorgetroya80.madmobility.modules.bicimad.ports.StationProvider
 import io.github.jorgetroya80.madmobility.shared.web.RequestIdFilter
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -46,6 +48,10 @@ class StationsControllerTest(
 
         @Bean
         fun emtCircuitBreaker(): CircuitBreaker = CircuitBreaker.ofDefaults("test")
+
+        // Needed by the shared RateLimitFilter, which the web slice loads
+        @Bean
+        fun meterRegistry(): MeterRegistry = SimpleMeterRegistry()
     }
 
     @Test

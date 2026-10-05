@@ -3,7 +3,6 @@ package io.github.jorgetroya80.madmobility.shared.web
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 import org.springframework.http.CacheControl
 import org.springframework.web.filter.ShallowEtagHeaderFilter
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
@@ -20,8 +19,8 @@ class HttpCacheConfig : WebMvcConfigurer {
     fun etagFilter(): FilterRegistrationBean<ShallowEtagHeaderFilter> =
         FilterRegistrationBean(ShallowEtagHeaderFilter().apply { isWriteWeakETag = true }).apply {
             addUrlPatterns(API_URL_PATTERN)
-            // After RequestIdFilter, so a 304 still carries X-Request-Id
-            order = Ordered.HIGHEST_PRECEDENCE + 1
+            // After RequestIdFilter, so a 304 still carries X-Request-Id, and after RateLimitFilter, so a 429 skips it
+            order = RateLimitFilter.ORDER + 1
         }
 
     override fun addInterceptors(registry: InterceptorRegistry) {
