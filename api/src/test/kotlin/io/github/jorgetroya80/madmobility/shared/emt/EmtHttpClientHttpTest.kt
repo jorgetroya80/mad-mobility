@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
@@ -82,6 +83,17 @@ class EmtHttpClientHttpTest : EmtWireMockTest() {
         assertThatThrownBy { client().get("bicimad", STATIONS, Map::class.java) }
             .isInstanceOfSatisfying(EmtUnavailable::class.java) {
                 assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.SERVER_ERROR)
+            }
+    }
+
+    @Test
+    fun `dropped connection throws EmtUnavailable with CONNECTION_FAILED`() {
+        stubLogin()
+        wireMock.stubFor(get(urlPathEqualTo(STATIONS)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
+
+        assertThatThrownBy { client().get("bicimad", STATIONS, Map::class.java) }
+            .isInstanceOfSatisfying(EmtUnavailable::class.java) {
+                assertThat(it.reason).isEqualTo(EmtUnavailable.Reason.CONNECTION_FAILED)
             }
     }
 

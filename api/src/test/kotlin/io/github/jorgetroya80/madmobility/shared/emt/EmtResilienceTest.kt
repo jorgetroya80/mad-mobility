@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
@@ -77,6 +78,22 @@ class EmtResilienceTest : EmtWireMockTest() {
                 .willSetStateTo("recovered"),
         )
         wireMock.stubFor(get(urlPathEqualTo(STATIONS)).inScenario("flaky").whenScenarioStateIs("recovered").willReturn(ok()))
+
+        assertThat(client().get("bicimad", STATIONS, Map::class.java)).hasSize(3)
+        assertThat(stationCalls()).isEqualTo(2)
+    }
+
+    @Test
+    fun `a dropped connection followed by a 200 succeeds after one retry`() {
+        stubLogin()
+        wireMock.stubFor(
+            get(urlPathEqualTo(STATIONS))
+                .inScenario("dropped")
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER))
+                .willSetStateTo("recovered"),
+        )
+        wireMock.stubFor(get(urlPathEqualTo(STATIONS)).inScenario("dropped").whenScenarioStateIs("recovered").willReturn(ok()))
 
         assertThat(client().get("bicimad", STATIONS, Map::class.java)).hasSize(3)
         assertThat(stationCalls()).isEqualTo(2)

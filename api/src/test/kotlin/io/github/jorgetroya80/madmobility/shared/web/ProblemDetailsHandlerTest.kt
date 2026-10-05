@@ -52,7 +52,8 @@ class ProblemDetailsHandlerTest(
         if (retryAfter.isEmpty()) {
             assertThat(result.response.getHeader(HttpHeaders.RETRY_AFTER)).isNull()
         } else {
-            assertThat(result.response.getHeader(HttpHeaders.RETRY_AFTER)?.toLong()).isBetween(retryAfter.toLong() - 1, retryAfter.toLong())
+            // Exact: the remaining time is a little under the value, so only rounding up gives it back
+            assertThat(result.response.getHeader(HttpHeaders.RETRY_AFTER)).isEqualTo(retryAfter)
         }
     }
 
