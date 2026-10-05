@@ -282,3 +282,4 @@ data class GeoPoint(val lat: Double, val lon: Double) {
 - 2026-10-05: spec aprobada.
 - 2026-10-05: ajustes durante la implementación (detalle en el changelog del plan). `name` y `address` llegan sin espacios en los extremos. Las estaciones con coordenadas inválidas se descartan. `updatedAt` va en segundos enteros. `Cache-Control: no-cache` también se aplica a los errores de `/v1/**`. El 429 usa el tipo `urn:mad-mobility:problem:rate-limited`. Los errores se documentan con un esquema `Problem` (`requestId` al primer nivel) y `distanceMeters` como entero opcional. `/info` muestra la versión del build. El README y la licencia del cliente quedan pendientes.
 - 2026-10-05: spec implementada (T1-T10, PR #36). SC12 se confirma en la primera release de `api`.
+- 2026-10-05: SC12 confirmado en la release `api-v0.2.0`: `@jorgetroya80/bicimad-client@0.2.0` publicado en GitHub Packages.
