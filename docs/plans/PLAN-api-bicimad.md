@@ -60,7 +60,7 @@ T10 smoke test + cierre (tras T9)
   - Archivos: `ModuleMetadata.kt`, `domain/Station.kt`, `adapters/emt/EmtStation.kt`, `adapters/emt/EmtStationMapper.kt`, `EmtStationMapperTest.kt`.
   - Dependencias: ninguna.
 
-- [ ] **T2: `GET /v1/bicimad/stations` sin filtros** (M, ~1 h)
+- [x] **T2: `GET /v1/bicimad/stations` sin filtros** (M, ~1 h)
   - Descripción: puerto `StationProvider` y `StationSnapshot`; `EmtStationProvider` (`EmtHttpClient` + `CacheService`, módulo `bicimad`, clave `stations`; 0 estaciones válidas → `EmtProtocolError`); cupo `bicimad` a 3000 en `application.yaml`; `StationsController` y DTOs con `updatedAt`, `stale`, `source`; orden por `number` (numérico y después alfabético). JaCoCo ≥ 80 % también en `modules/bicimad`.
   - Aceptación:
     - SC2 completo: el JSON tiene los campos de la spec y ningún campo de la EMT.
@@ -197,3 +197,4 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 - 2026-10-05: plan aprobado.
 - 2026-10-05: T1 implementada. El módulo se declara con `id = "bicimad"` y `allowedDependencies = ["shared"]` (`"shared :: *"` rechaza los subpaquetes `emt` y `web` aunque `shared` sea OPEN). `EmtStationMapper` es un `object` sin estado. Son obligatorios `id`, `number`, `name`, `address`, `dock_bikes`, `free_bases`, `total_bases` y dos coordenadas; si falta cualquiera, la estación se descarta con un solo `WARN`. Si faltan `activate` o `no_available`, la estación es `NO_SERVICE`; si falta `light`, la ocupación es `UNKNOWN`. El rango de las coordenadas lo valida `GeoPoint` en T3.
 - 2026-10-05: un solo PR para todo el módulo en lugar de uno por tarea, con un commit por tarea en la rama `feat/api-bicimad`.
+- 2026-10-05: T2 implementada. El orden por número es `Station.BY_NUMBER` (dominio, reutilizable en T3) y lo aplica el caso de uso `ListStations`. Los tests HTTP simulan `StationProvider` con un bean de MockK en una `@TestConfiguration`, sin `@MockkBean`, porque SpringMockK no está en el catálogo. JaCoCo para `modules/bicimad` va en su propia tarea `bicimadCoverageVerification`, con el 99 % de líneas. Con `bootRun` contra la EMT real salen 678 estaciones (676 `OPERATIONAL`, 2 `NO_SERVICE`) sin ningún `WARN`. Pendiente: `updatedAt` conserva los microsegundos y Jackson 3 ordena las propiedades alfabéticamente; el contenido coincide con la spec.

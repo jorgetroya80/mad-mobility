@@ -111,15 +111,21 @@ tasks.jacocoTestReport {
     dependsOn(tasks.test)
 }
 
-// Coverage gate for the shared infrastructure (spec: at least 80 % of lines in `shared`)
-tasks.jacocoTestCoverageVerification {
+// Coverage gates (spec: at least 80 % of lines in `shared` and in each domain module)
+fun JacocoCoverageVerification.requireLineCoverage(packagePath: String) {
     dependsOn(tasks.test)
+    executionData(tasks.test.get())
+    sourceDirectories.setFrom(
+        sourceSets.main
+            .get()
+            .allSource.srcDirs,
+    )
     classDirectories.setFrom(
         sourceSets.main
             .get()
             .output.classesDirs
             .asFileTree
-            .matching { include("io/github/jorgetroya80/madmobility/shared/**") },
+            .matching { include("io/github/jorgetroya80/madmobility/$packagePath/**") },
     )
     violationRules {
         rule {
@@ -131,8 +137,18 @@ tasks.jacocoTestCoverageVerification {
     }
 }
 
+tasks.jacocoTestCoverageVerification {
+    requireLineCoverage("shared")
+}
+
+val bicimadCoverageVerification by tasks.registering(JacocoCoverageVerification::class) {
+    description = "Checks line coverage of modules/bicimad."
+    group = "verification"
+    requireLineCoverage("modules/bicimad")
+}
+
 tasks.check {
-    dependsOn(tasks.jacocoTestCoverageVerification)
+    dependsOn(tasks.jacocoTestCoverageVerification, bicimadCoverageVerification)
 }
 
 spotless {

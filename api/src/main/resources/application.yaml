@@ -30,6 +30,10 @@ mad-mobility:
   quota:
     # EMT allows 20,000 calls/day; keep a margin. Per-module caps: quota.modules.<module>.daily-limit
     global-daily-limit: 18000
+    modules:
+      # One stations call per cache TTL (60 s) is ~1,440/day; twice that as margin
+      bicimad:
+        daily-limit: 3000
   cors:
     # Comma-separated list, e.g. https://bicimad.example.com
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
