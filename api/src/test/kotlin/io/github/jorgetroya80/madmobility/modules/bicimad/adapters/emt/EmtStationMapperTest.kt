@@ -38,7 +38,7 @@ class EmtStationMapperTest {
                 id = 1493,
                 number = "90",
                 name = "Metro Velázquez",
-                address = "Calle Goya, 20 ",
+                address = "Calle Goya, 20",
                 location = GeoPoint(40.4251493, -3.6838415999999996),
                 bikes = 0,
                 freeDocks = 0,
@@ -132,6 +132,18 @@ class EmtStationMapperTest {
         assertThat(station.name).isEqualTo("Fuencarral")
     }
 
+    @Test
+    fun `name and address are trimmed after removing the number prefix`() {
+        val station =
+            EmtStationMapper
+                .toDomain(
+                    listOf(emtStation(number = "5", name = "5 -  Plaza del Carmen ", address = " Plaza del Carmen 1 ")),
+                ).single()
+
+        assertThat(station.name).isEqualTo("Plaza del Carmen")
+        assertThat(station.address).isEqualTo("Plaza del Carmen 1")
+    }
+
     private fun fixtureStations(): List<EmtStation> {
         val json = javaClass.getResourceAsStream("/emt/bicimad-stations.json")
         return jacksonObjectMapper().readValue<EmtResponse<EmtStation>>(json).data.orEmpty()
@@ -141,6 +153,7 @@ class EmtStationMapperTest {
         id: Int? = 1,
         number: String? = "1",
         name: String? = "1 - Puerta del Sol",
+        address: String? = "Puerta del Sol 1",
         activate: Int? = 1,
         light: Int? = 0,
         virtualDelete: Boolean? = false,
@@ -150,7 +163,7 @@ class EmtStationMapperTest {
         id = id,
         number = number,
         name = name,
-        address = "Puerta del Sol 1",
+        address = address,
         geometry = geometry,
         dockBikes = dockBikes,
         freeBases = 10,

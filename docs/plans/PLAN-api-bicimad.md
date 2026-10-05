@@ -81,7 +81,7 @@ T10 smoke test + cierre (tras T9)
   - Archivos: `domain/GeoPoint.kt`, `application/FindNearbyStations.kt`, `http/StationsQuery.kt`, `http/StationsController.kt`, `FindNearbyStationsTest.kt`, `StationsControllerTest.kt`.
   - Dependencias: T2.
 
-- [ ] **T4: `GET /v1/bicimad/stations/{id}`** (S, ~30 min)
+- [x] **T4: `GET /v1/bicimad/stations/{id}`** (S, ~30 min)
   - Descripción: `GetStation` sobre el mismo snapshot; `StationNotFound` con `@ResponseStatus(NOT_FOUND)` (el `ProblemDetailsHandler` actual ya respeta el código); `id` no numérico → `400`.
   - Aceptación:
     - SC5 completo: `id=abc` → `400`; `id` inexistente o con `virtualDelete` → `404` problem+json.
@@ -199,3 +199,4 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 - 2026-10-05: un solo PR para todo el módulo en lugar de uno por tarea, con un commit por tarea en la rama `feat/api-bicimad`.
 - 2026-10-05: T2 implementada. El orden por número es `Station.BY_NUMBER` (dominio, reutilizable en T3) y lo aplica el caso de uso `ListStations`. Los tests HTTP simulan `StationProvider` con un bean de MockK en una `@TestConfiguration`, sin `@MockkBean`, porque SpringMockK no está en el catálogo. JaCoCo para `modules/bicimad` va en su propia tarea `bicimadCoverageVerification`, con el 99 % de líneas. Con `bootRun` contra la EMT real salen 678 estaciones (676 `OPERATIONAL`, 2 `NO_SERVICE`) sin ningún `WARN`. Pendiente: `updatedAt` conserva los microsegundos y Jackson 3 ordena las propiedades alfabéticamente; el contenido coincide con la spec.
 - 2026-10-05: T3 implementada. `FindNearbyStations` sustituye a `ListStations`. `Station` guarda un `GeoPoint` ya validado: el mapper descarta con un `WARN` las estaciones con coordenadas fuera de rango, NaN o infinitas, para que una estación mala no provoque un 500. Los 400 usan `ResponseStatusException`, que ya gestiona `ProblemDetailsHandler`. `need` solo se acepta en minúsculas y `near` es estricto (`lat,lon`, sin espacios). El radio se compara con la distancia sin redondear; la distancia se redondea solo en la respuesta. Si dos estaciones están a la misma distancia, conservan el orden de entrada. Corregida la referencia Sol–Cibeles: son ≈ 950 m, no 1,1 km.
+- 2026-10-05: T4 implementada. `GetStation` devuelve `FoundStation`; `StationNotFound` va con `@ResponseStatus(NOT_FOUND)` en `application` y el 404 usa el cuerpo genérico del handler, sin el id. Un `id` no numérico o mayor que `Int` da 400 por el type mismatch de Spring. Además, aprobado por el usuario: el mapper recorta los espacios de `name` y `address`, porque la EMT envía `"Plaza del Carmen "`.

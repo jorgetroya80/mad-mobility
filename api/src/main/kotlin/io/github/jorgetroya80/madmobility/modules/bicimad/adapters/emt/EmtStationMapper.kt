@@ -39,8 +39,8 @@ object EmtStationMapper {
         return Station(
             id = emt.id ?: return null,
             number = number,
-            name = emt.name?.removePrefix("$number$NAME_SEPARATOR") ?: return null,
-            address = emt.address ?: return null,
+            name = emt.name?.removePrefix("$number$NAME_SEPARATOR")?.trim() ?: return null,
+            address = emt.address?.trim() ?: return null,
             location = location,
             bikes = emt.dockBikes ?: return null,
             freeDocks = emt.freeBases ?: return null,

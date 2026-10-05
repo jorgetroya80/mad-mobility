@@ -1,6 +1,7 @@
 package io.github.jorgetroya80.madmobility.modules.bicimad.http
 
 import io.github.jorgetroya80.madmobility.modules.bicimad.application.FindNearbyStations
+import io.github.jorgetroya80.madmobility.modules.bicimad.application.GetStation
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.GeoPoint
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Occupancy
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Station
@@ -28,7 +29,7 @@ import java.time.Clock
 import java.time.Instant
 
 @WebMvcTest(StationsController::class)
-@Import(FindNearbyStations::class, StationsControllerTest.Config::class)
+@Import(FindNearbyStations::class, GetStation::class, StationsControllerTest.Config::class)
 class StationsControllerTest(
     @Autowired private val mvc: MockMvcTester,
     @Autowired private val provider: StationProvider,
@@ -241,6 +242,49 @@ class StationsControllerTest(
         assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-400")
     }
 
+    @Test
+    fun `station by id has the station, freshness and source, without distanceMeters`() {
+        every { provider.snapshot() } returns StationSnapshot(listOf(FUENCARRAL), UPDATED_AT, stale = true)
+
+        val result = mvc.get().uri("$STATIONS/1409").exchange()
+
+        assertThat(result).hasStatusOk().hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+        val body = json(result.response.contentAsString)
+        assertThat(body.propertyNames()).containsExactlyInAnyOrder("station", "updatedAt", "stale", "source")
+        assertThat(body.path("updatedAt").asString()).isEqualTo("2026-10-05T10:15:00Z")
+        assertThat(body.path("stale").asBoolean()).isTrue()
+        assertThat(body.path("source").asString()).isEqualTo("EMT Madrid MobilityLabs")
+        assertThat(body.path("station")).isEqualTo(json(STATION_JSON))
+    }
+
+    @Test
+    fun `unknown station id is a 404 problem with the request id`() {
+        given(station("1"))
+
+        val result =
+            mvc
+                .get()
+                .uri("$STATIONS/999999")
+                .header(RequestIdFilter.HEADER, "req-404")
+                .exchange()
+
+        assertThat(result).hasStatus(404).hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-404")
+    }
+
+    @Test
+    fun `non-numeric station id is a 400 problem with the request id`() {
+        val result =
+            mvc
+                .get()
+                .uri("$STATIONS/abc")
+                .header(RequestIdFilter.HEADER, "req-400")
+                .exchange()
+
+        assertThat(result).hasStatus(400).hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-400")
+    }
+
     private fun given(vararg stations: Station) {
         every { provider.snapshot() } returns StationSnapshot(stations.toList(), UPDATED_AT, stale = false)
     }
@@ -271,6 +315,11 @@ class StationsControllerTest(
     private companion object {
         const val STATIONS = "/v1/bicimad/stations"
         val UPDATED_AT: Instant = Instant.parse("2026-10-05T10:15:00Z")
+        val STATION_JSON =
+            """
+            {"id":1409,"number":"5","name":"Fuencarral","address":"Calle Fuencarral nº 106","lat":40.4285212,"lon":-3.7021354,
+             "status":"OPERATIONAL","bikes":2,"freeDocks":23,"totalDocks":27,"occupancy":"LOW"}
+            """.trimIndent()
         const val SOL_LAT = 40.4168
         const val SOL_LON = -3.7038
 
