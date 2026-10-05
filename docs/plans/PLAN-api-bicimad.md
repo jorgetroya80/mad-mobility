@@ -1,7 +1,7 @@
 # Plan: api-bicimad
 
 - Created: 2026-10-05
-- Status: **approved** (2026-10-05)
+- Status: **implemented** (2026-10-05)
 - Spec: [SPEC-api-bicimad.md](../specs/SPEC-api-bicimad.md)
 
 ## Overview
@@ -92,8 +92,8 @@ T10 smoke test + cierre (tras T9)
 
 #### Checkpoint 1: endpoints
 
-- [ ] SC2-SC6 comprobados; `./gradlew build` en verde en CI.
-- [ ] Revisión humana del JSON real (`bootRun` contra la EMT) antes de fijar el contrato con springdoc.
+- [x] SC2-SC6 comprobados; `./gradlew build` en verde en CI.
+- [x] Revisión humana del JSON real (`bootRun` contra la EMT) antes de fijar el contrato con springdoc.
 
 ### Fase 2: Protección HTTP
 
@@ -116,7 +116,7 @@ T10 smoke test + cierre (tras T9)
 
 #### Checkpoint 2: protección HTTP
 
-- [ ] SC7-SC8 comprobados; cobertura de `shared` sigue ≥ 80 %.
+- [x] SC7-SC8 comprobados; cobertura de `shared` sigue ≥ 80 %.
 
 ### Fase 3: Contrato y cliente
 
@@ -152,11 +152,11 @@ T10 smoke test + cierre (tras T9)
 
 #### Checkpoint 3: contrato y cliente
 
-- [ ] SC9-SC11 comprobados en CI; revisión humana de `release.yml` antes del merge.
+- [x] SC9-SC11 comprobados en CI; revisión humana de `release.yml` antes del merge.
 
 ### Fase 4: Cierre
 
-- [ ] **T10: Smoke test y cierre** (S, ~30 min, **requiere tus credenciales en `api/.env.local`**)
+- [x] **T10: Smoke test y cierre** (S, ~30 min, **requiere tus credenciales en `api/.env.local`**)
   - Descripción: `EmtSmokeTest` añade la traducción real (`EmtStationMapper`) y comprueba > 600 estaciones válidas; spec y plan a **implemented**; `CAPABILITY-MAP.md` actualizado; memoria/notas de `web-shell` sobre cómo instalar el paquete (token de GitHub Packages).
   - Aceptación:
     - SC13: `./gradlew smokeTest` pasa contra la EMT real; resultado anotado en el PR.
@@ -167,8 +167,8 @@ T10 smoke test + cierre (tras T9)
 
 #### Checkpoint final
 
-- [ ] SC1-SC13 de la spec comprobados (SC12, publicación, en la primera release).
-- [ ] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
+- [x] SC1-SC11 y SC13 de la spec comprobados. SC12 (publicación) se confirma en la primera release de `api` tras el merge.
+- [x] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
 
 ## Riesgos y mitigaciones
 
@@ -191,6 +191,12 @@ Un solo desarrollador: orden T1 → T10. T5 y T6 son independientes entre sí.
 
 Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fase 4 (~0,5 h). Cada checkpoint es un buen punto para cortar.
 
+## Resultado
+
+- T1-T10 en la rama `feat/api-bicimad`, un commit por tarea, en el PR #36 (squash merge).
+- SC1-SC11 y SC13 verificados: `./gradlew build` (182 tests, JaCoCo ≥ 80 % en `shared` y en `modules/bicimad`, este al 99 %), `generateOpenApi` + `redocly lint` sin avisos, `dockerImageTest`, `bootRun` contra la EMT real y `./gradlew smokeTest` (678 estaciones válidas, 0 descartadas).
+- Pendiente: SC12 (primera publicación real del cliente) y el README y la licencia del paquete del cliente (decisión del usuario).
+
 ## Changelog
 
 - 2026-10-05: versión inicial.
@@ -205,3 +211,4 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 - 2026-10-05: T7 implementada. springdoc 3.1.1 funciona con Boot 4.1.1, Jackson 3 y Kotlin (riesgo cerrado). Las anotaciones (`swagger-annotations-jakarta` 2.2.55) toman la versión del BOM de springdoc. La versión del documento sale de `bootBuildInfo`, importado en `application.yaml`; como efecto secundario, `/info` muestra ahora el artefacto y la versión. La configuración de springdoc es solo de propiedades (sin beans) con `servers: [/]`, y la licencia de los datos va en `info.license`. Los campos obligatorios se declaran con `@Schema(requiredProperties)`: inferirlos de la nulabilidad de Kotlin exigiría `jackson-module-kotlin` de Jackson 2. El test de exportación excluye `/v1/test/**` y falla si los obligatorios cambian. `verifyNoSpringdocInJar` (en `check`) rechaza cualquier entrada `springdoc` o `swagger` en el `bootJar`. `redocly lint` pasa sin errores ni avisos y sin relajar reglas; `dockerImageTest` pasa con 404 en `/v3/api-docs` y `/swagger-ui.html`. Pendiente (resuelto en T8): springdoc tipaba `distanceMeters` como `integer | null` y el esquema `ProblemDetail` mostraba un objeto `properties` que en la respuesta real no existe.
 - 2026-10-05: T8 implementada, con la opción A aprobada por el usuario para el esquema. `distanceMeters` deja de ser `integer | null` al desactivar `springdoc.model-converters.kotlin-nullable-property-customizer` (solo configuración). Los errores apuntan a un esquema `Problem` documental (`shared/web/ProblemBody.kt`) con `requestId` al primer nivel y sin `properties`; `OpenApiExportTest` comprueba los dos arreglos. Las versiones del cliente son openapi-fetch 0.17.0, openapi-typescript 7.13.0 y typescript 5.9.3 (`~5.9.3`). `build` copia `schema.d.ts` a `dist/`, porque `tsc` no emite los `.d.ts` de entrada. Los archivos generados del cliente van en `.prettierignore`. El hook pre-push compila el cliente si cambia `api/client/` y ya no mira `openapi/`. CI: el job `API (Gradle)` genera, pasa el lint y compila el cliente; también se ejecuta si cambian `pnpm-lock.yaml` o `pnpm-workspace.yaml`. Se eliminan el job `contract` y los filtros `openapi/**`. Prueba del guardián de tipos: al renombrar el esquema `Problem` en el API fallan el test de exportación y `tsc` del cliente.
 - 2026-10-05: T9 implementada. `publish-api-client` en `release.yml`, independiente de `publish-api`, con `packages: write` a nivel de job. La versión del API llega por `env` (sin `${{ }}` dentro de `run`) y se fija con `pnpm version --no-git-tag-version --no-git-checks`, porque pnpm 12 comprueba git incluso sin tag. No usa `cache: pnpm`, para que un job que publica no restaure cachés ajenas. `pnpm publish --dry-run` en local da `@jorgetroya80/bicimad-client@0.2.0` con 5 archivos. Pendiente para la primera release real: confirmar SC12 y, si GitHub Packages lo pide, enlazar el paquete al repo. El README y la licencia del paquete se dejan para más adelante (decisión del usuario).
+- 2026-10-05: T10 implementada. `EmtSmokeTest` traduce las estaciones reales con `EmtStationMapper`: 678 válidas y 0 descartadas, con una sola llamada a estaciones por ejecución. Plan implementado.

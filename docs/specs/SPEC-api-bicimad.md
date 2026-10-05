@@ -1,7 +1,7 @@
 # Spec: api-bicimad
 
 - Created: 2026-10-05
-- Status: **approved** (2026-10-05)
+- Status: **implemented** (2026-10-05)
 - Plan: [PLAN-api-bicimad.md](../plans/PLAN-api-bicimad.md)
 
 Módulo `api-bicimad` del [Capability Map](CAPABILITY-MAP.md). Añade el módulo de dominio `modules/bicimad` sobre la infraestructura de [api-core](SPEC-api-core.md), documenta la API con springdoc y publica un cliente TypeScript en cada release del API. Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md).
@@ -280,3 +280,5 @@ data class GeoPoint(val lat: Double, val lon: Double) {
 - 2026-10-05: versión inicial. Decisiones del usuario: `need` solo ordena; `near` opcional; rate limit propio y sin dependencias; el cliente TypeScript (tipos + openapi-fetch) se publica en GitHub Packages en cada release del API; `openapi/bicimad.json` deja de commitearse.
 - 2026-10-05: springdoc solo en desarrollo (`developmentOnly` + tests, con Swagger UI); fuera del jar y la imagen de producción.
 - 2026-10-05: spec aprobada.
+- 2026-10-05: ajustes durante la implementación (detalle en el changelog del plan). `name` y `address` llegan sin espacios en los extremos. Las estaciones con coordenadas inválidas se descartan. `updatedAt` va en segundos enteros. `Cache-Control: no-cache` también se aplica a los errores de `/v1/**`. El 429 usa el tipo `urn:mad-mobility:problem:rate-limited`. Los errores se documentan con un esquema `Problem` (`requestId` al primer nivel) y `distanceMeters` como entero opcional. `/info` muestra la versión del build. El README y la licencia del cliente quedan pendientes.
+- 2026-10-05: spec implementada (T1-T10, PR #36). SC12 se confirma en la primera release de `api`.
