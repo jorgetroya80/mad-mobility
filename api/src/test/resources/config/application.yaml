@@ -3,3 +3,6 @@ mad-mobility:
   emt:
     email: test@example.com
     password: test-password
+  rate-limit:
+    # Every MockMvc request comes from 127.0.0.1 and contexts are shared; rate limit tests set their own
+    capacity: 1000000

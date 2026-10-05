@@ -25,6 +25,32 @@ import java.net.URI
 import java.time.Clock
 import java.time.Duration
 
+/** A problem type with its fixed title and detail. */
+internal data class Problem(
+    val type: URI,
+    val title: String,
+    val detail: String,
+)
+
+/** The problem body every error shares: [problem] for [status], the request path and the request id. */
+internal fun problemDetail(
+    status: HttpStatus,
+    problem: Problem,
+    request: HttpServletRequest,
+): ProblemDetail =
+    ProblemDetail.forStatusAndDetail(status, problem.detail).apply {
+        type = problem.type
+        title = problem.title
+        instance = URI.create(request.requestURI)
+        setProperty(REQUEST_ID, MDC.get(RequestIdFilter.MDC_KEY))
+    }
+
+/** Retry-After value: whole seconds, rounded up and at least 1. */
+internal fun Duration.toRetryAfterSeconds(): Long = maxOf(1, Math.ceilDiv(toMillis(), MILLIS_PER_SECOND))
+
+private const val REQUEST_ID = "requestId"
+private const val MILLIS_PER_SECOND = 1000L
+
 /**
  * RFC 9457 errors (application/problem+json) with standard HTTP codes only: EMT codes and messages
  * stay in the logs, never in the response. Every problem carries the request id.
@@ -43,8 +69,8 @@ class ProblemDetailsHandler(
         val (status, problem) = statusAndProblem(e)
         return ResponseEntity
             .status(status)
-            .apply { retryAfter(e)?.let { header(HttpHeaders.RETRY_AFTER, it.toSecondsCeil().toString()) } }
-            .body(problem(status, problem, request))
+            .apply { retryAfter(e)?.let { header(HttpHeaders.RETRY_AFTER, it.toRetryAfterSeconds().toString()) } }
+            .body(problemDetail(status, problem, request))
     }
 
     @ExceptionHandler(Exception::class)
@@ -62,12 +88,12 @@ class ProblemDetailsHandler(
             val detail = annotation.reason.ifBlank { status.reasonPhrase }
             return ResponseEntity
                 .status(status)
-                .body(problem(status, Problem(URI.create("about:blank"), status.reasonPhrase, detail), request))
+                .body(problemDetail(status, Problem(URI.create("about:blank"), status.reasonPhrase, detail), request))
         }
         log.error("Unexpected error on {}", request.requestURI, e)
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(problem(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR, request))
+            .body(problemDetail(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR, request))
     }
 
     /** Adds the request id to the problems Spring MVC builds for its own exceptions (404, 405, ...). */
@@ -120,31 +146,9 @@ class ProblemDetailsHandler(
             }
         }
 
-    private fun problem(
-        status: HttpStatus,
-        problem: Problem,
-        request: HttpServletRequest,
-    ): ProblemDetail =
-        ProblemDetail.forStatusAndDetail(status, problem.detail).apply {
-            type = problem.type
-            title = problem.title
-            instance = URI.create(request.requestURI)
-            setProperty(REQUEST_ID, MDC.get(RequestIdFilter.MDC_KEY))
-        }
-
-    private fun Duration.toSecondsCeil(): Long = maxOf(1, Math.ceilDiv(toMillis(), MILLIS_PER_SECOND))
-
-    private data class Problem(
-        val type: URI,
-        val title: String,
-        val detail: String,
-    )
-
     private companion object {
         val log = LoggerFactory.getLogger(ProblemDetailsHandler::class.java)
-        const val REQUEST_ID = "requestId"
         const val FIRST_OPEN_ATTEMPT = 1
-        const val MILLIS_PER_SECOND = 1000L
 
         val EMT_TIMEOUT = Problem(URI.create("urn:mad-mobility:problem:emt-timeout"), "EMT timeout", "EMT Madrid did not answer in time.")
         val EMT_UNAVAILABLE =
