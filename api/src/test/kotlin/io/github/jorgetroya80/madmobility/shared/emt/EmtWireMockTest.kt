@@ -43,7 +43,7 @@ abstract class EmtWireMockTest {
     class MutableClock(
         var now: Instant = Instant.parse("2026-10-04T10:00:00Z"),
     ) : Clock() {
-        override fun getZone(): ZoneId = ZoneId.of("Europe/Madrid")
+        override fun getZone(): ZoneId = EmtConfig.MADRID
 
         override fun withZone(zone: ZoneId): Clock = this
 

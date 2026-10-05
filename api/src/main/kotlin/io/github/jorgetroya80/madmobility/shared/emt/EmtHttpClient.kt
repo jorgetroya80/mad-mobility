@@ -100,7 +100,7 @@ class EmtHttpClient(
         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(EmtResponse::class.java, elementType).type)
 
     private companion object {
-        private val log = LoggerFactory.getLogger(EmtHttpClient::class.java)
+        val log = LoggerFactory.getLogger(EmtHttpClient::class.java)
         const val ACCESS_TOKEN_HEADER = "accessToken"
     }
 }

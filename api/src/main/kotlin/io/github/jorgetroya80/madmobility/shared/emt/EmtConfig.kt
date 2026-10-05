@@ -18,7 +18,7 @@ import java.time.ZoneId
 class EmtConfig {
     /** EMT dates, quota resets and logs are in Madrid time. */
     @Bean
-    fun clock(): Clock = Clock.system(ZoneId.of("Europe/Madrid"))
+    fun clock(): Clock = Clock.system(MADRID)
 
     @Bean
     fun emtCircuitBreaker(registry: CircuitBreakerRegistry): CircuitBreaker = registry.circuitBreaker(RESILIENCE_INSTANCE)
@@ -35,6 +35,8 @@ class EmtConfig {
     companion object {
         /** Name of the Resilience4j instances configured under resilience4j.* in application.yaml */
         const val RESILIENCE_INSTANCE = "emt"
+
+        val MADRID: ZoneId = ZoneId.of("Europe/Madrid")
 
         fun emtRestClient(
             builder: RestClient.Builder,
