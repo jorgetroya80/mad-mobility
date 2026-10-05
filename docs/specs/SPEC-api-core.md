@@ -137,7 +137,7 @@ fun <T : Any> get(module: String, path: String, elementType: Class<T>): List<T> 
 - Reintento: 1, con backoff de 500 ms, solo ante timeout, error de E/S o 5xx. Nunca ante 4xx.
 - Circuit breaker (uno para toda la EMT): ventana de 10 llamadas, 50 % de fallos lo abre, 30 s abierto, 2 llamadas de prueba en semiabierto.
 - Chequeo de `code` del cuerpo: `00`/`01` es éxito y devuelve `data`; token inválido invalida el token y reintenta una vez con login nuevo; cualquier otro código lanza `EmtProtocolError` con el código y `description`.
-- Errores (`EmtException`, sellada): `EmtUnavailable` con motivo `TIMEOUT`, `SERVER_ERROR` (E/S o 5xx) o `CIRCUIT_OPEN`, `EmtQuotaExceeded`, `EmtAuthFailed` (credenciales rechazadas), `EmtProtocolError` (código inesperado o cuerpo ilegible).
+- Errores (`EmtException`, sellada): `EmtUnavailable` con motivo `TIMEOUT`, `SERVER_ERROR` (5xx), `CONNECTION_FAILED` (conexión cortada, inalcanzable o E/S leyendo el cuerpo) o `CIRCUIT_OPEN`, `EmtQuotaExceeded`, `EmtAuthFailed` (credenciales rechazadas), `EmtProtocolError` (código inesperado o cuerpo ilegible).
 - Nunca registra el token, la contraseña ni el `passKey`.
 
 ### `CacheService`
@@ -179,14 +179,14 @@ fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 - CORS: orígenes de `CORS_ALLOWED_ORIGINS` (lista separada por comas), métodos `GET`, `HEAD`, `OPTIONS`, ruta `/v1/**`, cabeceras expuestas `ETag` y `X-Request-Id`. Sin orígenes, no hay CORS.
 - `ProblemDetailsHandler`: la API solo devuelve códigos HTTP estándar con `application/problem+json` (`type`, `title`, `status`, `detail`, `instance`, `requestId`). Los códigos internos de la EMT (`code`) nunca salen en la respuesta; solo se registran en logs. Se aplica cuando no hay caché que servir:
 
-  | Error interno                       | HTTP                                                                               |
-  | ----------------------------------- | ---------------------------------------------------------------------------------- |
-  | `EmtUnavailable` (`TIMEOUT`)        | `504 Gateway Timeout`                                                              |
-  | `EmtUnavailable` (`SERVER_ERROR`)   | `503 Service Unavailable`                                                          |
-  | `EmtUnavailable` (`CIRCUIT_OPEN`)   | `503 Service Unavailable` + `Retry-After` (segundos hasta semiabierto)             |
-  | `EmtQuotaExceeded`                  | `503 Service Unavailable` + `Retry-After` (segundos hasta las 00:00 Europe/Madrid) |
-  | `EmtAuthFailed`, `EmtProtocolError` | `502 Bad Gateway`                                                                  |
-  | Cualquier otra excepción            | `500 Internal Server Error`, sin detalle interno                                   |
+  | Error interno                                          | HTTP                                                                               |
+  | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+  | `EmtUnavailable` (`TIMEOUT`)                           | `504 Gateway Timeout`                                                              |
+  | `EmtUnavailable` (`SERVER_ERROR`, `CONNECTION_FAILED`) | `503 Service Unavailable`                                                          |
+  | `EmtUnavailable` (`CIRCUIT_OPEN`)                      | `503 Service Unavailable` + `Retry-After` (segundos hasta semiabierto)             |
+  | `EmtQuotaExceeded`                                     | `503 Service Unavailable` + `Retry-After` (segundos hasta las 00:00 Europe/Madrid) |
+  | `EmtAuthFailed`, `EmtProtocolError`                    | `502 Bad Gateway`                                                                  |
+  | Cualquier otra excepción                               | `500 Internal Server Error`, sin detalle interno                                   |
 
   Los errores de petición (`400`, `404`) los define cada módulo con el mismo formato. El `detail` nunca incluye datos sensibles.
 
@@ -285,3 +285,4 @@ class CacheService(
 - 2026-10-04: códigos reales de la EMT capturados en T4: login correcto `00`/`01`; credenciales malas HTTP 200 + `89` (`EmtAuthFailed`); token inválido o ausente HTTP 401 + `80` (relogin). El código de cupo agotado sigue sin verificar. Detalle en `api/src/test/resources/emt/README.md`.
 - 2026-10-04: endurecimiento tras revisión (agente `spring-boot-engineer`): el login fallido también es single-flight (los que esperan comparten el error); credenciales rechazadas se recuerdan 1 min sin volver a llamar a la EMT; `EmtQuotaExceeded` se ignora en el circuit breaker; las excepciones con `@ResponseStatus` de los módulos conservan su código; las desconexiones del cliente no se registran como error. **Límite conocido de SC5:** los 12 s valen con un token válido; si además hay que hacer login y relogin, el peor caso de una petición ronda los 40 s (4 llamadas de 5 s por intento × 2 intentos). Se acepta para el MVP.
 - 2026-10-04: spec implementada (T1-T12, PRs #20-#32).
+- 2026-10-05: `EmtUnavailable` gana el motivo `CONNECTION_FAILED` (conexión cortada, inalcanzable o E/S leyendo el cuerpo); `SERVER_ERROR` queda solo para 5xx. La respuesta HTTP no cambia: ambos dan `503` `emt-unavailable`.

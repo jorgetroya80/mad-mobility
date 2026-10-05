@@ -102,6 +102,7 @@ class EmtHttpClientTest {
         assertThatThrownBy { client.get("bicimad", STATIONS, TestStation::class.java) }
             .isInstanceOfSatisfying(EmtProtocolError::class.java) { assertThat(it.code).isEqualTo("42") }
             .hasMessageContaining("weird")
+            .hasMessageContaining("bicimad /v1/transport/bicimad/stations/")
     }
 
     @Test

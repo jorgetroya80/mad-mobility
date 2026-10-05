@@ -20,6 +20,7 @@ class ProblemDetailsHandlerTest(
     @CsvSource(
         "timeout,      504, urn:mad-mobility:problem:emt-timeout,         ''",
         "server-error, 503, urn:mad-mobility:problem:emt-unavailable,     ''",
+        "connection-failed, 503, urn:mad-mobility:problem:emt-unavailable, ''",
         "circuit-open, 503, urn:mad-mobility:problem:emt-unavailable,     30",
         "quota,        503, urn:mad-mobility:problem:emt-quota-exhausted, 90",
         "auth,         502, urn:mad-mobility:problem:emt-bad-response,    ''",
@@ -51,7 +52,8 @@ class ProblemDetailsHandlerTest(
         if (retryAfter.isEmpty()) {
             assertThat(result.response.getHeader(HttpHeaders.RETRY_AFTER)).isNull()
         } else {
-            assertThat(result.response.getHeader(HttpHeaders.RETRY_AFTER)?.toLong()).isBetween(retryAfter.toLong() - 1, retryAfter.toLong())
+            // Exact: the remaining time is a little under the value, so only rounding up gives it back
+            assertThat(result.response.getHeader(HttpHeaders.RETRY_AFTER)).isEqualTo(retryAfter)
         }
     }
 

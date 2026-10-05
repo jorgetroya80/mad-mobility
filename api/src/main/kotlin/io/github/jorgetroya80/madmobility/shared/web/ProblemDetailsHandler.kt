@@ -88,8 +88,11 @@ class ProblemDetailsHandler(
             is EmtUnavailable -> {
                 when (e.reason) {
                     EmtUnavailable.Reason.TIMEOUT -> HttpStatus.GATEWAY_TIMEOUT to EMT_TIMEOUT
-                    EmtUnavailable.Reason.SERVER_ERROR -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
-                    EmtUnavailable.Reason.CIRCUIT_OPEN -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
+
+                    EmtUnavailable.Reason.SERVER_ERROR,
+                    EmtUnavailable.Reason.CONNECTION_FAILED,
+                    EmtUnavailable.Reason.CIRCUIT_OPEN,
+                    -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
                 }
             }
 
@@ -109,7 +112,7 @@ class ProblemDetailsHandler(
             }
 
             e is EmtUnavailable && e.reason == EmtUnavailable.Reason.CIRCUIT_OPEN -> {
-                Duration.ofMillis(emtCircuitBreaker.circuitBreakerConfig.waitIntervalFunctionInOpenState.apply(1))
+                Duration.ofMillis(emtCircuitBreaker.circuitBreakerConfig.waitIntervalFunctionInOpenState.apply(FIRST_OPEN_ATTEMPT))
             }
 
             else -> {
@@ -129,7 +132,7 @@ class ProblemDetailsHandler(
             setProperty(REQUEST_ID, MDC.get(RequestIdFilter.MDC_KEY))
         }
 
-    private fun Duration.toSecondsCeil(): Long = maxOf(1, (toMillis() + 999) / 1000)
+    private fun Duration.toSecondsCeil(): Long = maxOf(1, Math.ceilDiv(toMillis(), MILLIS_PER_SECOND))
 
     private data class Problem(
         val type: URI,
@@ -138,8 +141,10 @@ class ProblemDetailsHandler(
     )
 
     private companion object {
-        private val log = LoggerFactory.getLogger(ProblemDetailsHandler::class.java)
+        val log = LoggerFactory.getLogger(ProblemDetailsHandler::class.java)
         const val REQUEST_ID = "requestId"
+        const val FIRST_OPEN_ATTEMPT = 1
+        const val MILLIS_PER_SECOND = 1000L
 
         val EMT_TIMEOUT = Problem(URI.create("urn:mad-mobility:problem:emt-timeout"), "EMT timeout", "EMT Madrid did not answer in time.")
         val EMT_UNAVAILABLE =

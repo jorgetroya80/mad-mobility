@@ -68,7 +68,7 @@ class EmtAuth(
         }
 
     private fun login(): Token {
-        if (!quotaTracker.tryAcquire(QUOTA_MODULE)) throw EmtQuotaExceeded(QUOTA_MODULE, quotaTracker.resetsAt())
+        quotaTracker.acquire(QUOTA_MODULE)
         val (body, status) = fetchLogin()
         if (status.is5xxServerError) {
             record("unavailable")
@@ -123,13 +123,13 @@ class EmtAuth(
     private fun addCredentials(headers: HttpHeaders) {
         when (val credentials = properties.credentials) {
             is EmtCredentials.EmailPassword -> {
-                headers.set("email", credentials.email)
-                headers.set("password", credentials.password)
+                headers.set(EMAIL_HEADER, credentials.email)
+                headers.set(PASSWORD_HEADER, credentials.password)
             }
 
             is EmtCredentials.ClientKey -> {
-                headers.set("X-ClientId", credentials.clientId)
-                headers.set("passKey", credentials.passKey)
+                headers.set(CLIENT_ID_HEADER, credentials.clientId)
+                headers.set(PASS_KEY_HEADER, credentials.passKey)
             }
         }
     }
@@ -153,6 +153,10 @@ class EmtAuth(
         const val QUOTA_MODULE = "auth"
         private const val LOGIN_KEY = "token"
         private const val LOGIN_PATH = "/v2/mobilitylabs/user/login/"
+        private const val EMAIL_HEADER = "email"
+        private const val PASSWORD_HEADER = "password"
+        private const val CLIENT_ID_HEADER = "X-ClientId"
+        private const val PASS_KEY_HEADER = "passKey"
         private val RENEW_MARGIN: Duration = Duration.ofMinutes(5)
         private val AUTH_FAILURE_BACKOFF: Duration = Duration.ofMinutes(1)
         private val LOGIN_RESPONSE = object : ParameterizedTypeReference<EmtResponse<LoginData>>() {}

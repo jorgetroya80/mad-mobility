@@ -15,7 +15,7 @@ internal object EmtErrors {
             // An I/O error while reading the body (dropped connection, read timeout) is a transport
             // failure; anything else (malformed JSON) is a protocol error
             if (generateSequence<Throwable>(e) { it.cause }.any { it is IOException }) {
-                throw EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT connection failed while reading the response", e)
+                throw EmtUnavailable(EmtUnavailable.Reason.CONNECTION_FAILED, "EMT connection failed while reading the response", e)
             }
             throw EmtProtocolError(null, "Unreadable EMT response: ${e.mostSpecificCause.message}", e)
         }
@@ -25,7 +25,7 @@ internal object EmtErrors {
         return if (timedOut) {
             EmtUnavailable(EmtUnavailable.Reason.TIMEOUT, "EMT did not answer in time", e)
         } else {
-            EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT could not be reached", e)
+            EmtUnavailable(EmtUnavailable.Reason.CONNECTION_FAILED, "EMT could not be reached", e)
         }
     }
 }

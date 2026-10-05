@@ -36,6 +36,7 @@ class TestEmtController(
         throw when (kind) {
             "timeout" -> EmtUnavailable(EmtUnavailable.Reason.TIMEOUT, "slow")
             "server-error" -> EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "down")
+            "connection-failed" -> EmtUnavailable(EmtUnavailable.Reason.CONNECTION_FAILED, "unreachable")
             "circuit-open" -> EmtUnavailable(EmtUnavailable.Reason.CIRCUIT_OPEN, "open")
             "quota" -> EmtQuotaExceeded("bicimad", clock.instant().plus(Duration.ofSeconds(90)))
             "auth" -> EmtAuthFailed("EMT rejected the configured credentials (code=89, description=Invalid user)")

@@ -19,7 +19,7 @@ class EmtUnavailable(
     message: String,
     cause: Throwable? = null,
 ) : EmtException(message, cause) {
-    enum class Reason { TIMEOUT, SERVER_ERROR, CIRCUIT_OPEN }
+    enum class Reason { TIMEOUT, SERVER_ERROR, CONNECTION_FAILED, CIRCUIT_OPEN }
 }
 
 /** The daily EMT call budget of [module] is spent until [resetsAt]; the EMT was not called. */
