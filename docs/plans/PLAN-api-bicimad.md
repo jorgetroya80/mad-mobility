@@ -11,7 +11,7 @@ Añadir el módulo `modules/bicimad` (dominio, capa anticorrupción, casos de us
 ## Decisiones de implementación
 
 - **Lista de tareas en este documento.** Como en `api-core`, las casillas de abajo son la fuente de verdad del progreso.
-- **Una rama y un PR por tarea**, con squash merge. Tipos: `feat(api)` para comportamiento, `build(api)` para Gradle y el paquete del cliente, `ci` para workflows, `test(api)` para el smoke test.
+- **Una rama (`feat/api-bicimad`) y un solo PR para todo el módulo, con un commit por tarea.** El repo solo permite squash merge: en `main` queda un commit `feat(api)`; los commits por tarea se conservan en el PR. Tipos: `feat(api)` para comportamiento, `build(api)` para Gradle y el paquete del cliente, `ci` para workflows, `test(api)` para el smoke test.
 - **Cortes verticales.** Cada tarea de las fases 1 y 2 deja un endpoint que funciona de punta a punta (EMT simulada → dominio → HTTP). La primera tarea es la traducción de la EMT porque es lo más arriesgado: el formato real ya difiere de la documentación.
 - **Tests HTTP con `StationProvider` simulado** (`@WebMvcTest` + `@MockkBean`) para parámetros, orden y errores; WireMock solo para el adaptador (una llamada por TTL, `stale`), como en `api-core`.
 - **springdoc en `developmentOnly` + `testImplementation`**; las anotaciones (`swagger-annotations-jakarta`) en `compileOnly`. `generateOpenApi` es una tarea `Test` (etiqueta `openapi`) que arranca el contexto con `StationProvider` simulado, pide `/v3/api-docs` y escribe `build/openapi/bicimad.json`.
@@ -196,3 +196,4 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 - 2026-10-05: versión inicial.
 - 2026-10-05: plan aprobado.
 - 2026-10-05: T1 implementada. El módulo se declara con `id = "bicimad"` y `allowedDependencies = ["shared"]` (`"shared :: *"` rechaza los subpaquetes `emt` y `web` aunque `shared` sea OPEN). `EmtStationMapper` es un `object` sin estado. Son obligatorios `id`, `number`, `name`, `address`, `dock_bikes`, `free_bases`, `total_bases` y dos coordenadas; si falta cualquiera, la estación se descarta con un solo `WARN`. Si faltan `activate` o `no_available`, la estación es `NO_SERVICE`; si falta `light`, la ocupación es `UNKNOWN`. El rango de las coordenadas lo valida `GeoPoint` en T3.
+- 2026-10-05: un solo PR para todo el módulo en lugar de uno por tarea, con un commit por tarea en la rama `feat/api-bicimad`.
