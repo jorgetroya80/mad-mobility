@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionException
-import java.util.concurrent.ConcurrentHashMap
 
 @ConfigurationProperties("mad-mobility.cache")
 data class CacheProperties(
@@ -57,7 +54,7 @@ class CacheService(
             .maximumSize(MAX_ENTRIES)
             .expireAfterWrite(properties.longestMaxStale())
             .build()
-    private val inFlight = ConcurrentHashMap<String, CompletableFuture<Cached<Any>>>()
+    private val loads = SingleFlight<Cached<Any>>()
 
     fun <T : Any> get(
         module: String,
@@ -83,30 +80,11 @@ class CacheService(
         cacheKey: String,
         module: String,
         loader: () -> Any,
-    ): Cached<Any> {
-        val mine = CompletableFuture<Cached<Any>>()
-        val running = inFlight.putIfAbsent(cacheKey, mine)
-        if (running != null) return join(running)
-        try {
+    ): Cached<Any> =
+        loads.run(cacheKey) {
             // Another caller may have refreshed between our read and taking ownership
-            val loaded =
-                store.getIfPresent(cacheKey)?.takeIf { isFresh(it, module) }
-                    ?: Cached(loader(), clock.instant(), stale = false).also { store.put(cacheKey, it) }
-            mine.complete(loaded)
-            return loaded
-        } catch (e: Throwable) {
-            mine.completeExceptionally(e)
-            throw e
-        } finally {
-            inFlight.remove(cacheKey, mine)
-        }
-    }
-
-    private fun join(running: CompletableFuture<Cached<Any>>): Cached<Any> =
-        try {
-            running.join()
-        } catch (e: CompletionException) {
-            throw e.cause ?: e
+            store.getIfPresent(cacheKey)?.takeIf { isFresh(it, module) }
+                ?: Cached(loader(), clock.instant(), stale = false).also { store.put(cacheKey, it) }
         }
 
     private fun isFresh(

@@ -4,14 +4,13 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatusCode
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionException
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -39,28 +38,15 @@ class EmtAuth(
     )
 
     private val token = AtomicReference<Token?>()
-    private val inFlight = AtomicReference<CompletableFuture<Token>?>()
+    private val logins = SingleFlight<Token>()
 
     @Volatile private var authFailure: AuthFailure? = null
 
     fun accessToken(): String {
         validToken()?.let { return it.value }
         authFailure?.takeIf { clock.instant().isBefore(it.until) }?.let { throw it.error }
-        val mine = CompletableFuture<Token>()
-        val running = inFlight.compareAndExchange(null, mine)
-        if (running != null) return join(running).value
-        try {
-            // Another caller may have logged in between our check and taking ownership
-            val fresh = validToken() ?: login().also { token.set(it) }.also { authFailure = null }
-            mine.complete(fresh)
-            return fresh.value
-        } catch (e: Throwable) {
-            if (e is EmtAuthFailed) authFailure = AuthFailure(e, clock.instant().plus(AUTH_FAILURE_BACKOFF))
-            mine.completeExceptionally(e)
-            throw e
-        } finally {
-            inFlight.compareAndSet(mine, null)
-        }
+        // Another caller may have logged in between our check and taking ownership
+        return logins.run(LOGIN_KEY) { validToken() ?: renewToken() }.value
     }
 
     /** When the cached token will be renewed, or null if there is no valid token (for health details). */
@@ -73,31 +59,17 @@ class EmtAuth(
 
     private fun validToken(): Token? = token.get()?.takeIf { clock.instant().isBefore(it.renewAt) }
 
-    private fun join(running: CompletableFuture<Token>): Token =
+    private fun renewToken(): Token =
         try {
-            running.join()
-        } catch (e: CompletionException) {
-            throw e.cause ?: e
+            login().also { token.set(it) }.also { authFailure = null }
+        } catch (e: EmtAuthFailed) {
+            authFailure = AuthFailure(e, clock.instant().plus(AUTH_FAILURE_BACKOFF))
+            throw e
         }
 
     private fun login(): Token {
         if (!quotaTracker.tryAcquire(QUOTA_MODULE)) throw EmtQuotaExceeded(QUOTA_MODULE, quotaTracker.resetsAt())
-        val response =
-            try {
-                emtRestClient
-                    .get()
-                    .uri(LOGIN_PATH)
-                    .headers(::addCredentials)
-                    .exchange { _, res ->
-                        // 5xx bodies are not EMT JSON; anything else carries the EMT envelope
-                        val body = if (res.statusCode.is5xxServerError) null else EmtErrors.readBody { res.bodyTo(LOGIN_RESPONSE) }
-                        body to res.statusCode
-                    }
-            } catch (e: ResourceAccessException) {
-                record("unavailable")
-                throw EmtErrors.unavailable(e)
-            }
-        val (body, status) = response
+        val (body, status) = fetchLogin()
         if (status.is5xxServerError) {
             record("unavailable")
             throw EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT login failed with HTTP ${status.value()}")
@@ -105,15 +77,42 @@ class EmtAuth(
         val login = body?.takeIf { it.isSuccess }?.data?.firstOrNull()
         if (login == null) {
             record("rejected")
-            val detail = "code=${body?.code}, description=${body?.description}"
-            if (body?.code == EmtResponse.CODE_INVALID_CREDENTIALS) {
-                log.error("EMT rejected the configured credentials ({})", detail)
-                throw EmtAuthFailed("EMT rejected the configured credentials ($detail)")
-            }
-            throw EmtProtocolError(body?.code, "Unexpected EMT login response (HTTP ${status.value()}, $detail)")
+            throw rejectedLoginError(body, status)
         }
         record("success")
         login.apiCounter?.current?.let(quotaTracker::reportEmtUsage)
+        return toToken(login)
+    }
+
+    private fun fetchLogin(): Pair<EmtResponse<LoginData>?, HttpStatusCode> =
+        try {
+            emtRestClient
+                .get()
+                .uri(LOGIN_PATH)
+                .headers(::addCredentials)
+                .exchange { _, res ->
+                    // 5xx bodies are not EMT JSON; anything else carries the EMT envelope
+                    val body = if (res.statusCode.is5xxServerError) null else EmtErrors.readBody { res.bodyTo(LOGIN_RESPONSE) }
+                    body to res.statusCode
+                }
+        } catch (e: ResourceAccessException) {
+            record("unavailable")
+            throw EmtErrors.unavailable(e)
+        }
+
+    private fun rejectedLoginError(
+        body: EmtResponse<LoginData>?,
+        status: HttpStatusCode,
+    ): EmtException {
+        val detail = "code=${body?.code}, description=${body?.description}"
+        if (body?.code != EmtResponse.CODE_INVALID_CREDENTIALS) {
+            return EmtProtocolError(body?.code, "Unexpected EMT login response (HTTP ${status.value()}, $detail)")
+        }
+        log.error("EMT rejected the configured credentials ({})", detail)
+        return EmtAuthFailed("EMT rejected the configured credentials ($detail)")
+    }
+
+    private fun toToken(login: LoginData): Token {
         val lifetime = Duration.ofSeconds(login.tokenSecExpiration)
         // Renew 5 min early, or halfway for short-lived tokens, so a token is always reused for a while
         val renewAt = clock.instant().plus(lifetime).minus(minOf(RENEW_MARGIN, lifetime.dividedBy(2)))
@@ -152,6 +151,7 @@ class EmtAuth(
 
         /** Logins consume EMT quota too, accounted under this module name. */
         const val QUOTA_MODULE = "auth"
+        private const val LOGIN_KEY = "token"
         private const val LOGIN_PATH = "/v2/mobilitylabs/user/login/"
         private val RENEW_MARGIN: Duration = Duration.ofMinutes(5)
         private val AUTH_FAILURE_BACKOFF: Duration = Duration.ofMinutes(1)
