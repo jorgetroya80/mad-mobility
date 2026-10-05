@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatusCode
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
@@ -82,22 +83,7 @@ class EmtAuth(
 
     private fun login(): Token {
         if (!quotaTracker.tryAcquire(QUOTA_MODULE)) throw EmtQuotaExceeded(QUOTA_MODULE, quotaTracker.resetsAt())
-        val response =
-            try {
-                emtRestClient
-                    .get()
-                    .uri(LOGIN_PATH)
-                    .headers(::addCredentials)
-                    .exchange { _, res ->
-                        // 5xx bodies are not EMT JSON; anything else carries the EMT envelope
-                        val body = if (res.statusCode.is5xxServerError) null else EmtErrors.readBody { res.bodyTo(LOGIN_RESPONSE) }
-                        body to res.statusCode
-                    }
-            } catch (e: ResourceAccessException) {
-                record("unavailable")
-                throw EmtErrors.unavailable(e)
-            }
-        val (body, status) = response
+        val (body, status) = fetchLogin()
         if (status.is5xxServerError) {
             record("unavailable")
             throw EmtUnavailable(EmtUnavailable.Reason.SERVER_ERROR, "EMT login failed with HTTP ${status.value()}")
@@ -105,15 +91,42 @@ class EmtAuth(
         val login = body?.takeIf { it.isSuccess }?.data?.firstOrNull()
         if (login == null) {
             record("rejected")
-            val detail = "code=${body?.code}, description=${body?.description}"
-            if (body?.code == EmtResponse.CODE_INVALID_CREDENTIALS) {
-                log.error("EMT rejected the configured credentials ({})", detail)
-                throw EmtAuthFailed("EMT rejected the configured credentials ($detail)")
-            }
-            throw EmtProtocolError(body?.code, "Unexpected EMT login response (HTTP ${status.value()}, $detail)")
+            throw rejectedLoginError(body, status)
         }
         record("success")
         login.apiCounter?.current?.let(quotaTracker::reportEmtUsage)
+        return toToken(login)
+    }
+
+    private fun fetchLogin(): Pair<EmtResponse<LoginData>?, HttpStatusCode> =
+        try {
+            emtRestClient
+                .get()
+                .uri(LOGIN_PATH)
+                .headers(::addCredentials)
+                .exchange { _, res ->
+                    // 5xx bodies are not EMT JSON; anything else carries the EMT envelope
+                    val body = if (res.statusCode.is5xxServerError) null else EmtErrors.readBody { res.bodyTo(LOGIN_RESPONSE) }
+                    body to res.statusCode
+                }
+        } catch (e: ResourceAccessException) {
+            record("unavailable")
+            throw EmtErrors.unavailable(e)
+        }
+
+    private fun rejectedLoginError(
+        body: EmtResponse<LoginData>?,
+        status: HttpStatusCode,
+    ): EmtException {
+        val detail = "code=${body?.code}, description=${body?.description}"
+        if (body?.code != EmtResponse.CODE_INVALID_CREDENTIALS) {
+            return EmtProtocolError(body?.code, "Unexpected EMT login response (HTTP ${status.value()}, $detail)")
+        }
+        log.error("EMT rejected the configured credentials ({})", detail)
+        return EmtAuthFailed("EMT rejected the configured credentials ($detail)")
+    }
+
+    private fun toToken(login: LoginData): Token {
         val lifetime = Duration.ofSeconds(login.tokenSecExpiration)
         // Renew 5 min early, or halfway for short-lived tokens, so a token is always reused for a while
         val renewAt = clock.instant().plus(lifetime).minus(minOf(RENEW_MARGIN, lifetime.dividedBy(2)))
