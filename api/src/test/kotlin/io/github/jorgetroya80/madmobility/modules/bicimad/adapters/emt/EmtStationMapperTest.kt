@@ -1,5 +1,6 @@
 package io.github.jorgetroya80.madmobility.modules.bicimad.adapters.emt
 
+import io.github.jorgetroya80.madmobility.modules.bicimad.domain.GeoPoint
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Occupancy
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Station
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationStatus
@@ -7,6 +8,8 @@ import io.github.jorgetroya80.madmobility.shared.emt.EmtResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.boot.test.system.CapturedOutput
 import org.springframework.boot.test.system.OutputCaptureExtension
 import tools.jackson.module.kotlin.jacksonObjectMapper
@@ -24,8 +27,7 @@ class EmtStationMapperTest {
                 number = "5",
                 name = "Fuencarral",
                 address = "Calle Fuencarral nº 106",
-                lat = 40.4285212,
-                lon = -3.7021354,
+                location = GeoPoint(40.4285212, -3.7021354),
                 bikes = 2,
                 freeDocks = 23,
                 totalDocks = 27,
@@ -37,8 +39,7 @@ class EmtStationMapperTest {
                 number = "90",
                 name = "Metro Velázquez",
                 address = "Calle Goya, 20 ",
-                lat = 40.4251493,
-                lon = -3.6838415999999996,
+                location = GeoPoint(40.4251493, -3.6838415999999996),
                 bikes = 0,
                 freeDocks = 0,
                 totalDocks = 27,
@@ -50,8 +51,7 @@ class EmtStationMapperTest {
                 number = "618",
                 name = "Calle Paterna 55",
                 address = "Calle Paterna 55",
-                lat = 40.340613,
-                lon = -3.68482,
+                location = GeoPoint(40.340613, -3.68482),
                 bikes = 17,
                 freeDocks = 9,
                 totalDocks = 19,
@@ -103,6 +103,19 @@ class EmtStationMapperTest {
         val stations = EmtStationMapper.toDomain(listOf(emtStation(geometry = EmtGeometry(listOf(-3.7)))))
 
         assertThat(stations).isEmpty()
+    }
+
+    @ParameterizedTest
+    @CsvSource("-3.7, 91.0", "-180.5, 40.4", "NaN, 40.4", "-3.7, Infinity")
+    fun `station with invalid coordinates is discarded with a warning`(
+        lon: Double,
+        lat: Double,
+        output: CapturedOutput,
+    ) {
+        val stations = EmtStationMapper.toDomain(listOf(emtStation(id = 1), emtStation(id = 99, geometry = EmtGeometry(listOf(lon, lat)))))
+
+        assertThat(stations.map { it.id }).containsExactly(1)
+        assertThat(output.out.lines().filter { "WARN" in it && "99" in it }).hasSize(1)
     }
 
     @Test

@@ -1,5 +1,6 @@
 package io.github.jorgetroya80.madmobility.modules.bicimad.adapters.emt
 
+import io.github.jorgetroya80.madmobility.modules.bicimad.domain.GeoPoint
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Occupancy
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.Station
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationStatus
@@ -33,15 +34,14 @@ object EmtStationMapper {
         stations.filterNot { it.virtualDelete == true }.mapNotNull { toStationOrNull(it) ?: discard(it) }
 
     private fun toStationOrNull(emt: EmtStation): Station? {
-        val coordinates = emt.geometry?.coordinates?.takeIf { it.size == COORDINATES_SIZE } ?: return null
+        val location = emt.geometry?.coordinates?.let(::locationOrNull) ?: return null
         val number = emt.number ?: return null
         return Station(
             id = emt.id ?: return null,
             number = number,
             name = emt.name?.removePrefix("$number$NAME_SEPARATOR") ?: return null,
             address = emt.address ?: return null,
-            lat = coordinates[LAT_INDEX],
-            lon = coordinates[LON_INDEX],
+            location = location,
             bikes = emt.dockBikes ?: return null,
             freeDocks = emt.freeBases ?: return null,
             totalDocks = emt.totalBases ?: return null,
@@ -50,8 +50,17 @@ object EmtStationMapper {
         )
     }
 
+    private fun locationOrNull(coordinates: List<Double>): GeoPoint? {
+        if (coordinates.size != COORDINATES_SIZE) return null
+        return try {
+            GeoPoint(coordinates[LAT_INDEX], coordinates[LON_INDEX])
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
+
     private fun discard(emt: EmtStation): Station? {
-        log.warn("Discarding EMT BiciMAD station id={}: missing required field or coordinates", emt.id)
+        log.warn("Discarding EMT BiciMAD station id={}: missing required field or invalid coordinates", emt.id)
         return null
     }
 

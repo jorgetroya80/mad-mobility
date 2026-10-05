@@ -70,13 +70,13 @@ T10 smoke test + cierre (tras T9)
   - Archivos: `ports/StationProvider.kt`, `domain/StationSnapshot.kt`, `adapters/emt/EmtStationProvider.kt`, `http/StationsController.kt`, `http/StationResponse.kt`, `application.yaml`, `build.gradle.kts` (+ tests).
   - Dependencias: T1.
 
-- [ ] **T3: Filtros `near`, `radius` y `need`** (M, ~1 h)
+- [x] **T3: Filtros `near`, `radius` y `need`** (M, ~1 h)
   - Descripción: `GeoPoint` con haversine, `FindNearbyStations` (radio y orden: disponibles para `need` primero, después distancia o `number`), `StationsQuery` (parseo y validación), `distanceMeters` solo con `near`, `400` problem+json.
   - Aceptación:
     - SC3: solo estaciones a ≤ 500 m, por `distanceMeters` ascendente.
     - SC4: con `need=docks`, las disponibles primero; mismo número de estaciones que sin `need`.
     - SC5 (parte de lista): `radius=6000`, `radius` sin `near`, `near=abc` y `need=car` → `400`.
-    - Haversine: Sol–Cibeles (≈ 1,1 km) con error < 1 %.
+    - Haversine: Sol–Cibeles (≈ 950 m) con error < 1 %.
   - Verificación: `./gradlew test --tests '*bicimad*'`; `curl` con `near=40.4168,-3.7038&need=docks`.
   - Archivos: `domain/GeoPoint.kt`, `application/FindNearbyStations.kt`, `http/StationsQuery.kt`, `http/StationsController.kt`, `FindNearbyStationsTest.kt`, `StationsControllerTest.kt`.
   - Dependencias: T2.
@@ -198,3 +198,4 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 - 2026-10-05: T1 implementada. El módulo se declara con `id = "bicimad"` y `allowedDependencies = ["shared"]` (`"shared :: *"` rechaza los subpaquetes `emt` y `web` aunque `shared` sea OPEN). `EmtStationMapper` es un `object` sin estado. Son obligatorios `id`, `number`, `name`, `address`, `dock_bikes`, `free_bases`, `total_bases` y dos coordenadas; si falta cualquiera, la estación se descarta con un solo `WARN`. Si faltan `activate` o `no_available`, la estación es `NO_SERVICE`; si falta `light`, la ocupación es `UNKNOWN`. El rango de las coordenadas lo valida `GeoPoint` en T3.
 - 2026-10-05: un solo PR para todo el módulo en lugar de uno por tarea, con un commit por tarea en la rama `feat/api-bicimad`.
 - 2026-10-05: T2 implementada. El orden por número es `Station.BY_NUMBER` (dominio, reutilizable en T3) y lo aplica el caso de uso `ListStations`. Los tests HTTP simulan `StationProvider` con un bean de MockK en una `@TestConfiguration`, sin `@MockkBean`, porque SpringMockK no está en el catálogo. JaCoCo para `modules/bicimad` va en su propia tarea `bicimadCoverageVerification`, con el 99 % de líneas. Con `bootRun` contra la EMT real salen 678 estaciones (676 `OPERATIONAL`, 2 `NO_SERVICE`) sin ningún `WARN`. Pendiente: `updatedAt` conserva los microsegundos y Jackson 3 ordena las propiedades alfabéticamente; el contenido coincide con la spec.
+- 2026-10-05: T3 implementada. `FindNearbyStations` sustituye a `ListStations`. `Station` guarda un `GeoPoint` ya validado: el mapper descarta con un `WARN` las estaciones con coordenadas fuera de rango, NaN o infinitas, para que una estación mala no provoque un 500. Los 400 usan `ResponseStatusException`, que ya gestiona `ProblemDetailsHandler`. `need` solo se acepta en minúsculas y `near` es estricto (`lat,lon`, sin espacios). El radio se compara con la distancia sin redondear; la distancia se redondea solo en la respuesta. Si dos estaciones están a la misma distancia, conservan el orden de entrada. Corregida la referencia Sol–Cibeles: son ≈ 950 m, no 1,1 km.
