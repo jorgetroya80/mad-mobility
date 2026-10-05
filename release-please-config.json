@@ -19,5 +19,7 @@
       "release-type": "node",
       "component": "web"
     }
-  }
+  },
+  "pull-request-header": ":bicyclist: New Release is coming",
+  "pull-request-footer": "Generated with Release Please"
 }
