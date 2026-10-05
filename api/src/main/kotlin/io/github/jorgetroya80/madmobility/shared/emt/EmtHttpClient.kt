@@ -65,7 +65,7 @@ class EmtHttpClient(
         token: String,
         responseType: ParameterizedTypeReference<EmtResponse<T>>,
     ): Pair<EmtResponse<T>?, HttpStatusCode> {
-        if (!quotaTracker.tryAcquire(module)) throw EmtQuotaExceeded(module, quotaTracker.resetsAt())
+        quotaTracker.acquire(module)
         return try {
             emtRestClient
                 .get()

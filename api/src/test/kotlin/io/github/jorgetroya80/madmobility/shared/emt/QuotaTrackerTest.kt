@@ -3,6 +3,7 @@ package io.github.jorgetroya80.madmobility.shared.emt
 import io.github.jorgetroya80.madmobility.shared.emt.EmtWireMockTest.MutableClock
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.Instant
@@ -33,6 +34,18 @@ class QuotaTrackerTest {
 
         assertThat(listOf("bicimad", "bus", "auth", "bicimad").map(tracker::tryAcquire)).containsExactly(true, true, true, false)
         assertThat(tracker.usedTotal()).isEqualTo(3)
+    }
+
+    @Test
+    fun `acquire throws quota exceeded once the limit is reached`() {
+        val tracker = tracker(QuotaProperties(modules = mapOf("bicimad" to QuotaProperties.ModuleQuota(1))))
+        tracker.acquire("bicimad")
+
+        assertThatThrownBy { tracker.acquire("bicimad") }
+            .isInstanceOfSatisfying(EmtQuotaExceeded::class.java) {
+                assertThat(it.module).isEqualTo("bicimad")
+                assertThat(it.resetsAt).isEqualTo(madridTime("2026-10-05T00:00:00"))
+            }
     }
 
     @Test

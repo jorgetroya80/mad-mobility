@@ -27,7 +27,7 @@ data class QuotaProperties(
 
 /**
  * Daily EMT call budget per module and in total, kept in memory and reset at midnight in the
- * [Clock]'s zone (Europe/Madrid). Every EMT request must call [tryAcquire] first.
+ * [Clock]'s zone (Europe/Madrid). Every EMT request must call [acquire] first.
  */
 @Component
 class QuotaTracker(
@@ -64,6 +64,11 @@ class QuotaTracker(
                 true
             }
         }
+
+    /** Reserves one EMT call for [module] or throws [EmtQuotaExceeded] when a daily limit is reached. */
+    fun acquire(module: String) {
+        if (!tryAcquire(module)) throw EmtQuotaExceeded(module, resetsAt())
+    }
 
     fun used(module: String): Int = lock.withLock { rollOverIfNewDay().let { perModule[module]?.get() ?: 0 } }
 

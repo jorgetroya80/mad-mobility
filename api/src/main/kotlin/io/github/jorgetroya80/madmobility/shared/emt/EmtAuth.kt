@@ -68,7 +68,7 @@ class EmtAuth(
         }
 
     private fun login(): Token {
-        if (!quotaTracker.tryAcquire(QUOTA_MODULE)) throw EmtQuotaExceeded(QUOTA_MODULE, quotaTracker.resetsAt())
+        quotaTracker.acquire(QUOTA_MODULE)
         val (body, status) = fetchLogin()
         if (status.is5xxServerError) {
             record("unavailable")
