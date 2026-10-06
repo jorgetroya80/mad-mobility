@@ -62,7 +62,7 @@ See each app's README for its internal architecture.
 
 ## Running locally
 
-You need JDK 25 and EMT MobilityLabs credentials ([sign up](https://mobilitylabs.emtmadrid.es/)). The web app is not built yet, so only the API runs for now.
+You need JDK 25 and EMT MobilityLabs credentials. The web app is not built yet, so only the API runs for now.
 
 1. Copy the env template and fill in your credentials (`EMT_EMAIL` and `EMT_PASSWORD`):
 
