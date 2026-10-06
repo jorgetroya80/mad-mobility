@@ -34,10 +34,12 @@ springdoc:
     info:
       title: Mad Mobility API
       version: ${build.version}
-      description: Real-time BiciMAD stations in Madrid, nearest first and ranked by what you need (a bike or a free dock).
+      description: >-
+        Real-time BiciMAD stations in Madrid, nearest first and ranked by what you need (a bike or a free dock).
+        Powered by [EMT de Madrid](https://www.emtmadrid.es) through its MobilityLabs open data platform.
       license:
-        name: 'Datos: EMT Madrid MobilityLabs'
-        url: https://mobilitylabs.emtmadrid.es/
+        name: MIT
+        url: https://opensource.org/licenses/MIT
     # Same origin as the document: the API runs wherever it is deployed
     servers:
       - url: /
