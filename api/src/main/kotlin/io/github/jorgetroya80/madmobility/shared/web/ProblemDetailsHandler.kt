@@ -5,7 +5,6 @@ import io.github.jorgetroya80.madmobility.shared.emt.EmtException
 import io.github.jorgetroya80.madmobility.shared.emt.EmtProtocolError
 import io.github.jorgetroya80.madmobility.shared.emt.EmtQuotaExceeded
 import io.github.jorgetroya80.madmobility.shared.emt.EmtUnavailable
-import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -57,7 +56,6 @@ private const val MILLIS_PER_SECOND = 1000L
  */
 @RestControllerAdvice
 class ProblemDetailsHandler(
-    private val emtCircuitBreaker: CircuitBreaker,
     private val clock: Clock,
 ) : ResponseEntityExceptionHandler() {
     @ExceptionHandler(EmtException::class)
@@ -117,7 +115,6 @@ class ProblemDetailsHandler(
 
                     EmtUnavailable.Reason.SERVER_ERROR,
                     EmtUnavailable.Reason.CONNECTION_FAILED,
-                    EmtUnavailable.Reason.CIRCUIT_OPEN,
                     -> HttpStatus.SERVICE_UNAVAILABLE to EMT_UNAVAILABLE
                 }
             }
@@ -137,10 +134,6 @@ class ProblemDetailsHandler(
                 Duration.between(clock.instant(), e.resetsAt)
             }
 
-            e is EmtUnavailable && e.reason == EmtUnavailable.Reason.CIRCUIT_OPEN -> {
-                Duration.ofMillis(emtCircuitBreaker.circuitBreakerConfig.waitIntervalFunctionInOpenState.apply(FIRST_OPEN_ATTEMPT))
-            }
-
             else -> {
                 null
             }
@@ -148,7 +141,6 @@ class ProblemDetailsHandler(
 
     private companion object {
         val log = LoggerFactory.getLogger(ProblemDetailsHandler::class.java)
-        const val FIRST_OPEN_ATTEMPT = 1
 
         val EMT_TIMEOUT = Problem(URI.create("urn:mad-mobility:problem:emt-timeout"), "EMT timeout", "EMT Madrid did not answer in time.")
         val EMT_UNAVAILABLE =

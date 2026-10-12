@@ -1,7 +1,5 @@
 package io.github.jorgetroya80.madmobility.shared.emt
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryRegistry
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -19,9 +17,6 @@ class EmtConfig {
     /** EMT dates, quota resets and logs are in Madrid time. */
     @Bean
     fun clock(): Clock = Clock.system(MADRID)
-
-    @Bean
-    fun emtCircuitBreaker(registry: CircuitBreakerRegistry): CircuitBreaker = registry.circuitBreaker(RESILIENCE_INSTANCE)
 
     @Bean
     fun emtRetry(registry: RetryRegistry): Retry = registry.retry(RESILIENCE_INSTANCE)
