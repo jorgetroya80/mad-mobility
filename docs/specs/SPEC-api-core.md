@@ -267,7 +267,8 @@ class CacheService(
 12. Cada error de la tabla de `ProblemDetailsHandler` devuelve su código HTTP y `application/problem+json` sin el `code` de la EMT; `503` por cupo o circuito abierto incluye `Retry-After`.
 13. Un preflight CORS desde un origen permitido recibe las cabeceras CORS; desde otro origen, no.
 14. `docker build` funciona; un test con Testcontainers comprueba que el contenedor arranca como usuario no root y `/health/live` responde 200.
-15. `./gradlew smokeTest` pasa contra la EMT real con credenciales locales (una vez, manual, resultado anotado en el PR).
+
+**Nota (2026-10-12):** SC6 y SC10 ya no aplican, y la mención a "circuito abierto" de SC12 tampoco — se quitó el circuit breaker (ver changelog). SC5 sigue vigente (timeout + 1 reintento). 15. `./gradlew smokeTest` pasa contra la EMT real con credenciales locales (una vez, manual, resultado anotado en el PR).
 
 ## Open Questions
 
