@@ -10,7 +10,7 @@ Una API propia como producto (BFF) que aísla la API de EMT MobilityLabs, normal
 
 No se usa tiempo real (WebSocket/SSE) ni notificaciones push. La EMT solo ofrece REST, y una prueba de 15 minutos (2026-10-03) mostró que los datos de BiciMAD se actualizan en bloques cada ~2 minutos (150-180 de 677 estaciones por bloque). Consultar más a menudo no da datos más frescos.
 
-El valor de portfolio está en lo que no se ve: monolito modular con arquitectura hexagonal por módulo, capa anticorrupción frente a la EMT, caché con fallback a datos antiguos, contrato OpenAPI generado desde el código (springdoc) y resiliencia (timeout, reintento, circuit breaker).
+El valor de portfolio está en lo que no se ve: monolito modular con arquitectura hexagonal por módulo, capa anticorrupción frente a la EMT, caché con fallback a datos antiguos, contrato OpenAPI generado desde el código (springdoc) y resiliencia (timeout, reintento).
 
 ## Architecture (Backend)
 
@@ -20,7 +20,7 @@ El valor de portfolio está en lo que no se ve: monolito modular con arquitectur
 api/
   shared/emt/          infraestructura común, sin dominio
     EmtAuth            login, caché del token (24 h), single-flight relogin
-    EmtHttpClient      timeout 5 s, 1 reintento con backoff, circuit breaker, chequeo de "code"
+    EmtHttpClient      timeout 5 s, 1 reintento con backoff, chequeo de "code"
     CacheService       TTL por módulo, stale-on-error, single-flight
     QuotaTracker       consumo de cupo por módulo
   modules/

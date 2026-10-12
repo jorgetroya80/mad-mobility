@@ -10,7 +10,7 @@ Módulo `api-core` del [Capability Map](CAPABILITY-MAP.md). Crea el proyecto Gra
 
 Que un módulo de dominio solo tenga que traducir datos de la EMT a su modelo: token, resiliencia, caché, cupo, health y observabilidad ya están resueltos y probados.
 
-- Como módulo de dominio, quiero un cliente EMT que gestione el token, los timeouts, el reintento, el circuit breaker y el chequeo del campo `code`, para que mi adaptador solo traduzca datos.
+- Como módulo de dominio, quiero un cliente EMT que gestione el token, los timeouts, el reintento y el chequeo del campo `code`, para que mi adaptador solo traduzca datos.
 - Como módulo de dominio, quiero una caché con TTL propio, single-flight y datos antiguos (`stale`) si la EMT falla, para responder rápido y sin gastar cupo.
 - Como mantenedor, quiero un límite de cupo diario por módulo que nunca se supere, y ver el consumo en métricas.
 - Como operador, quiero `/health/live` y `/health/ready`, logs JSON con request id y métricas de la EMT, para diagnosticar sin acceso al código.
@@ -34,7 +34,7 @@ Que un módulo de dominio solo tenga que traducir datos de la EMT a su modelo: t
 | Kotlin                           | 2.3.21 (la que gestiona Spring Boot 4.1.1)        | Lenguaje                                                          |
 | Spring Boot                      | 4.1.1                                             | Web MVC, Actuator, validación, `RestClient`, logging estructurado |
 | Spring Modulith                  | 2.1.x (línea de Boot 4.1)                         | Verificación de módulos en tests                                  |
-| Resilience4j                     | 2.x (módulos core; starter si existe para Boot 4) | Retry y circuit breaker del cliente EMT                           |
+| Resilience4j                     | 2.x (módulos core; starter si existe para Boot 4) | Retry del cliente EMT                                             |
 | Caffeine                         | 3.x                                               | Almacenamiento de `CacheService`                                  |
 | Micrometer                       | gestionado por Boot                               | Métricas vía Actuator                                             |
 | Gradle                           | wrapper 9.3.1                                     | Build (máximo probado con el plugin Kotlin 2.3.21)                |
@@ -95,7 +95,7 @@ api/
       emt/
         EmtProperties.kt         credenciales, base URL, timeouts, umbrales (validado al arrancar)
         EmtAuth.kt               login, caché del token, single-flight relogin
-        EmtHttpClient.kt         RestClient + retry + circuit breaker + chequeo de code + cupo
+        EmtHttpClient.kt         RestClient + retry + chequeo de code + cupo
         EmtException.kt          jerarquía sellada de errores
         CacheService.kt          TTL por módulo, stale-on-error, single-flight
         QuotaTracker.kt          cupo diario por módulo y global
@@ -135,9 +135,8 @@ fun <T : Any> get(module: String, path: String, elementType: Class<T>): List<T> 
 - Añade la cabecera `accessToken`. Timeouts: conexión 2 s, lectura 5 s.
 - Antes de cada llamada pide cupo a `QuotaTracker`; sin cupo lanza `EmtQuotaExceeded` sin llamar a la EMT.
 - Reintento: 1, con backoff de 500 ms, solo ante timeout, error de E/S o 5xx. Nunca ante 4xx.
-- Circuit breaker (uno para toda la EMT): ventana de 10 llamadas, 50 % de fallos lo abre, 30 s abierto, 2 llamadas de prueba en semiabierto.
 - Chequeo de `code` del cuerpo: `00`/`01` es éxito y devuelve `data`; token inválido invalida el token y reintenta una vez con login nuevo; cualquier otro código lanza `EmtProtocolError` con el código y `description`.
-- Errores (`EmtException`, sellada): `EmtUnavailable` con motivo `TIMEOUT`, `SERVER_ERROR` (5xx), `CONNECTION_FAILED` (conexión cortada, inalcanzable o E/S leyendo el cuerpo) o `CIRCUIT_OPEN`, `EmtQuotaExceeded`, `EmtAuthFailed` (credenciales rechazadas), `EmtProtocolError` (código inesperado o cuerpo ilegible).
+- Errores (`EmtException`, sellada): `EmtUnavailable` con motivo `TIMEOUT`, `SERVER_ERROR` (5xx) o `CONNECTION_FAILED` (conexión cortada, inalcanzable o E/S leyendo el cuerpo), `EmtQuotaExceeded`, `EmtAuthFailed` (credenciales rechazadas), `EmtProtocolError` (código inesperado o cuerpo ilegible).
 - Nunca registra el token, la contraseña ni el `passKey`.
 
 ### `CacheService`
@@ -164,7 +163,7 @@ fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 ### Health
 
 - `/health/live`: estado de liveness de Spring. `/health/ready`: readiness de Spring. Ninguno depende de la EMT: con la EMT caída se sigue sirviendo caché.
-- `/health`: incluye el componente `emt` con estado del circuito, validez del token (sí/no y caducidad) y cupo usado. Nunca el token.
+- `/health`: incluye el componente `emt` con validez del token (sí/no y caducidad) y cupo usado. Nunca el token.
 - La configuración inválida (faltan credenciales) hace que la app no arranque, con un mensaje que nombra la variable que falta.
 - Actuator solo expone `health` e `info` por HTTP; `metrics` queda habilitado internamente para el registro de Micrometer.
 
@@ -172,7 +171,7 @@ fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 
 - Logs: `logging.structured.format.console=ecs` (JSON) por defecto; perfil `local` con formato legible.
 - `RequestIdFilter`: acepta `X-Request-Id` si cumple `[A-Za-z0-9-]{1,64}`, si no genera un UUID. Lo pone en el MDC (`requestId`) y en la respuesta.
-- Métricas: `http.client.requests` de `RestClient` (latencia y estado de la EMT), `emt.cache.gets{module,result=hit|miss|stale}`, `emt.quota.used{module}`, `emt.quota.limit{module}`, `emt.auth.logins{result}` y las del circuit breaker de Resilience4j.
+- Métricas: `http.client.requests` de `RestClient` (latencia y estado de la EMT), `emt.cache.gets{module,result=hit|miss|stale}`, `emt.quota.used{module}`, `emt.quota.limit{module}` y `emt.auth.logins{result}`.
 
 ### Web
 
@@ -183,7 +182,6 @@ fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
   | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
   | `EmtUnavailable` (`TIMEOUT`)                           | `504 Gateway Timeout`                                                              |
   | `EmtUnavailable` (`SERVER_ERROR`, `CONNECTION_FAILED`) | `503 Service Unavailable`                                                          |
-  | `EmtUnavailable` (`CIRCUIT_OPEN`)                      | `503 Service Unavailable` + `Retry-After` (segundos hasta semiabierto)             |
   | `EmtQuotaExceeded`                                     | `503 Service Unavailable` + `Retry-After` (segundos hasta las 00:00 Europe/Madrid) |
   | `EmtAuthFailed`, `EmtProtocolError`                    | `502 Bad Gateway`                                                                  |
   | Cualquier otra excepción                               | `500 Internal Server Error`, sin detalle interno                                   |
@@ -236,7 +234,7 @@ class CacheService(
 | ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Unitario    | JUnit, MockK, AssertJ, `Clock` fijo             | `CacheService` (TTL, stale, `max-stale`, single-flight), `QuotaTracker` (límites, reinicio), `EmtAuth` (margen, single-flight) |
 | Cliente     | `MockRestServiceServer` (`spring-test`)         | Lógica de `EmtHttpClient` sin red: chequeo de `code`, relogin, mapeo de errores, cupo agotado sin llamada a la EMT             |
-| Integración | `@SpringBootTest` + WireMock dentro del proceso | HTTP real: login y cabeceras, timeouts, reintento, circuit breaker, concurrencia (single-flight)                               |
+| Integración | `@SpringBootTest` + WireMock dentro del proceso | HTTP real: login y cabeceras, timeouts, reintento, concurrencia (single-flight)                                                |
 | Imagen      | Testcontainers                                  | La imagen de `api/Dockerfile` arranca como no root y `/health/live` responde 200                                               |
 | Web         | `@SpringBootTest` + `MockMvc`                   | `/health/*`, CORS, `X-Request-Id`, problem+json, ausencia de secretos en logs                                                  |
 | Modularidad | Spring Modulith `ApplicationModules.verify()`   | `shared` sin dependencias de `modules`; módulos sin dependencias entre sí                                                      |
@@ -249,8 +247,8 @@ class CacheService(
 
 ## Boundaries
 
-- **Always:** credenciales solo en variables de entorno; toda llamada a la EMT pasa por `EmtHttpClient` (cupo y circuit breaker); `Clock` inyectado para lógica temporal; imágenes Docker fijadas por digest; `./gradlew build` en verde antes de abrir PR; Conventional Commits con scope `api`.
-- **Ask first:** dependencias fuera de esta tabla; cambiar los valores por defecto de timeouts, reintento, circuit breaker, TTL o cupo; exponer más endpoints de Actuator; cambiar la estructura de paquetes o la detección de módulos; añadir Redis, base de datos o corrutinas.
+- **Always:** credenciales solo en variables de entorno; toda llamada a la EMT pasa por `EmtHttpClient` (cupo); `Clock` inyectado para lógica temporal; imágenes Docker fijadas por digest; `./gradlew build` en verde antes de abrir PR; Conventional Commits con scope `api`.
+- **Ask first:** dependencias fuera de esta tabla; cambiar los valores por defecto de timeouts, reintento, TTL o cupo; exponer más endpoints de Actuator; cambiar la estructura de paquetes o la detección de módulos; añadir Redis, base de datos o corrutinas.
 - **Never:** credenciales o token en el repositorio, en logs, en respuestas o hacia el navegador; llamar a la EMT real desde tests de CI; código de dominio (estaciones, paradas) en `shared`; desactivar o saltar `ModularityTest`; bajar el umbral de cobertura para pasar el build.
 
 ## Success Criteria
@@ -286,3 +284,4 @@ class CacheService(
 - 2026-10-04: endurecimiento tras revisión (agente `spring-boot-engineer`): el login fallido también es single-flight (los que esperan comparten el error); credenciales rechazadas se recuerdan 1 min sin volver a llamar a la EMT; `EmtQuotaExceeded` se ignora en el circuit breaker; las excepciones con `@ResponseStatus` de los módulos conservan su código; las desconexiones del cliente no se registran como error. **Límite conocido de SC5:** los 12 s valen con un token válido; si además hay que hacer login y relogin, el peor caso de una petición ronda los 40 s (4 llamadas de 5 s por intento × 2 intentos). Se acepta para el MVP.
 - 2026-10-04: spec implementada (T1-T12, PRs #20-#32).
 - 2026-10-05: `EmtUnavailable` gana el motivo `CONNECTION_FAILED` (conexión cortada, inalcanzable o E/S leyendo el cuerpo); `SERVER_ERROR` queda solo para 5xx. La respuesta HTTP no cambia: ambos dan `503` `emt-unavailable`.
+- 2026-10-12: se quita el circuit breaker de `EmtHttpClient` (bean, cliente, health, `ProblemDetailsHandler`, enum `EmtUnavailable.Reason.CIRCUIT_OPEN` y configuración de `resilience4j.circuitbreaker`): para este proyecto (una sola dependencia externa, tráfico bajo/personal) añadía estado y superficie de testing sin valor proporcional. Queda solo timeout + retry como resiliencia. `/health` ya no reporta estado del circuito; el health de `emt` pasa a token válido + cupo. `CIRCUIT_OPEN` como motivo de `503` lo siguen cubriendo `SERVER_ERROR`/`CONNECTION_FAILED`. Ver [PLAN-emt-resilience-simplify.md](../plans/PLAN-emt-resilience-simplify.md).
