@@ -9,7 +9,6 @@ import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationSnapshot
 import io.github.jorgetroya80.madmobility.modules.bicimad.domain.StationStatus
 import io.github.jorgetroya80.madmobility.modules.bicimad.ports.StationProvider
 import io.github.jorgetroya80.madmobility.shared.web.RequestIdFilter
-import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.every
@@ -45,9 +44,6 @@ class StationsControllerTest(
         // Needed by the shared ProblemDetailsHandler, which the web slice loads
         @Bean
         fun clock(): Clock = Clock.systemUTC()
-
-        @Bean
-        fun emtCircuitBreaker(): CircuitBreaker = CircuitBreaker.ofDefaults("test")
 
         // Needed by the shared RateLimitFilter, which the web slice loads
         @Bean

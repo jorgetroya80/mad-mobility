@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
-import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -28,7 +27,6 @@ class EmtQuotaIntegrationTest : EmtWireMockTest() {
             EmtHttpClient(
                 restClient,
                 EmtAuth(restClient, properties, clock, SimpleMeterRegistry(), quota),
-                CircuitBreaker.ofDefaults("test"),
                 NO_RETRY,
                 quota,
             )
@@ -59,7 +57,6 @@ class EmtQuotaIntegrationTest : EmtWireMockTest() {
             EmtHttpClient(
                 restClient,
                 EmtAuth(restClient, properties, clock, SimpleMeterRegistry(), quota),
-                CircuitBreaker.ofDefaults("test"),
                 NO_RETRY,
                 quota,
             )
