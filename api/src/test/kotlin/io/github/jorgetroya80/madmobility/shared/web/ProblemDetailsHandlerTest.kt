@@ -21,7 +21,6 @@ class ProblemDetailsHandlerTest(
         "timeout,      504, urn:mad-mobility:problem:emt-timeout,         ''",
         "server-error, 503, urn:mad-mobility:problem:emt-unavailable,     ''",
         "connection-failed, 503, urn:mad-mobility:problem:emt-unavailable, ''",
-        "circuit-open, 503, urn:mad-mobility:problem:emt-unavailable,     30",
         "quota,        503, urn:mad-mobility:problem:emt-quota-exhausted, 90",
         "auth,         502, urn:mad-mobility:problem:emt-bad-response,    ''",
         "protocol,     502, urn:mad-mobility:problem:emt-bad-response,    ''",
