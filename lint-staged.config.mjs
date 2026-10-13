@@ -1,18 +1,10 @@
 import { existsSync } from 'node:fs';
-import { resolve, sep } from 'node:path';
 
 const hasWeb = existsSync('web/tsconfig.json');
 const hasApi = existsSync('api/build.gradle.kts');
-const webDir = resolve('web') + sep;
-
-const outsideWeb = (files) => files.filter((file) => !file.startsWith(webDir));
 
 /** @type {import('lint-staged').Configuration} */
 export default {
-  '*.{json,md,yml,yaml,css}': (files) => {
-    const rootFiles = outsideWeb(files);
-    return rootFiles.length > 0 ? `prettier --write ${rootFiles.join(' ')}` : [];
-  },
   'web/**/*.{ts,tsx}': (files) =>
     hasWeb
       ? [
