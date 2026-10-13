@@ -224,7 +224,7 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - T1-T11 en la rama `feat/web-shell`, un commit por tarea (T10 en dos), en el PR #43 (squash merge). Cambio previo en el API: PR #44 y release `api-v0.4.0` (PR #45) para que el cliente acepte un `fetch` propio.
 - SC1-SC11 y SC13 verificados:
   - `pnpm install --frozen-lockfile` desde cero con token válido; CI con `GITHUB_TOKEN` en verde.
-  - `lint`, `typecheck`, `test` (56 tests; `src/shared` y `src/widgets` al 100 %) y `build`.
+  - `lint`, `typecheck`, `test` (63 tests; `src/shared` y `src/widgets` al 100 %) y `build`.
   - Proxy con `bootRun` (200 con datos reales), `dev:mock` en Chrome headless (fixture de 3 estaciones), sin MSW en `dist/`.
   - Layout y atribuciones con el build de producción a 360, 768 y 1280 px; favicon sin 404.
   - Carga inicial 78,56 KB gzip de JS (MapLibre en diferido: 274,99 KB + worker ≈ 144 KB).
@@ -253,3 +253,4 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: T11 implementada. `web/README.md` reescrito (requisitos con `~/.npmrc` y token, comandos, `VITE_API_BASE_URL`, arquitectura), favicon SVG (`web/public/favicon.svg`, sin 404 de `favicon.ico`) y README raíz actualizado (cómo arrancar la web). Repaso de SC1-SC13: todos en verde salvo SC12 (pendiente de release). Avisos de consola del estilo `liberty` de OpenFreeMap (`highway-shield-*`) ignorados: son del estilo, no del código.
 - 2026-10-13: plan implementado.
 - 2026-10-13: revisión del PR #43: cuatro arreglos menores en un commit `fix(web)` (proxy, validación de `VITE_API_BASE_URL`, arranque de MSW, plugin del worker; 57 tests). Tres puntos abiertos en la spec (landmarks, fechas inválidas, panel montado dos veces), a resolver antes del merge.
+- 2026-10-13: puntos abiertos de la revisión del PR #43, resueltos en un commit `fix(web)`. `useMediaQuery` (`useSyncExternalStore`) en `shared/lib`; `AppLayout({ title, map, panel, panelLabel })` monta solo el contenedor del breakpoint, todo dentro de `<main>` con el `<h1>`; `SidePanel` es una `section` (región con nombre). Tests: `stubMatchMedia` en `test/matchMedia.ts` (jsdom no tiene `matchMedia`; por defecto por debajo de `md`) y `unstubGlobals` en Vitest. 63 tests; lint, typecheck y build en verde; capturas del build a móvil y 1280 px correctas. Fechas inválidas: regla en la spec para `web-bicimad`, sin código. La aceptación de T9 (`aside`) queda como histórico.

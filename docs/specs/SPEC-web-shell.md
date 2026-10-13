@@ -125,12 +125,13 @@ web/
         constants.ts           POLL_INTERVAL_MS = 60_000, MADRID_CENTER (Puerta del Sol), MADRID_ZOOM, MAP_STYLE_URL, MD_MEDIA_QUERY
         index.ts
       lib/
+        media/useMediaQuery.ts true si la media query se cumple; se actualiza al cambiar
         time/formatRelative.ts "hace X" con Intl.RelativeTimeFormat (es)
         index.ts
       ui/
         base-map/              envoltorio de MapLibre (único sitio que importa maplibre-gl); se exporta con carga diferida
         bottom-sheet/          panel inferior: plegado / desplegado
-        side-panel/            panel lateral fijo (md:)
+        side-panel/            panel lateral fijo (md:), región con nombre
         state-message/         estados vacío / error / cargando
         relative-time/         <RelativeTime date=…> con formatRelative
         data-attribution/      "Datos: EMT Madrid MobilityLabs"
@@ -159,7 +160,8 @@ web/
 - Se prueba a 360, 768 y 1280 px de ancho.
 - Atribución siempre visible: `AttributionControl` de MapLibre (OpenStreetMap / OpenFreeMap) y `DataAttribution` (EMT, al pie del panel). Por debajo de `md` la de MapLibre va arriba a la derecha, para que el bottom sheet desplegado no la tape; desde `md`, abajo a la derecha. `BaseMap` la recoloca al cambiar de breakpoint (`matchMedia` con `MD_MEDIA_QUERY = '(min-width: 48rem)'`, igual que el `md` por defecto de Tailwind; hay que mantenerlos sincronizados).
 - Bottom sheet animado: siempre mide `60dvh` y se desplaza con `translate-y` (300 ms, sin animación con `motion-reduce`); plegado solo asoma el asa (44 px, variable CSS `--handle-height`) y el contenido queda `inert`. Una franja del alto del asa ocupa sitio en el flujo, así el mapa termina encima del asa y queda centrado en la zona visible.
-- `AppLayout({ map, panel, panelLabel })` muestra el panel con CSS (`md:hidden` / `hidden md:block`): el contenido del panel se monta dos veces y la copia oculta queda fuera del árbol de accesibilidad. Si `web-bicimad` añade estado local al panel, habrá que subir ese estado o elegir el contenedor con `matchMedia`.
+- `AppLayout({ title, map, panel, panelLabel })` monta un solo contenedor para el panel, elegido con `useMediaQuery(MD_MEDIA_QUERY)` (`shared/lib`, sobre `useSyncExternalStore`): `BottomSheet` por debajo de `md`, `SidePanel` desde `md`. El contenido del panel existe una vez, así su estado (selección, scroll) no se duplica; al cruzar el breakpoint el panel se vuelve a montar.
+- Landmarks: `<main>` envuelve el `<h1>` (`sr-only`, texto de `title`), el panel y el mapa, porque en `web-bicimad` la lista de estaciones es contenido principal. El panel es una región con nombre (`section` con `aria-label` en `SidePanel`; `section` con `aria-labelledby` del asa en `BottomSheet`) y el mapa otra (`Mapa de Madrid`).
 
 ### Cambios fuera de `web/`
 
@@ -196,6 +198,8 @@ export function RelativeTime({ date, now }: RelativeTimeProps) {
   return <time dateTime={date.toISOString()}>{formatRelative(date, now)}</time>;
 }
 ```
+
+`formatRelative` y `RelativeTime` esperan un `Date` válido: con uno inválido lanzan `RangeError` (`toISOString`, `Intl.RelativeTimeFormat` con `NaN`). La validación va en la frontera, no en el componente: `web-bicimad` convierte `updatedAt` del API a `Date` en un solo sitio y trata una fecha inválida como dato ausente (no muestra la hora), sin llegar a `RelativeTime`.
 
 **SOLID:**
 
@@ -235,7 +239,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 | ----------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Unidad      | Vitest                            | `formatRelative` (segundos, minutos, límites), `env` (sin valor → `/api`, `/` final quitada, URL válida, valor inválido lanza error) |
 | Componentes | Vitest + Testing Library + jsdom  | `BottomSheet` (abrir/cerrar, `aria-expanded`, teclado), `StateMessage`, `RelativeTime`                                               |
-| Layout      | Testing Library                   | `AppLayout` renderiza el panel y el mapa; `MapPage` muestra el estado vacío y la atribución                                          |
+| Layout      | Testing Library                   | `AppLayout` renderiza el panel una vez y el mapa dentro de `main`; `MapPage` muestra el estado vacío y la atribución                 |
 | API         | Vitest + MSW (`setupServer`)      | `shared/api` llama a `/v1/bicimad/stations` con la `baseUrl` configurada y devuelve datos tipados                                    |
 | Mapa        | Vitest con `maplibre-gl` simulado | `BaseMap` crea el mapa con centro, zoom, estilo y `AttributionControl`; lo destruye al desmontar                                     |
 | Manual      | navegador                         | 360 / 768 / 1280 px; `dev` contra `bootRun` y `dev:mock` sin backend (anotado en el PR)                                              |
@@ -272,11 +276,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 
 ## Open Questions
 
-Puntos de la revisión del PR #43, a resolver antes del merge (2026-10-13):
-
-1. **Landmarks:** solo el mapa está en `<main>` y el panel es un `aside` (complementario). En `web-bicimad` la lista de estaciones será el contenido principal, y el `<h1>` queda fuera de `main`. Propuesta: `main` envuelve panel y mapa; el panel pasa a sección con nombre; el `<h1>` dentro de `main`.
-2. **Fechas inválidas:** `RelativeTime` y `formatRelative` lanzan `RangeError` con un `Date` inválido (`toISOString`, `Intl.RelativeTimeFormat` con `NaN`). Propuesta: validar en la frontera (al convertir `updatedAt` del API) y no en el componente.
-3. **Panel montado dos veces:** con estado en el panel (selección, scroll), las dos copias se desincronizan. Opciones: estado elevado fuera del panel, o elegir el contenedor con un hook `useMediaQuery(MD_MEDIA_QUERY)`.
+Ninguna. Los tres puntos de la revisión del PR #43 están resueltos (ver Layout responsive, Code Style y Changelog).
 
 ## Changelog
 
@@ -302,3 +302,4 @@ Puntos de la revisión del PR #43, a resolver antes del merge (2026-10-13):
 - 2026-10-13: T10. Atribución de MapLibre arriba a la derecha por debajo de `md` (decisión del usuario), bottom sheet animado (decisión del usuario: barra + texto "Estaciones" en el asa) y panel montado por CSS en los dos contenedores. Texto del estado vacío confirmado; sin título visible en el panel lateral.
 - 2026-10-13: spec implementada (T1-T11, PR #43). SC1-SC11 y SC13 verificados; SC12 se confirma en la primera release de `web`.
 - 2026-10-13: revisión del PR #43. Arreglos menores: el proxy de Vite solo captura `/api/` (`^/api/`); `VITE_API_BASE_URL` rechaza URLs relativas al protocolo (`//host`); en modo mock, si MSW no arranca se informa con `reportError` y la app se pinta igual; el plugin del worker lee el archivo una vez. Tres puntos abiertos (Open Questions) a resolver antes del merge.
+- 2026-10-13: puntos abiertos de la revisión del PR #43, resueltos. Landmarks: `main` envuelve `<h1>`, panel y mapa; `SidePanel` pasa de `aside` a `section` con nombre; `AppLayout` recibe `title`. Panel montado una sola vez: hook `useMediaQuery(MD_MEDIA_QUERY)` en `shared/lib`. Fechas inválidas: sin cambio de código; regla para `web-bicimad` (validar `updatedAt` al convertirlo, en la frontera).
