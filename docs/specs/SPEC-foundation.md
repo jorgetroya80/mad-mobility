@@ -159,6 +159,7 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 - Comprobación de desajuste del contrato: el job `api` regenera el OpenAPI con springdoc y falla si difiere de `openapi/bicimad.json`. El paso concreto se define en `api-bicimad`; aquí solo se reserva.
 - Job `tooling` (si cambian `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc`, `*.config.mjs` o `.prettierrc.json`): `pnpm install --frozen-lockfile` (aplica las políticas de `pnpm-workspace.yaml`, como `minimumReleaseAge`) y `prettier --check .`.
 - Job `workflows` (si `workflows`): `actionlint`.
+- Job `release-scope` (solo en PR): falla si el título del PR genera release (`feat`, `fix`, `perf` o cualquier tipo con `!`) y el PR toca a la vez `api/` y `web/`. release-please asigna el commit del squash a cada componente cuya carpeta toca, así que ese PR sacaría release de los dos (el PR #43 subió `api` a 0.5.0 sin cambios en el API). Los cambios del otro componente van antes en un PR propio con un tipo que no genera release (`build`, `chore`). El PR de release (`chore: release main`) y los de Dependabot (`chore(deps)`) no se ven afectados.
 - Job `ci-ok`: depende de todos, `if: always()`, falla si alguno falló o se canceló; los omitidos cuentan como éxito. **Es el único check requerido** en la protección de `main`.
 
 ### Release (`release.yml`)
@@ -169,7 +170,7 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 - Job `publish-web` (si `web--release_created`): `pnpm --filter web build` y adjunta `web-dist.tar.gz` a la release.
 - Jobs `deploy-api` y `deploy-web`: placeholders que solo se ejecutan si la variable de repositorio `DEPLOY_ENABLED == 'true'`. Se completan en el módulo `deploy`.
 - Publicación y despliegue van en el mismo workflow porque las releases creadas con `GITHUB_TOKEN` no disparan otros workflows.
-- release-please usa el `GITHUB_TOKEN` automático (sin secretos), igual que en `artwork-search`. Como los eventos de ese token no inician workflows, el PR de release no ejecuta los checks requeridos por sí solo: **antes de mergearlo hay que cerrarlo y reabrirlo** (o editarlo). Por eso `ci.yml` escucha también el tipo `edited`.
+- release-please usa el `GITHUB_TOKEN` automático (sin secretos), igual que en `artwork-search`. Como los eventos de ese token no inician workflows, el PR de release no ejecuta los checks requeridos por sí solo: **antes de mergearlo hay que cerrarlo y reabrirlo** (o editarlo). Por eso `ci.yml` escucha también el tipo `edited`. Antes de editarlo, comprobar que no hay ya una ejecución en cola para la rama del PR de release: si la hay, la edición crea otra y `cancel-in-progress` cancela una de las dos (pasó en el PR #46).
 
 **`release-please-config.json`:**
 
@@ -257,3 +258,4 @@ Este módulo no tiene código de aplicación; se verifica con escenarios reprodu
 - 2026-10-05: el job `pr-title` pasa de `pr-title.yml` a `ci.yml` (solo en `pull_request`) y forma parte de `ci-ok`; el nombre del check no cambia, así que el ruleset de `main` sigue igual. Se quita el scope `contract` (módulo obsoleto) de `commitlint` y de `pr-title`. El job `contract` y la carpeta `openapi/` ya se eliminaron en `api-bicimad`.
 - 2026-10-13: Prettier deja de ejecutarse en pre-commit y en el job `tooling` de CI (decisión del usuario durante `web-shell`). `web/` lo formatea oxfmt (ver [SPEC-web-shell.md](SPEC-web-shell.md)); Kotlin sigue con Spotless.
 - 2026-10-13: Prettier eliminado del repo (dependencia, `.prettierrc.json` y `.prettierignore`).
+- 2026-10-13: nuevo job `release-scope` en `ci.yml` (decisión del usuario tras el PR de release #46): un PR que genera release solo puede tocar `api/` o `web/`. Nota sobre la ejecución de CI en cola antes de editar el PR de release.

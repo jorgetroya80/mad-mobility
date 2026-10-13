@@ -2,7 +2,8 @@ name: CI
 
 on:
   pull_request:
-    # "edited" lets a manual edit re-run CI on release-please PRs created with GITHUB_TOKEN
+    # "edited": a manual edit re-runs CI on release-please PRs created with GITHUB_TOKEN,
+    # and a title change re-runs pr-title and release-scope
     types: [opened, edited, synchronize, reopened]
   push:
     branches: [main]
@@ -26,6 +27,8 @@ jobs:
       web: ${{ steps.filter.outputs.web == 'true' && steps.exists.outputs.web == 'true' }}
       workflows: ${{ steps.filter.outputs.workflows }}
       tooling: ${{ steps.filter.outputs.tooling }}
+      api-folder: ${{ steps.filter.outputs.api-folder }}
+      web-folder: ${{ steps.filter.outputs.web-folder }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: filter
@@ -49,6 +52,11 @@ jobs:
               - 'pnpm-workspace.yaml'
               - '.nvmrc'
               - '*.config.mjs'
+            # Folders release-please maps to a component (release-scope job)
+            api-folder:
+              - 'api/**'
+            web-folder:
+              - 'web/**'
       - id: exists
         name: Check which projects exist
         run: |
@@ -182,9 +190,30 @@ jobs:
             repo
           requireScope: false
 
+  # release-please gives a squash commit to every component whose folder it touches, so a
+  # releasing PR that also touches the other component releases it too (PR #43 bumped api).
+  release-scope:
+    name: release-scope
+    needs: changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a releasing PR touches both api/ and web/
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          TOUCHES_API: ${{ needs.changes.outputs.api-folder }}
+          TOUCHES_WEB: ${{ needs.changes.outputs.web-folder }}
+        run: |
+          releasing='^((feat|fix|perf)(\([^)]*\))?!?|[a-z]+(\([^)]*\))?!):'
+          if [[ "$TITLE" =~ $releasing && "$TOUCHES_API" == true && "$TOUCHES_WEB" == true ]]; then
+            echo "::error::A feat, fix, perf or breaking PR must touch only api/ or web/. Move the other component's changes to a separate build or chore PR."
+            exit 1
+          fi
+          echo "Release scope OK."
+
   ci-ok:
     name: ci-ok
-    needs: [changes, api, web, tooling, workflows, pr-title]
+    needs: [changes, api, web, tooling, workflows, pr-title, release-scope]
     if: always()
     runs-on: ubuntu-latest
     steps:
