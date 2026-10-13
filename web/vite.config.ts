@@ -1,13 +1,32 @@
 /// <reference types="vitest/config" />
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 
 const MIN_LINE_COVERAGE = 80;
+const MOCK_MODE = 'mock';
+const MOCK_SERVICE_WORKER_PATH = '/mockServiceWorker.js';
+
+// Serves MSW's worker script only in `vite --mode mock`, so it never lands in public/ or dist/.
+function mockServiceWorker(): Plugin {
+  const workerFile = createRequire(import.meta.url).resolve('msw/mockServiceWorker.js');
+  return {
+    name: 'mock-service-worker',
+    apply: (_config, { command, mode }) => command === 'serve' && mode === MOCK_MODE,
+    configureServer(server) {
+      server.middlewares.use(MOCK_SERVICE_WORKER_PATH, (_request, response) => {
+        response.setHeader('Content-Type', 'application/javascript');
+        response.end(readFileSync(workerFile));
+      });
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), mockServiceWorker()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

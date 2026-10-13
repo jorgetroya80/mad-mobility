@@ -123,7 +123,7 @@ T11 cierre (tras T10)
   - Archivos: `web/src/shared/api/{client.ts,client.test.ts,index.ts}`, `web/src/shared/api/mocks/{fixtures.ts,handlers.ts,node.ts}`, `web/test/setup.ts`, `web/src/app/providers/QueryProvider.tsx`, `web/src/app/App.tsx`.
   - Commit: `feat(web): add typed api client with msw test server`.
 
-- [ ] **T6: Modo `dev:mock`** (S, ~45 min)
+- [x] **T6: Modo `dev:mock`** (S, ~45 min)
   - Descripción: `shared/api/mocks/browser.ts` (`setupWorker`). `main.tsx` arranca el worker solo si `import.meta.env.MODE === 'mock'`, con `import()` dinámico, antes de montar React. Plugin pequeño en `vite.config.ts` que, solo en modo `mock`, sirve `/mockServiceWorker.js` desde `msw/lib/mockServiceWorker.js`. Script `dev:mock` = `vite --mode mock`.
   - Aceptación:
     - SC7: con `dev:mock` y sin backend, `await (await fetch('/api/v1/bicimad/stations')).json()` en la consola devuelve el fixture.
@@ -134,7 +134,7 @@ T11 cierre (tras T10)
 
 #### Checkpoint 2: datos
 
-- [ ] `test`, `typecheck` y `build` en verde; SC7 y SC8 comprobados.
+- [x] `test`, `typecheck` y `build` en verde; SC7 y SC8 comprobados.
 - [ ] Revisión con el usuario.
 
 ### Fase 3: Mapa y layout
@@ -230,3 +230,4 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: T4 implementada con TDD (rojo: el import de `./env` no resolvía; verde: 11 tests, `shared/config` al 100 %). `parseApiBaseUrl` es una función pura y `env` la aplica a `import.meta.env` (tipado en `src/vite-env.d.ts`); `/` se mantiene como `/`. `MADRID_CENTER = { lng, lat }` y solo `MADRID_ZOOM = 15`. Umbrales de cobertura por glob en `vite.config.ts`; comprobado que `test` falla por debajo del 80 % en `src/shared`. Fuera de la lista de archivos: `index.test.ts` (prueba la API pública de `shared/config`; sin él, `constants.ts` sin consumidores dejaba `src/shared` en el 76,92 %), `coverage/` en `.gitignore` y `allow` de jest-dom en `import/no-unassigned-import`. SC1 comprobado desde cero con el token nuevo: instalación con la caché de pnpm vacía.
 - 2026-10-13: checkpoint 1. Rama empujada y PR #43 en borrador; CI en verde (`API (Gradle)`, `Web (pnpm)`, `Root tooling`, `Lint workflows`, `pr-title`, `ci-ok`): `GITHUB_TOKEN` lee el cliente desde GitHub Packages (SC11).
 - 2026-10-13: T5 implementada. El cliente 0.3.0 no aceptaba un `fetch` propio; por decisión del usuario se cambió antes el cliente (PR #44, `createBicimadClient(baseUrl, { fetch })`, release `api-v0.4.0` en el PR #45) en lugar de añadir `openapi-fetch` a `web`. `feat/web-shell` rebasada sobre `main`. `baseUrl` absoluta (`new URL(env.apiBaseUrl, location.origin)`) porque el `Request` de Node no acepta rutas relativas (aprobado). `onUnhandledFrame: 'error'` existe en msw 3.0.2: una petición sin handler rechaza la llamada y MSW lo registra con `console.error`; el test comprueba las dos cosas. Fixture tipado con `StationsResponse` (3 estaciones); un tipo incorrecto en el fixture rompe `typecheck` (comprobado). `createQueryClient()` con los defaults de la spec (`staleTime = POLL_INTERVAL_MS`). Añadido `QueryProvider.test.tsx`. 15 tests; `src/shared/api` al 100 %. MSW fuera del build (76,13 KB gzip de JS). Aviso de pnpm: `@vitest/mocker` pide msw `^2.4.9` como peer opcional (solo modo navegador de Vitest; no afecta).
+- 2026-10-13: T6 implementada. `enableMocking()` en `main.tsx` (await de nivel superior) solo en modo `mock`, con `onUnhandledFrame: 'bypass'` para no llenar la consola con teselas y assets de Vite. Plugin propio en `vite.config.ts` (`apply` solo con `serve` + modo `mock`) que sirve `msw/mockServiceWorker.js`. No se usa el plugin oficial `msw/vite`: emite el worker al build si se importa `virtual:msw`, lo que choca con SC8. SC8: sin `mockServiceWorker.js` ni código de MSW en `dist/` (76,14 KB gzip). SC7 comprobado en Chrome headless sin backend: `fetch('/api/v1/bicimad/stations')` devuelve el fixture y la consola muestra "[MSW] Mocking enabled.". Con `dev` normal, `/mockServiceWorker.js` cae en el fallback de Vite (`index.html`). Checkpoint 2 pendiente de revisión del usuario.
