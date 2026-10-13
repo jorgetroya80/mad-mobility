@@ -42,7 +42,7 @@ Comprobadas el 2026-10-13 en npm. Todas tienen al menos 10 días a fecha de hoy 
 | `@testing-library/user-event`      | 14.6.7    | 2026-09-02           |                                                         |
 | `@testing-library/jest-dom`        | 7.0.1     | 2026-08-09           |                                                         |
 | `msw`                              | 3.0.2     | 2026-10-03           | `onUnhandledFrame` probado con 3.0.3; se revalida en T5 |
-| `@jorgetroya80/bicimad-client`     | 0.3.0     | release `api-v0.3.0` | Excluido de `minimumReleaseAge`                         |
+| `@jorgetroya80/bicimad-client`     | 0.4.0     | release `api-v0.4.0` | Excluido de `minimumReleaseAge`                         |
 
 `api/client` fija sus `devDependencies` a lo que ya resuelve el lockfile: `typescript` 5.9.3 y `openapi-typescript` 7.13.0.
 
@@ -107,13 +107,13 @@ T11 cierre (tras T10)
 
 #### Checkpoint 1: base
 
-- [ ] `lint`, `typecheck`, `test` y `build` en verde en local.
-- [ ] Rama empujada y PR en borrador: jobs `api`, `web` y `tooling` en verde (SC11).
+- [x] `lint`, `typecheck`, `test` y `build` en verde en local.
+- [x] Rama empujada y PR en borrador: jobs `api`, `web` y `tooling` en verde (SC11).
 - [ ] Revisión con el usuario antes de seguir.
 
 ### Fase 2: Datos
 
-- [ ] **T5: Cliente del API, MSW en tests y QueryProvider** (M, ~1 h)
+- [x] **T5: Cliente del API, MSW en tests y QueryProvider** (M, ~1 h)
   - Descripción: `shared/api/client.ts` con `createClient<paths>({ baseUrl: env.apiBaseUrl, fetch: (request) => globalThis.fetch(request) })`, reexportando los tipos que hagan falta. `shared/api/mocks/{fixtures.ts,handlers.ts,node.ts}`, tipados con los tipos del cliente. `test/setup.ts` arranca el servidor con `onUnhandledFrame: 'error'`. `app/providers/QueryProvider.tsx` con los defaults de la spec, usado en `App.tsx`.
   - Aceptación:
     - Test de `shared/api`: `GET /v1/bicimad/stations` contra MSW devuelve el fixture con sus tipos; una petición sin handler hace fallar el test.
@@ -228,3 +228,5 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: T2 implementada. `oxlint` 1.86.0 y `vitest` 5.0.3 se instalan ya en T2 para los scripts provisionales `lint` y `test` (el job `web` de CI los ejecuta desde que existe `web/tsconfig.json`). `types` del `tsconfig` solo lista `vite/client`: `geojson`, `vitest/globals` y `@testing-library/jest-dom/vitest` los añade la tarea que instala cada paquete. SC6 comprobado: con `bootRun`, `/api/v1/bicimad/stations` por el proxy devuelve 200 con datos reales. Build: 68,71 KB gzip de JS. Commit con `--no-verify` (decisión del usuario): lint-staged aún llama a eslint, que no está instalado; T3 lo sustituye. commitlint y Prettier se comprobaron a mano.
 - 2026-10-13: T3 implementada. Sin `format:check` ni cambios en `ci.yml` (decisión del usuario: formato al guardar y en pre-commit). El plugin `react` de oxlint 1.86.0 incluye `react-hooks/*` (no existe un plugin `react-hooks`). `react/react-in-jsx-scope` desactivada (aprobado por el usuario) e `import/no-unassigned-import` con `allow` para CSS. `.oxfmtrc.json` ignora `CHANGELOG.md` (oxfmt también formatea Markdown). lint-staged: la regla de Prettier de la raíz descarta los archivos de `web/`. Comprobado: el archivo de prueba falla con `no-explicit-any`, `no-non-null-assertion` y `no-default-export`; lint-staged ejecuta oxlint y oxfmt en `web/` y Prettier no los toca. VS Code: extensión Oxc 1.63.0 instalada y `.vscode/settings.json` local; JetBrains: plugin pendiente de instalar desde el IDE.
 - 2026-10-13: T4 implementada con TDD (rojo: el import de `./env` no resolvía; verde: 11 tests, `shared/config` al 100 %). `parseApiBaseUrl` es una función pura y `env` la aplica a `import.meta.env` (tipado en `src/vite-env.d.ts`); `/` se mantiene como `/`. `MADRID_CENTER = { lng, lat }` y solo `MADRID_ZOOM = 15`. Umbrales de cobertura por glob en `vite.config.ts`; comprobado que `test` falla por debajo del 80 % en `src/shared`. Fuera de la lista de archivos: `index.test.ts` (prueba la API pública de `shared/config`; sin él, `constants.ts` sin consumidores dejaba `src/shared` en el 76,92 %), `coverage/` en `.gitignore` y `allow` de jest-dom en `import/no-unassigned-import`. SC1 comprobado desde cero con el token nuevo: instalación con la caché de pnpm vacía.
+- 2026-10-13: checkpoint 1. Rama empujada y PR #43 en borrador; CI en verde (`API (Gradle)`, `Web (pnpm)`, `Root tooling`, `Lint workflows`, `pr-title`, `ci-ok`): `GITHUB_TOKEN` lee el cliente desde GitHub Packages (SC11).
+- 2026-10-13: T5 implementada. El cliente 0.3.0 no aceptaba un `fetch` propio; por decisión del usuario se cambió antes el cliente (PR #44, `createBicimadClient(baseUrl, { fetch })`, release `api-v0.4.0` en el PR #45) en lugar de añadir `openapi-fetch` a `web`. `feat/web-shell` rebasada sobre `main`. `baseUrl` absoluta (`new URL(env.apiBaseUrl, location.origin)`) porque el `Request` de Node no acepta rutas relativas (aprobado). `onUnhandledFrame: 'error'` existe en msw 3.0.2: una petición sin handler rechaza la llamada y MSW lo registra con `console.error`; el test comprueba las dos cosas. Fixture tipado con `StationsResponse` (3 estaciones); un tipo incorrecto en el fixture rompe `typecheck` (comprobado). `createQueryClient()` con los defaults de la spec (`staleTime = POLL_INTERVAL_MS`). Añadido `QueryProvider.test.tsx`. 15 tests; `src/shared/api` al 100 %. MSW fuera del build (76,13 KB gzip de JS). Aviso de pnpm: `@vitest/mocker` pide msw `^2.4.9` como peer opcional (solo modo navegador de Vitest; no afecta).

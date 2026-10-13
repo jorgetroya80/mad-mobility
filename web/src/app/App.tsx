@@ -1,5 +1,10 @@
 import { MapPage } from '@/pages/map';
+import { QueryProvider } from './providers/QueryProvider';
 
 export function App() {
-  return <MapPage />;
+  return (
+    <QueryProvider>
+      <MapPage />
+    </QueryProvider>
+  );
 }

@@ -1,0 +1,48 @@
+import type { StationsResponse } from '@jorgetroya80/bicimad-client';
+
+export const stationsFixture: StationsResponse = {
+  stations: [
+    {
+      id: 1,
+      number: '1a',
+      name: 'Puerta del Sol A',
+      address: 'Puerta del Sol nº 1',
+      lat: 40.4170224,
+      lon: -3.7024255,
+      status: 'OPERATIONAL',
+      bikes: 12,
+      freeDocks: 12,
+      totalDocks: 24,
+      occupancy: 'MEDIUM',
+    },
+    {
+      id: 2,
+      number: '1b',
+      name: 'Puerta del Sol B',
+      address: 'Puerta del Sol nº 1',
+      lat: 40.4171037,
+      lon: -3.7025031,
+      status: 'OPERATIONAL',
+      bikes: 2,
+      freeDocks: 22,
+      totalDocks: 24,
+      occupancy: 'LOW',
+    },
+    {
+      id: 3,
+      number: '2',
+      name: 'Miguel Moya',
+      address: 'Calle Miguel Moya nº 1',
+      lat: 40.4205886,
+      lon: -3.7058415,
+      status: 'NO_SERVICE',
+      bikes: 0,
+      freeDocks: 0,
+      totalDocks: 24,
+      occupancy: 'UNKNOWN',
+    },
+  ],
+  updatedAt: '2026-10-13T10:15:00Z',
+  stale: false,
+  source: 'EMT Madrid MobilityLabs',
+};

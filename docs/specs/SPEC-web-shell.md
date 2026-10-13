@@ -20,7 +20,7 @@ Dejar lista una SPA vacía pero completa (mapa de Madrid, layout responsive, cli
 
 ## Assumptions
 
-1. El cliente se instala desde GitHub Packages con versión exacta (hoy `0.3.0`), nunca con `workspace:`. `api/client` sigue en el workspace solo para compilarse y publicarse; `web` no lo enlaza.
+1. El cliente se instala desde GitHub Packages con versión exacta (hoy `0.4.0`), nunca con `workspace:`. `api/client` sigue en el workspace solo para compilarse y publicarse; `web` no lo enlaza.
 2. GitHub Packages exige autenticación también para paquetes públicos. pnpm 12 no expande variables de entorno en las credenciales del `.npmrc` del repo (las ignora con un aviso), así que el `.npmrc` del repo solo enruta el scope y el token va en un `.npmrc` de usuario:
    - En local: `~/.npmrc` con `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` y `NODE_AUTH_TOKEN` (PAT con `read:packages`) exportado en el perfil del shell.
    - En CI: `actions/setup-node` con `registry-url: https://npm.pkg.github.com` y `scope: '@jorgetroya80'` genera ese `.npmrc` de usuario; el paso de `pnpm install` recibe `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` y el job, `packages: read`.
@@ -47,7 +47,7 @@ Dejar lista una SPA vacía pero completa (mapa de Madrid, layout responsive, cli
 | Vite + `@vitejs/plugin-react`                             | 8.x/6.x | Dev server, proxy, build estático                                    |
 | Tailwind CSS + `@tailwindcss/vite`                        | 4.x     | Estilos (config CSS-first, sin `tailwind.config.js`)                 |
 | `@tanstack/react-query`                                   | 5.x     | Estado del servidor, polling                                         |
-| `@jorgetroya80/bicimad-client`                            | 0.3.0   | Cliente tipado del API (`openapi-fetch` + tipos)                     |
+| `@jorgetroya80/bicimad-client`                            | 0.4.0   | Cliente tipado del API (`openapi-fetch` + tipos)                     |
 | `maplibre-gl`                                             | 6.x     | Mapa base, envuelto en `shared/ui/base-map`                          |
 | oxlint                                                    | 1.x     | Lint (plugins `typescript`, `react`, `jsx-a11y`, `import`, `vitest`) |
 | oxfmt                                                     | 0.x     | Formato de TS, TSX, CSS y JSON de `web/`                             |
@@ -113,7 +113,7 @@ web/
         index.ts
     shared/
       api/
-        client.ts              createClient<paths>({ baseUrl: env.apiBaseUrl, fetch: (request) => globalThis.fetch(request) })
+        client.ts              createBicimadClient(<env.apiBaseUrl hecha absoluta>, { fetch: (request) => globalThis.fetch(request) })
         mocks/
           handlers.ts          handlers MSW tipados con los tipos del cliente
           fixtures.ts          respuestas de ejemplo tipadas
@@ -238,7 +238,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 | Mapa        | Vitest con `maplibre-gl` simulado | `BaseMap` crea el mapa con centro, zoom, estilo y `AttributionControl`; lo destruye al desmontar                                     |
 | Manual      | navegador                         | 360 / 768 / 1280 px; `dev` contra `bootRun` y `dev:mock` sin backend (anotado en el PR)                                              |
 
-- `openapi-fetch` guarda el `fetch` global al crear el cliente, antes de que MSW lo intercepte. Por eso `client.ts` pasa `fetch: (request) => globalThis.fetch(request)`, que lo busca en cada llamada; sin eso las peticiones de los tests no llegan a MSW.
+- `openapi-fetch` guarda el `fetch` global al crear el cliente, antes de que MSW lo intercepte. Por eso `client.ts` pasa `fetch: (request) => globalThis.fetch(request)`, que lo busca en cada llamada; sin eso las peticiones de los tests no llegan a MSW. El cliente publicado acepta ese `fetch` desde la 0.4.0 (`createBicimadClient(baseUrl, { fetch })`), así que `web` no depende de `openapi-fetch` directamente. La `baseUrl` se hace absoluta con `new URL(env.apiBaseUrl, location.origin)`: el `Request` de Node (Vitest) no acepta rutas relativas; en el navegador el resultado es el mismo.
 - jsdom no tiene WebGL: `maplibre-gl` se simula en los tests de `BaseMap` y el resto de tests simulan `BaseMap` entero.
 - Cobertura v8 ≥ 80 % de líneas en `src/shared` y `src/widgets`; `src/app/main.tsx` y `shared/api/mocks/browser.ts` excluidos. El umbral va en `test.coverage.thresholds` de `vite.config.ts` (por carpeta), así que `pnpm --filter web test` falla en local y en CI si baja.
 - Sin tests end-to-end (como en la idea).
@@ -251,7 +251,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 
 ## Success Criteria
 
-1. `pnpm install --frozen-lockfile` funciona en local (con `~/.npmrc` y `NODE_AUTH_TOKEN`) y en CI (con `setup-node` y `GITHUB_TOKEN`), e instala `@jorgetroya80/bicimad-client@0.3.0` desde GitHub Packages.
+1. `pnpm install --frozen-lockfile` funciona en local (con `~/.npmrc` y `NODE_AUTH_TOKEN`) y en CI (con `setup-node` y `GITHUB_TOKEN`), e instala `@jorgetroya80/bicimad-client@0.4.0` desde GitHub Packages.
 2. `web/package.json` no tiene ningún `^` ni `~`; las `devDependencies` de `api/client` tampoco. En el lockfile, `web` resuelve `typescript@6.0.3` y `api/client` `typescript@5.9.3`; el job `api` sigue generando y compilando el cliente.
 3. `pnpm --filter web lint`, `typecheck`, `test` y `build` pasan en local y en el job `web` de CI.
 4. Cobertura ≥ 80 % de líneas en `src/shared` y `src/widgets`.
@@ -287,3 +287,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: Prettier fuera de los commits y de CI (decisión del usuario). oxfmt formatea `web/` al guardar y en pre-commit; el resto de Markdown, YAML y JSON no tiene formateador automático; el API no cambia (Spotless + ktlint).
 - 2026-10-13: se borran los restos de Prettier (`prettier` de la raíz, `.prettierrc.json`, `.prettierignore`). oxfmt sigue en pre-commit para `web/`.
 - 2026-10-13: `import/no-unassigned-import` permite también `@testing-library/jest-dom/vitest` (import de `test/setup.ts`, T4).
+- 2026-10-13: el cliente pasa a 0.4.0, que acepta un `fetch` propio (PR #44, release `api-v0.4.0`); `web` usa `createBicimadClient` sin depender de `openapi-fetch` (decisión del usuario, en lugar de añadirlo como dependencia directa). La `baseUrl` del cliente se hace absoluta para que funcione con el `Request` de Node en los tests (aprobado).
