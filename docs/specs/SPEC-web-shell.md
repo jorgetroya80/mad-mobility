@@ -122,13 +122,13 @@ web/
         index.ts
       config/
         env.ts                 lee y valida import.meta.env una sola vez (ver abajo)
-        constants.ts           POLL_INTERVAL_MS = 60_000, MADRID_CENTER (Puerta del Sol), zooms
+        constants.ts           POLL_INTERVAL_MS = 60_000, MADRID_CENTER (Puerta del Sol), MADRID_ZOOM, MAP_STYLE_URL
         index.ts
       lib/
         time/formatRelative.ts "hace X" con Intl.RelativeTimeFormat (es)
         index.ts
       ui/
-        base-map/              envoltorio de MapLibre (único sitio que importa maplibre-gl)
+        base-map/              envoltorio de MapLibre (único sitio que importa maplibre-gl); se exporta con carga diferida
         bottom-sheet/          panel inferior: plegado / desplegado
         side-panel/            panel lateral fijo (md:)
         state-message/         estados vacío / error / cargando
@@ -240,6 +240,9 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 
 - `openapi-fetch` guarda el `fetch` global al crear el cliente, antes de que MSW lo intercepte. Por eso `client.ts` pasa `fetch: (request) => globalThis.fetch(request)`, que lo busca en cada llamada; sin eso las peticiones de los tests no llegan a MSW. El cliente publicado acepta ese `fetch` desde la 0.4.0 (`createBicimadClient(baseUrl, { fetch })`), así que `web` no depende de `openapi-fetch` directamente. La `baseUrl` se hace absoluta con `new URL(env.apiBaseUrl, location.origin)`: el `Request` de Node (Vitest) no acepta rutas relativas; en el navegador el resultado es el mismo.
 - jsdom no tiene WebGL: `maplibre-gl` se simula en los tests de `BaseMap` y el resto de tests simulan `BaseMap` entero.
+- MapLibre en `shared/ui/base-map`:
+  - `BaseMap.tsx` es el componente real. Llama a `setWorkerUrl` con la URL que da Vite (`maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url`), porque MapLibre 6 calcula la de su worker a partir de su propio `import.meta.url` y Vite no la conserva ni en dev ni en el build (sin esto: "Worker failed to load" y sin teselas). Aprobado por el usuario.
+  - El `BaseMap` público (`index.ts`) es `LazyBaseMap`: `lazy()` + `Suspense`, con un hueco del mismo tamaño mientras carga. Así MapLibre (≈ 275 KB gzip) sale de la carga inicial sin que los consumidores lo sepan.
 - Cobertura v8 ≥ 80 % de líneas en `src/shared` y `src/widgets`; `src/app/main.tsx` y `shared/api/mocks/browser.ts` excluidos. El umbral va en `test.coverage.thresholds` de `vite.config.ts` (por carpeta), así que `pnpm --filter web test` falla en local y en CI si baja.
 - Sin tests end-to-end (como en la idea).
 
@@ -263,7 +266,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 10. Un commit que toca `web/**/*.ts` pasa por `oxlint --fix` y `oxfmt` en pre-commit; un push que toca `web/` ejecuta `typecheck` de `web`.
 11. Los jobs `api` y `tooling` siguen en verde con el token añadido.
 12. En la siguiente release de `web`, `publish-web` adjunta `web-dist.tar.gz` a la GitHub Release. Se confirma después del merge, en la primera release; no bloquea el PR.
-13. El JavaScript de `dist/` suma ≤ 300 KB gzip (tamaños de la salida de `vite build`, anotados en el PR). Referencia: un prototipo con React, TanStack Query, `openapi-fetch` y MapLibre dio 81 KB gzip el 2026-10-13.
+13. El JavaScript de la carga inicial (el que `index.html` carga o precarga) suma ≤ 300 KB gzip, según la salida de `vite build` (anotado en el PR). MapLibre y su worker se cargan después y no cuentan. Referencia (T7): 77,43 KB de carga inicial; el chunk diferido de MapLibre, 274,93 KB; el worker, unos 144 KB.
 
 ## Open Questions
 
@@ -288,3 +291,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: se borran los restos de Prettier (`prettier` de la raíz, `.prettierrc.json`, `.prettierignore`). oxfmt sigue en pre-commit para `web/`.
 - 2026-10-13: `import/no-unassigned-import` permite también `@testing-library/jest-dom/vitest` (import de `test/setup.ts`, T4).
 - 2026-10-13: el cliente pasa a 0.4.0, que acepta un `fetch` propio (PR #44, release `api-v0.4.0`); `web` usa `createBicimadClient` sin depender de `openapi-fetch` (decisión del usuario, en lugar de añadirlo como dependencia directa). La `baseUrl` del cliente se hace absoluta para que funcione con el `Request` de Node en los tests (aprobado).
+- 2026-10-13: T7. MapLibre suma ≈ 495 KB gzip (hilo principal + worker); por decisión del usuario, `BaseMap` se carga en diferido y SC13 pasa a medir la carga inicial (77,43 KB). Arreglo del worker con `setWorkerUrl` (aprobado). `maplibre-gl` 6.11.2. Corregida la referencia de SC13: el prototipo de 81 KB no incluía MapLibre.

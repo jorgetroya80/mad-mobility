@@ -32,7 +32,7 @@ Comprobadas el 2026-10-13 en npm. Todas tienen al menos 10 días a fecha de hoy 
 | `@vitejs/plugin-react`             | 6.1.1     | 2026-08-28           | 6.1.2 es del 2026-10-05                                 |
 | `tailwindcss`, `@tailwindcss/vite` | 4.3.3     | 2026-07-16           |                                                         |
 | `@tanstack/react-query`            | 5.104.1   | 2026-10-02           | 5.104.2 es del 2026-10-11                               |
-| `maplibre-gl`                      | 6.12.0    | 2026-10-03           | 6.14.0 es del 2026-10-11                                |
+| `maplibre-gl`                      | 6.11.2    | 2026-09-24           | 6.14.0 es del 2026-10-11                                |
 | `oxlint`                           | 1.86.0    | 2026-09-28           | Reglas probadas con 1.88.0; se revalidan en T3          |
 | `oxfmt`                            | 0.71.0    | 2026-09-28           |                                                         |
 | `vitest`, `@vitest/coverage-v8`    | 5.0.3     | 2026-09-30           |                                                         |
@@ -80,9 +80,9 @@ T11 cierre (tras T10)
   - Descripción: dependencias de la tabla de versiones para React, Vite, TypeScript y Tailwind. `index.html`, `vite.config.ts` (plugin React, Tailwind, alias `@/`, proxy `/api` → `localhost:8080` quitando el prefijo), `tsconfig.json` (`strict`, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `skipLibCheck`, `types` explícitos, `include: src, test, vite.config.ts`). FSD mínimo: `src/app/main.tsx`, `src/app/App.tsx`, `src/app/styles/index.css` y `src/pages/map` (`MapPage` con un título y `index.ts`). Scripts `dev`, `build`, `preview`, `typecheck` y los provisionales `lint` y `test`.
   - Aceptación:
     - `typecheck` y `build` pasan; `dist/` contiene `index.html` y los assets.
-    - SC6: con `bootRun` y `dev` levantados, `curl -s -o /dev/null -w '%{http_code}' localhost:5173/api/v1/bicimad/stations` devuelve `200`.
+    - SC5: con `bootRun` y `dev` levantados, `curl -s -o /dev/null -w '%{http_code}' localhost:5173/api/v1/bicimad/stations` devuelve `200`.
     - SC2 (parte de `web`): sin `^` ni `~` en `web/package.json`.
-  - Verificación: `pnpm --filter web typecheck && pnpm --filter web build`; `curl` de SC6; la página se ve en el navegador con estilos de Tailwind.
+  - Verificación: `pnpm --filter web typecheck && pnpm --filter web build`; `curl` de SC5; la página se ve en el navegador con estilos de Tailwind.
   - Archivos: `web/package.json`, `web/index.html`, `web/vite.config.ts`, `web/tsconfig.json`, `web/src/app/{main.tsx,App.tsx,styles/index.css}`, `web/src/pages/map/{ui/MapPage.tsx,index.ts}`.
   - Commit: `build(web): scaffold vite, react, typescript and tailwind`.
 
@@ -91,7 +91,7 @@ T11 cierre (tras T10)
   - Aceptación:
     - `lint` y `oxfmt --check` pasan sobre el código de T2.
     - Un archivo temporal con `any`, `!` y `export default` hace fallar `lint` con esas tres reglas (se borra al terminar).
-    - SC11 (parte de pre-commit): un commit que toca `web/src/**/*.tsx` ejecuta oxlint y oxfmt; `prettier --check .` en la raíz ignora `web/`.
+    - SC10 (parte de pre-commit): un commit que toca `web/src/**/*.tsx` ejecuta oxlint y oxfmt; `prettier --check .` en la raíz ignora `web/`.
   - Verificación: `pnpm --filter web lint && pnpm --filter web exec oxfmt --check`; `pnpm exec prettier --check .`; commit de prueba.
   - Archivos: `web/.oxlintrc.json`, `web/.oxfmtrc.json`, `web/package.json`, `.prettierignore`, `lint-staged.config.mjs`, `.vscode/extensions.json`.
   - Commit: `build(web): add oxlint and oxfmt`.
@@ -126,24 +126,24 @@ T11 cierre (tras T10)
 - [x] **T6: Modo `dev:mock`** (S, ~45 min)
   - Descripción: `shared/api/mocks/browser.ts` (`setupWorker`). `main.tsx` arranca el worker solo si `import.meta.env.MODE === 'mock'`, con `import()` dinámico, antes de montar React. Plugin pequeño en `vite.config.ts` que, solo en modo `mock`, sirve `/mockServiceWorker.js` desde `msw/lib/mockServiceWorker.js`. Script `dev:mock` = `vite --mode mock`.
   - Aceptación:
-    - SC7: con `dev:mock` y sin backend, `await (await fetch('/api/v1/bicimad/stations')).json()` en la consola devuelve el fixture.
-    - SC8: tras `build`, `dist/` no contiene `mockServiceWorker.js` y `grep -r 'MSW' web/dist` no encuentra nada. Si el `grep` da un falso positivo por otra librería, se cambia el patrón y se anota en el Changelog.
+    - SC6: con `dev:mock` y sin backend, `await (await fetch('/api/v1/bicimad/stations')).json()` en la consola devuelve el fixture.
+    - SC7: tras `build`, `dist/` no contiene `mockServiceWorker.js` y `grep -r 'MSW' web/dist` no encuentra nada. Si el `grep` da un falso positivo por otra librería, se cambia el patrón y se anota en el Changelog.
   - Verificación: `pnpm --filter web dev:mock` + consola del navegador; `pnpm --filter web build && ! ls web/dist/mockServiceWorker.js && ! grep -rq 'MSW' web/dist`.
   - Archivos: `web/src/shared/api/mocks/browser.ts`, `web/src/app/main.tsx`, `web/vite.config.ts`, `web/package.json`.
   - Commit: `feat(web): add mock mode with msw in the browser`.
 
 #### Checkpoint 2: datos
 
-- [x] `test`, `typecheck` y `build` en verde; SC7 y SC8 comprobados.
-- [ ] Revisión con el usuario.
+- [x] `test`, `typecheck` y `build` en verde; SC6 y SC7 comprobados.
+- [x] Revisión con el usuario.
 
 ### Fase 3: Mapa y layout
 
-- [ ] **T7: Mapa base** (M, ~1 h)
+- [x] **T7: Mapa base** (M, ~1 h)
   - Descripción: `shared/ui/base-map/BaseMap.tsx`, único archivo que importa `maplibre-gl` (y su CSS). Crea el mapa con el estilo `liberty` de OpenFreeMap, `MADRID_CENTER` y el zoom inicial, añade `AttributionControl` compacto y lo destruye al desmontar. `MapPage` muestra `BaseMap` a pantalla completa (provisional hasta T10).
   - Aceptación:
     - Test con `maplibre-gl` simulado: se crea con centro, zoom, estilo y `AttributionControl`; `remove()` se llama al desmontar.
-    - SC10 (parte de OSM/OpenFreeMap): en el navegador se ve Madrid centrado en Puerta del Sol con la atribución de OpenStreetMap/OpenFreeMap.
+    - SC9 (parte de OSM/OpenFreeMap): en el navegador se ve Madrid centrado en Puerta del Sol con la atribución de OpenStreetMap/OpenFreeMap.
   - Verificación: `pnpm --filter web test`; `pnpm --filter web dev` en el navegador.
   - Archivos: `web/src/shared/ui/base-map/{BaseMap.tsx,BaseMap.test.tsx,index.ts}`, `web/src/shared/ui/index.ts`, `web/src/pages/map/ui/MapPage.tsx`.
   - Commit: `feat(web): add maplibre base map centered on madrid`.
@@ -170,8 +170,8 @@ T11 cierre (tras T10)
   - Descripción: `widgets/app-layout` con `AppLayout` (`h-dvh`; recibe `map` y `panel` como slots): `BottomSheet` por debajo de `md`, `SidePanel` desde `md`. `MapPage` compone `AppLayout` con `BaseMap`, un `StateMessage` vacío ("Las estaciones llegan en la siguiente versión" o similar, a confirmar en el PR) y `DataAttribution`.
   - Aceptación:
     - Test de `AppLayout`: renderiza el mapa y el panel recibidos. Test de `MapPage` (con `BaseMap` simulado): estado vacío y atribución de EMT visibles.
-    - SC9: a 360 px el mapa ocupa la pantalla y el bottom sheet se abre y se cierra con el botón y con el teclado; a 768 y 1280 px el panel lateral está fijo y el mapa ocupa el resto.
-    - SC10 completo: las atribuciones de OSM/OpenFreeMap y de EMT son visibles en los tres anchos.
+    - SC8: a 360 px el mapa ocupa la pantalla y el bottom sheet se abre y se cierra con el botón y con el teclado; a 768 y 1280 px el panel lateral está fijo y el mapa ocupa el resto.
+    - SC9 completo: las atribuciones de OSM/OpenFreeMap y de EMT son visibles en los tres anchos.
   - Verificación: `pnpm --filter web test`; navegador con DevTools a 360, 768 y 1280 px (capturas en el PR).
   - Archivos: `web/src/widgets/app-layout/{ui/AppLayout.tsx,ui/AppLayout.test.tsx,index.ts}`, `web/src/pages/map/ui/{MapPage.tsx,MapPage.test.tsx}`.
   - Commit: `feat(web): add responsive app layout to the map page`.
@@ -179,7 +179,7 @@ T11 cierre (tras T10)
 #### Checkpoint 3: mapa y layout
 
 - [ ] `lint`, `typecheck`, `test` (con cobertura ≥ 80 %) y `build` en verde.
-- [ ] SC9 y SC10 comprobados en el navegador.
+- [ ] SC8 y SC9 comprobados en el navegador.
 - [ ] Revisión con el usuario.
 
 ### Fase 4: Cierre
@@ -187,7 +187,7 @@ T11 cierre (tras T10)
 - [ ] **T11: Documentación y verificación final** (S, ~45 min)
   - Descripción: `web/README.md` (quita "Not built yet"; comandos, requisito de `~/.npmrc` con la línea de `_authToken` y de `NODE_AUTH_TOKEN` con `read:packages`, `dev` frente a `dev:mock`). Medir el JS de `dist/` (SC13). Repasar SC1-SC13 y anotar en el PR los manuales (SC6, SC7, SC9, SC10, SC13, capturas). Spec y plan a **implemented** y Capability Map actualizado.
   - Aceptación:
-    - SC3 y SC5 en local y en CI; SC13: JS de `dist/` ≤ 300 KB gzip.
+    - SC3 y SC4 en local y en CI; SC13: JS de la carga inicial ≤ 300 KB gzip.
     - Todos los SC anotados en el PR menos SC12, que se confirma en la primera release de `web`.
   - Verificación: `pnpm --filter web lint && pnpm --filter web typecheck && pnpm --filter web test && pnpm --filter web build`; CI del PR en verde.
   - Archivos: `web/README.md`, `docs/specs/SPEC-web-shell.md`, `docs/plans/PLAN-web-shell.md`, `docs/specs/CAPABILITY-MAP.md`.
@@ -231,3 +231,6 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: checkpoint 1. Rama empujada y PR #43 en borrador; CI en verde (`API (Gradle)`, `Web (pnpm)`, `Root tooling`, `Lint workflows`, `pr-title`, `ci-ok`): `GITHUB_TOKEN` lee el cliente desde GitHub Packages (SC11).
 - 2026-10-13: T5 implementada. El cliente 0.3.0 no aceptaba un `fetch` propio; por decisión del usuario se cambió antes el cliente (PR #44, `createBicimadClient(baseUrl, { fetch })`, release `api-v0.4.0` en el PR #45) en lugar de añadir `openapi-fetch` a `web`. `feat/web-shell` rebasada sobre `main`. `baseUrl` absoluta (`new URL(env.apiBaseUrl, location.origin)`) porque el `Request` de Node no acepta rutas relativas (aprobado). `onUnhandledFrame: 'error'` existe en msw 3.0.2: una petición sin handler rechaza la llamada y MSW lo registra con `console.error`; el test comprueba las dos cosas. Fixture tipado con `StationsResponse` (3 estaciones); un tipo incorrecto en el fixture rompe `typecheck` (comprobado). `createQueryClient()` con los defaults de la spec (`staleTime = POLL_INTERVAL_MS`). Añadido `QueryProvider.test.tsx`. 15 tests; `src/shared/api` al 100 %. MSW fuera del build (76,13 KB gzip de JS). Aviso de pnpm: `@vitest/mocker` pide msw `^2.4.9` como peer opcional (solo modo navegador de Vitest; no afecta).
 - 2026-10-13: T6 implementada. `enableMocking()` en `main.tsx` (await de nivel superior) solo en modo `mock`, con `onUnhandledFrame: 'bypass'` para no llenar la consola con teselas y assets de Vite. Plugin propio en `vite.config.ts` (`apply` solo con `serve` + modo `mock`) que sirve `msw/mockServiceWorker.js`. No se usa el plugin oficial `msw/vite`: emite el worker al build si se importa `virtual:msw`, lo que choca con SC8. SC8: sin `mockServiceWorker.js` ni código de MSW en `dist/` (76,14 KB gzip). SC7 comprobado en Chrome headless sin backend: `fetch('/api/v1/bicimad/stations')` devuelve el fixture y la consola muestra "[MSW] Mocking enabled.". Con `dev` normal, `/mockServiceWorker.js` cae en el fallback de Vite (`index.html`). Checkpoint 2 pendiente de revisión del usuario.
+- 2026-10-13: checkpoint 2 revisado por el usuario.
+- 2026-10-13: `maplibre-gl` baja a 6.11.2 (decisión del usuario): 6.12.0 se publicó el 2026-10-03 a las 21:45 UTC y aún no cumplía los 10 días de `minimumReleaseAge` a la hora de T7. Corregida la numeración de los SC en este plan, desfasada desde que se quitó el SC4 de la spec (lint FSD).
+- 2026-10-13: T7 implementada con `maplibre-gl` 6.11.2 (TDD: rojo por import sin resolver; 22 tests, `base-map` al 100 %). `BaseMap.tsx` es el único archivo que importa MapLibre: estilo `liberty` (`MAP_STYLE_URL` en `shared/config`), centro y zoom de Madrid, `AttributionControl` compacto y `remove()` al desmontar; contenedor `<section aria-label="Mapa de Madrid">` (jsx-a11y rechaza `role="region"` en un `div`). Desviaciones aprobadas: `setWorkerUrl` con la URL de Vite (sin ella, "Worker failed to load") y carga diferida (`LazyBaseMap`, exportado como `BaseMap`) porque MapLibre llevaba el JS a ≈ 495 KB gzip. Build: carga inicial 77,43 KB (`index` 73,89 + `config` 3,54), chunk de MapLibre 274,93 KB, worker ≈ 144 KB. SC9 (parte OSM/OpenFreeMap) comprobado en Chrome headless con el build de producción a 1280x800 y 360x740: mapa centrado en Sol y atribución visible. Único error de consola: `favicon.ico` 404 (fuera de T7). `MapPage` muestra el mapa a pantalla completa con un `<h1>` `sr-only` (provisional hasta T10).
