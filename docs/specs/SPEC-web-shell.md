@@ -94,7 +94,7 @@ web/
   tsconfig.json                strict, skipLibCheck, types explícitos, alias @/ -> src/; include: src, test, vite.config.ts
   vite.config.ts               plugins, proxy /api, config de Vitest; en modo mock sirve /mockServiceWorker.js
   .oxlintrc.json               reglas de lint
-  .oxfmtrc.json                singleQuote, printWidth 100 (como Prettier en la raíz); ignora CHANGELOG.md
+  .oxfmtrc.json                singleQuote, printWidth 100; ignora CHANGELOG.md
   src/
     app/
       main.tsx                 punto de entrada; en modo mock carga MSW con import() dinámico
@@ -166,7 +166,7 @@ web/
 | `.npmrc` (nuevo)                  | solo `@jorgetroya80:registry=https://npm.pkg.github.com` (sin credenciales)                                                                                                                              |
 | `api/client/package.json`         | `devDependencies` con versión exacta: `typescript` 5.9.3, `openapi-typescript` 7.13.0                                                                                                                    |
 | `pnpm-workspace.yaml`             | `minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']`; `saveExact: true`                                                                                                                          |
-| `.prettierignore`                 | añade `web/`                                                                                                                                                                                             |
+| `.prettierignore`                 | se borra, junto con `.prettierrc.json` y la dependencia `prettier` de la raíz                                                                                                                                                                                             |
 | `lint-staged.config.mjs`          | `web/**/*.{ts,tsx}`: `oxlint --fix` + `oxfmt`; `web/**/*.{css,json}`: `oxfmt` (con `pnpm --filter web exec`). Se quita la regla de Prettier para el resto de archivos |
 | `.github/workflows/ci.yml`        | jobs con `pnpm install`: `packages: read`, `setup-node` con `registry-url` y `scope`, y `NODE_AUTH_TOKEN` en el paso de instalación; el job `tooling` deja de ejecutar `prettier --check`                                                                      |
 | `.github/workflows/release.yml`   | lo mismo en los jobs que ejecutan `pnpm install` (`publish-web`, `publish-api-client`)                                                                                                                   |
@@ -246,7 +246,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 ## Boundaries
 
 - **Always:** versiones exactas; importar solo por la API pública de cada slice; `lint`, `typecheck`, `test` y `build` en verde antes del PR; Conventional Commits con scope `web` (o `ci` para workflows, `repo` para tooling de la raíz).
-- **Ask first:** cualquier dependencia fuera del Tech Stack (router, librería de bottom sheet, `react-map-gl`, iconos…); desactivar una regla de oxlint; bajar el umbral de cobertura; cambiar las reglas de Prettier en la raíz; activar el lint con tipos de oxlint (`--type-aware`).
+- **Ask first:** cualquier dependencia fuera del Tech Stack (router, librería de bottom sheet, `react-map-gl`, iconos…); desactivar una regla de oxlint; bajar el umbral de cobertura; activar el lint con tipos de oxlint (`--type-aware`).
 - **Never:** `^` o `~` en `web/package.json` o en las `devDependencies` de `api/client`; `workspace:` para el cliente; `fetch` directo o `maplibre-gl` fuera de `shared`; commitear `.env.local`, tokens o `dist/`; ESLint o Prettier dentro de `web/`; `// oxlint-disable` sin motivo escrito al lado.
 
 ## Success Criteria
@@ -285,3 +285,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: autenticación de GitHub Packages corregida en T1. pnpm 12 ignora `${NODE_AUTH_TOKEN}` en el `.npmrc` del repo; el token va en un `.npmrc` de usuario (`~/.npmrc` en local, el que genera `setup-node` con `registry-url` en CI). El `.npmrc` del repo solo enruta el scope. Además, `minimumReleaseAgeExclude` es obligatorio: sin él pnpm falla con `ERR_PNPM_NO_MATURE_MATCHING_VERSION`.
 - 2026-10-13: sin `format:check` ni comprobación de formato en CI (decisión del usuario): oxfmt formatea al guardar (VS Code y JetBrains, extensión/plugin de Oxc) y en pre-commit. Ajustes de oxlint descubiertos en T3: el plugin `react` incluye las reglas `react-hooks/*`; `react/react-in-jsx-scope` desactivada (aprobado); `import/no-unassigned-import` permite CSS.
 - 2026-10-13: Prettier fuera de los commits y de CI (decisión del usuario). oxfmt formatea `web/` al guardar y en pre-commit; el resto de Markdown, YAML y JSON no tiene formateador automático; el API no cambia (Spotless + ktlint).
+- 2026-10-13: se borran los restos de Prettier (`prettier` de la raíz, `.prettierrc.json`, `.prettierignore`). oxfmt sigue en pre-commit para `web/`.
