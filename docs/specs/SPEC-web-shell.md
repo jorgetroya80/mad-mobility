@@ -1,7 +1,7 @@
 # Spec: web-shell
 
 - Created: 2026-10-13
-- Status: **approved** (2026-10-13)
+- Status: **implemented** (2026-10-13)
 - Plan: [PLAN-web-shell.md](../plans/PLAN-web-shell.md)
 
 Módulo `web-shell` del [Capability Map](CAPABILITY-MAP.md). Crea el proyecto `web/` (Vite + React + TypeScript), su tooling (oxlint, oxfmt), la arquitectura Feature-Sliced Design (FSD), el cliente tipado del API, el mapa base y el layout responsive. No muestra estaciones: eso es `web-bicimad`. Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md).
@@ -296,3 +296,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: T7. MapLibre suma ≈ 495 KB gzip (hilo principal + worker); por decisión del usuario, `BaseMap` se carga en diferido y SC13 pasa a medir la carga inicial (77,43 KB). Arreglo del worker con `setWorkerUrl` (aprobado). `maplibre-gl` 6.11.2. Corregida la referencia de SC13: el prototipo de 81 KB no incluía MapLibre.
 - 2026-10-13: T8. `RelativeTime` recibe `now` obligatorio: el valor por defecto `new Date()` incumple `react/purity` de oxlint, y quien pasa `now` decide cuándo se refresca el texto. `StateMessage` usa `variant` (`empty | error | loading`) solo para elegir rol ARIA y estilo, sin cambiar el comportamiento.
 - 2026-10-13: T10. Atribución de MapLibre arriba a la derecha por debajo de `md` (decisión del usuario), bottom sheet animado (decisión del usuario: barra + texto "Estaciones" en el asa) y panel montado por CSS en los dos contenedores. Texto del estado vacío confirmado; sin título visible en el panel lateral.
+- 2026-10-13: spec implementada (T1-T11, PR #43). SC1-SC11 y SC13 verificados; SC12 se confirma en la primera release de `web`.

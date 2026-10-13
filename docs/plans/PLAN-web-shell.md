@@ -1,7 +1,7 @@
 # Plan: web-shell
 
 - Created: 2026-10-13
-- Status: **approved** (2026-10-13)
+- Status: **implemented** (2026-10-13)
 - Spec: [SPEC-web-shell.md](../specs/SPEC-web-shell.md)
 
 ## Overview
@@ -184,7 +184,7 @@ T11 cierre (tras T10)
 
 ### Fase 4: Cierre
 
-- [ ] **T11: Documentación y verificación final** (S, ~45 min)
+- [x] **T11: Documentación y verificación final** (S, ~45 min)
   - Descripción: `web/README.md` (quita "Not built yet"; comandos, requisito de `~/.npmrc` con la línea de `_authToken` y de `NODE_AUTH_TOKEN` con `read:packages`, `dev` frente a `dev:mock`). Añadir un favicon (`web/public/favicon.ico` o SVG enlazado desde `index.html`) para quitar el 404 de la consola visto en T7. Medir el JS de `dist/` (SC13). Repasar SC1-SC13 y anotar en el PR los manuales (SC6, SC7, SC9, SC10, SC13, capturas). Spec y plan a **implemented** y Capability Map actualizado.
   - Aceptación:
     - SC3 y SC4 en local y en CI; SC13: JS de la carga inicial ≤ 300 KB gzip.
@@ -195,7 +195,7 @@ T11 cierre (tras T10)
 
 #### Checkpoint final
 
-- [ ] SC1-SC11 y SC13 verificados; PR listo para squash merge.
+- [x] SC1-SC11 y SC13 verificados; PR listo para squash merge.
 - [ ] SC12 pendiente de la primera release de `web` (no bloquea).
 
 ## Riesgos y mitigaciones
@@ -219,6 +219,17 @@ Un solo desarrollador: orden T1 → T11. Tras T4, T7, T8 y T9 son independientes
 
 Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h), Fase 4 (~0,75 h). Cada checkpoint es un buen punto para cortar.
 
+## Resultado
+
+- T1-T11 en la rama `feat/web-shell`, un commit por tarea (T10 en dos), en el PR #43 (squash merge). Cambio previo en el API: PR #44 y release `api-v0.4.0` (PR #45) para que el cliente acepte un `fetch` propio.
+- SC1-SC11 y SC13 verificados:
+  - `pnpm install --frozen-lockfile` desde cero con token válido; CI con `GITHUB_TOKEN` en verde.
+  - `lint`, `typecheck`, `test` (56 tests; `src/shared` y `src/widgets` al 100 %) y `build`.
+  - Proxy con `bootRun` (200 con datos reales), `dev:mock` en Chrome headless (fixture de 3 estaciones), sin MSW en `dist/`.
+  - Layout y atribuciones con el build de producción a 360, 768 y 1280 px; favicon sin 404.
+  - Carga inicial 78,56 KB gzip de JS (MapLibre en diferido: 274,99 KB + worker ≈ 144 KB).
+- Pendiente: SC12, en la primera release de `web` tras el merge.
+
 ## Changelog
 
 - 2026-10-13: versión inicial.
@@ -239,3 +250,5 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: T9 implementada con TDD (40 tests). `BottomSheet({ label, defaultExpanded?, children })`, no controlado: asa `button` de ancho completo y `min-h-11` con `aria-expanded`, `aria-controls` y foco visible; contenido en `<section aria-labelledby hidden>` (oculto también para lectores de pantalla); desplegado a `h-[60dvh]`. Sin animación (opcional en la spec). `SidePanel` reenvía las props de `aside` con `label` obligatorio, `w-90` (360 px) y scroll propio; la visibilidad por breakpoint la decide `AppLayout`. Añadido `SidePanel.test.tsx`.
 - 2026-10-13: T10 implementada con TDD (56 tests; `widgets` y `pages` al 100 %), en dos commits: `feat(web): animate the bottom sheet` (animación con `translate-y`, `inert` en lugar de `hidden`, franja del asa en el flujo) y `feat(web): add responsive app layout to the map page`. `AppLayout({ map, panel, panelLabel })`: columna por debajo de `md`, fila con `SidePanel` de 360 px desde `md`; panel montado en los dos contenedores por CSS. `MapPage`: `<h1>` `sr-only`, estado vacío "Las estaciones llegan en la siguiente versión" (confirmado) y `DataAttribution` al pie. Atribución de MapLibre arriba a la derecha por debajo de `md` (decisión del usuario; `MD_MEDIA_QUERY` en `shared/config`). Carga inicial ≈ 81,8 KB gzip (JS 78,56 + CSS 3,24); MapLibre sigue en el chunk diferido (274,99 KB). SC8 y SC9 comprobados con el build de producción en Chrome headless a 360x740 (plegado, desplegado y a mitad de animación), 768x1024 y 1280x800: las dos atribuciones visibles en todos. `inert` no lo respetan jsdom ni Testing Library: los tests comprueban el atributo.
 - 2026-10-13: checkpoint 3 revisado por el usuario.
+- 2026-10-13: T11 implementada. `web/README.md` reescrito (requisitos con `~/.npmrc` y token, comandos, `VITE_API_BASE_URL`, arquitectura), favicon SVG (`web/public/favicon.svg`, sin 404 de `favicon.ico`) y README raíz actualizado (cómo arrancar la web). Repaso de SC1-SC13: todos en verde salvo SC12 (pendiente de release). Avisos de consola del estilo `liberty` de OpenFreeMap (`highway-shield-*`) ignorados: son del estilo, no del código.
+- 2026-10-13: plan implementado.
