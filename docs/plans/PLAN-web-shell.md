@@ -76,7 +76,7 @@ T11 cierre (tras T10)
   - Archivos: `.npmrc`, `pnpm-workspace.yaml`, `web/package.json`, `api/client/package.json`, `pnpm-lock.yaml`, `.github/workflows/ci.yml`, `.github/workflows/release.yml`.
   - Commit: `build(web): install the api client from github packages`.
 
-- [ ] **T2: Esqueleto de la app** (M, ~1 h)
+- [x] **T2: Esqueleto de la app** (M, ~1 h)
   - Descripción: dependencias de la tabla de versiones para React, Vite, TypeScript y Tailwind. `index.html`, `vite.config.ts` (plugin React, Tailwind, alias `@/`, proxy `/api` → `localhost:8080` quitando el prefijo), `tsconfig.json` (`strict`, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `skipLibCheck`, `types` explícitos, `include: src, test, vite.config.ts`). FSD mínimo: `src/app/main.tsx`, `src/app/App.tsx`, `src/app/styles/index.css` y `src/pages/map` (`MapPage` con un título y `index.ts`). Scripts `dev`, `build`, `preview`, `typecheck` y los provisionales `lint` y `test`.
   - Aceptación:
     - `typecheck` y `build` pasan; `dist/` contiene `index.html` y los assets.
@@ -225,3 +225,4 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: plan aprobado.
 - 2026-10-13: T1 corregida: el token no va en el `.npmrc` del repo (pnpm 12 no expande variables en credenciales del repo), sino en `~/.npmrc` en local y en el `.npmrc` que genera `setup-node` con `registry-url` en CI.
 - 2026-10-13: T1 implementada. `setup-node` con `registry-url` y `scope` en `api`, `web`, `tooling` y `publish-web`; `publish-api-client` ya los tenía y solo recibe el token en la instalación. Lockfile con el cliente 0.3.0 desde `npm.pkg.github.com` (paquete real, no enlazado a `api/client`); el cliente sigue compilando con TypeScript 5.9.3; `actionlint` sin errores. Pendiente: SC1 desde cero con un token local válido (el actual da 401; el lockfile salió de la caché de pnpm) y SC11 en el PR.
+- 2026-10-13: T2 implementada. `oxlint` 1.86.0 y `vitest` 5.0.3 se instalan ya en T2 para los scripts provisionales `lint` y `test` (el job `web` de CI los ejecuta desde que existe `web/tsconfig.json`). `types` del `tsconfig` solo lista `vite/client`: `geojson`, `vitest/globals` y `@testing-library/jest-dom/vitest` los añade la tarea que instala cada paquete. SC6 comprobado: con `bootRun`, `/api/v1/bicimad/stations` por el proxy devuelve 200 con datos reales. Build: 68,71 KB gzip de JS. Commit con `--no-verify` (decisión del usuario): lint-staged aún llama a eslint, que no está instalado; T3 lo sustituye. commitlint y Prettier se comprobaron a mano.
