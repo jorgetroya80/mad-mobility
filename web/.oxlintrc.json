@@ -28,7 +28,7 @@
     "import/no-unassigned-import": [
       "error",
       {
-        "allow": ["**/*.css"]
+        "allow": ["**/*.css", "@testing-library/jest-dom/vitest"]
       }
     ],
     "react/react-in-jsx-scope": "off"

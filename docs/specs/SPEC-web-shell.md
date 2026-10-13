@@ -225,7 +225,7 @@ export function RelativeTime({ date, now = new Date() }: RelativeTimeProps) {
 | `max-params` (3), `max-depth` (3), `complexity` (10)               | funciones con demasiados parámetros, anidación o ramas         |
 | `max-lines-per-function` (50, sin líneas en blanco ni comentarios) | componentes y funciones largos; desactivada en `*.test.ts(x)`  |
 
-Además, las categorías `correctness` y `suspicious` de oxlint activas, y los plugins `jsx-a11y` y `vitest` con sus reglas recomendadas. En oxlint 1.86.0 no existe el plugin `react-hooks`: sus reglas (`react-hooks/*`) las trae el plugin `react`. Dos ajustes sobre las categorías: `react/react-in-jsx-scope` desactivada (aprobado por el usuario: con el JSX runtime automático de React 17+ no hace falta importar `React`) e `import/no-unassigned-import` con `allow: ['**/*.css']` para el import de estilos de `main.tsx`. Lo que no cubre una regla (nombres, comentarios, SOLID) se revisa en el PR.
+Además, las categorías `correctness` y `suspicious` de oxlint activas, y los plugins `jsx-a11y` y `vitest` con sus reglas recomendadas. En oxlint 1.86.0 no existe el plugin `react-hooks`: sus reglas (`react-hooks/*`) las trae el plugin `react`. Dos ajustes sobre las categorías: `react/react-in-jsx-scope` desactivada (aprobado por el usuario: con el JSX runtime automático de React 17+ no hace falta importar `React`) e `import/no-unassigned-import` con `allow: ['**/*.css', '@testing-library/jest-dom/vitest']` para el import de estilos de `main.tsx` y el de jest-dom en `test/setup.ts`. Lo que no cubre una regla (nombres, comentarios, SOLID) se revisa en el PR.
 
 ## Testing Strategy
 
@@ -286,3 +286,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: sin `format:check` ni comprobación de formato en CI (decisión del usuario): oxfmt formatea al guardar (VS Code y JetBrains, extensión/plugin de Oxc) y en pre-commit. Ajustes de oxlint descubiertos en T3: el plugin `react` incluye las reglas `react-hooks/*`; `react/react-in-jsx-scope` desactivada (aprobado); `import/no-unassigned-import` permite CSS.
 - 2026-10-13: Prettier fuera de los commits y de CI (decisión del usuario). oxfmt formatea `web/` al guardar y en pre-commit; el resto de Markdown, YAML y JSON no tiene formateador automático; el API no cambia (Spotless + ktlint).
 - 2026-10-13: se borran los restos de Prettier (`prettier` de la raíz, `.prettierrc.json`, `.prettierignore`). oxfmt sigue en pre-commit para `web/`.
+- 2026-10-13: `import/no-unassigned-import` permite también `@testing-library/jest-dom/vitest` (import de `test/setup.ts`, T4).
