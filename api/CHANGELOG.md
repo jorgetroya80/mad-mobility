@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.3.0...api-v0.4.0) (2026-10-13)
+
+
+### Features
+
+* **api:** accept a custom fetch in the bicimad client ([3b3a4e5](https://github.com/jorgetroya80/mad-mobility/commit/3b3a4e5e1248ec8625e8e947ec70c8125de3080d))
+
 ## [0.3.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.2.0...api-v0.3.0) (2026-10-05)
 
 
