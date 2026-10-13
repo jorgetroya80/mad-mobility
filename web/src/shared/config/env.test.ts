@@ -23,7 +23,7 @@ describe('parseApiBaseUrl', () => {
     expect(parseApiBaseUrl('http://localhost:8080')).toBe('http://localhost:8080');
   });
 
-  it.each(['api', 'ftp://x'])('throws for %j', (raw) => {
+  it.each(['api', 'ftp://x', '//evil.example.com'])('throws for %j', (raw) => {
     expect(() => parseApiBaseUrl(raw)).toThrow(`${INVALID_URL_MESSAGE} ${raw}`);
   });
 });

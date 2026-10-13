@@ -252,3 +252,4 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: checkpoint 3 revisado por el usuario.
 - 2026-10-13: T11 implementada. `web/README.md` reescrito (requisitos con `~/.npmrc` y token, comandos, `VITE_API_BASE_URL`, arquitectura), favicon SVG (`web/public/favicon.svg`, sin 404 de `favicon.ico`) y README raíz actualizado (cómo arrancar la web). Repaso de SC1-SC13: todos en verde salvo SC12 (pendiente de release). Avisos de consola del estilo `liberty` de OpenFreeMap (`highway-shield-*`) ignorados: son del estilo, no del código.
 - 2026-10-13: plan implementado.
+- 2026-10-13: revisión del PR #43: cuatro arreglos menores en un commit `fix(web)` (proxy, validación de `VITE_API_BASE_URL`, arranque de MSW, plugin del worker; 57 tests). Tres puntos abiertos en la spec (landmarks, fechas inválidas, panel montado dos veces), a resolver antes del merge.

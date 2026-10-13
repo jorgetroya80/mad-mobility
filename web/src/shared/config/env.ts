@@ -1,6 +1,6 @@
 const DEFAULT_API_BASE_URL = '/api';
 const ROOT_PATH = '/';
-const VALID_API_BASE_URL = /^(\/|https?:\/\/.+)/;
+const VALID_API_BASE_URL = /^(\/(?!\/)|https?:\/\/.+)/;
 
 function stripTrailingSlash(value: string): string {
   if (value === ROOT_PATH || !value.endsWith('/')) return value;

@@ -17,9 +17,10 @@ function mockServiceWorker(): Plugin {
     name: 'mock-service-worker',
     apply: (_config, { command, mode }) => command === 'serve' && mode === MOCK_MODE,
     configureServer(server) {
+      const workerScript = readFileSync(workerFile);
       server.middlewares.use(MOCK_SERVICE_WORKER_PATH, (_request, response) => {
         response.setHeader('Content-Type', 'application/javascript');
-        response.end(readFileSync(workerFile));
+        response.end(workerScript);
       });
     },
   };
@@ -34,9 +35,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
+      '^/api/': {
         target: 'http://localhost:8080',
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => path.replace(/^\/api(?=\/)/, ''),
       },
     },
   },

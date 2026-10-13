@@ -7,8 +7,13 @@ async function enableMocking(): Promise<void> {
   if (import.meta.env.MODE !== 'mock') {
     return;
   }
-  const { worker } = await import('@/shared/api/mocks/browser');
-  await worker.start({ onUnhandledFrame: 'bypass' });
+  try {
+    const { worker } = await import('@/shared/api/mocks/browser');
+    await worker.start({ onUnhandledFrame: 'bypass' });
+  } catch (error) {
+    // Report it but render anyway: a broken mock setup should not leave a blank page.
+    reportError(error);
+  }
 }
 
 const rootElement = document.getElementById('root');

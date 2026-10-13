@@ -272,7 +272,11 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 
 ## Open Questions
 
-- Ninguna.
+Puntos de la revisión del PR #43, a resolver antes del merge (2026-10-13):
+
+1. **Landmarks:** solo el mapa está en `<main>` y el panel es un `aside` (complementario). En `web-bicimad` la lista de estaciones será el contenido principal, y el `<h1>` queda fuera de `main`. Propuesta: `main` envuelve panel y mapa; el panel pasa a sección con nombre; el `<h1>` dentro de `main`.
+2. **Fechas inválidas:** `RelativeTime` y `formatRelative` lanzan `RangeError` con un `Date` inválido (`toISOString`, `Intl.RelativeTimeFormat` con `NaN`). Propuesta: validar en la frontera (al convertir `updatedAt` del API) y no en el componente.
+3. **Panel montado dos veces:** con estado en el panel (selección, scroll), las dos copias se desincronizan. Opciones: estado elevado fuera del panel, o elegir el contenedor con un hook `useMediaQuery(MD_MEDIA_QUERY)`.
 
 ## Changelog
 
@@ -297,3 +301,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: T8. `RelativeTime` recibe `now` obligatorio: el valor por defecto `new Date()` incumple `react/purity` de oxlint, y quien pasa `now` decide cuándo se refresca el texto. `StateMessage` usa `variant` (`empty | error | loading`) solo para elegir rol ARIA y estilo, sin cambiar el comportamiento.
 - 2026-10-13: T10. Atribución de MapLibre arriba a la derecha por debajo de `md` (decisión del usuario), bottom sheet animado (decisión del usuario: barra + texto "Estaciones" en el asa) y panel montado por CSS en los dos contenedores. Texto del estado vacío confirmado; sin título visible en el panel lateral.
 - 2026-10-13: spec implementada (T1-T11, PR #43). SC1-SC11 y SC13 verificados; SC12 se confirma en la primera release de `web`.
+- 2026-10-13: revisión del PR #43. Arreglos menores: el proxy de Vite solo captura `/api/` (`^/api/`); `VITE_API_BASE_URL` rechaza URLs relativas al protocolo (`//host`); en modo mock, si MSW no arranca se informa con `reportError` y la app se pinta igual; el plugin del worker lee el archivo una vez. Tres puntos abiertos (Open Questions) a resolver antes del merge.
