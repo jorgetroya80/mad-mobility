@@ -5,3 +5,7 @@ packages:
 # Only install package versions published at least 10 days ago (minutes).
 # Enforced in CI too.
 minimumReleaseAge: 14400
+# Our own client: web takes each release as soon as it is published
+minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']
+
+saveExact: true

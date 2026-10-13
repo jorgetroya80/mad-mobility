@@ -62,7 +62,7 @@ See each app's README for its internal architecture.
 
 ## Running locally
 
-You need JDK 25 and EMT MobilityLabs credentials. The web app is not built yet, so only the API runs for now.
+You need JDK 25 and EMT MobilityLabs credentials for the API, and Node 24 plus a GitHub token with `read:packages` for the web app (see [web/README.md](web/README.md)).
 
 1. Copy the env template and fill in your credentials (`EMT_EMAIL` and `EMT_PASSWORD`):
 
@@ -82,6 +82,15 @@ You need JDK 25 and EMT MobilityLabs credentials. The web app is not built yet, 
    curl 'localhost:8080/v1/bicimad/stations?near=40.4168,-3.7038&radius=500&need=docks'
    curl localhost:8080/v1/bicimad/stations/538
    ```
+
+4. Start the web app on `localhost:5173` (it proxies `/api` to the API):
+
+   ```bash
+   pnpm install
+   pnpm --filter web dev
+   ```
+
+   Without the API, `pnpm --filter web dev:mock` serves fake data from the browser.
 
 Swagger UI is at `localhost:8080/swagger-ui.html` while `bootRun` is running. Run the tests with `./gradlew test` (no credentials needed).
 
