@@ -188,9 +188,9 @@ export function formatRelative(date: Date, now: Date): string {
 }
 
 // shared/ui/relative-time/RelativeTime.tsx — solo presenta
-type RelativeTimeProps = { date: Date; now?: Date };
+type RelativeTimeProps = { date: Date; now: Date };
 
-export function RelativeTime({ date, now = new Date() }: RelativeTimeProps) {
+export function RelativeTime({ date, now }: RelativeTimeProps) {
   return <time dateTime={date.toISOString()}>{formatRelative(date, now)}</time>;
 }
 ```
@@ -292,3 +292,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: `import/no-unassigned-import` permite también `@testing-library/jest-dom/vitest` (import de `test/setup.ts`, T4).
 - 2026-10-13: el cliente pasa a 0.4.0, que acepta un `fetch` propio (PR #44, release `api-v0.4.0`); `web` usa `createBicimadClient` sin depender de `openapi-fetch` (decisión del usuario, en lugar de añadirlo como dependencia directa). La `baseUrl` del cliente se hace absoluta para que funcione con el `Request` de Node en los tests (aprobado).
 - 2026-10-13: T7. MapLibre suma ≈ 495 KB gzip (hilo principal + worker); por decisión del usuario, `BaseMap` se carga en diferido y SC13 pasa a medir la carga inicial (77,43 KB). Arreglo del worker con `setWorkerUrl` (aprobado). `maplibre-gl` 6.11.2. Corregida la referencia de SC13: el prototipo de 81 KB no incluía MapLibre.
+- 2026-10-13: T8. `RelativeTime` recibe `now` obligatorio: el valor por defecto `new Date()` incumple `react/purity` de oxlint, y quien pasa `now` decide cuándo se refresca el texto. `StateMessage` usa `variant` (`empty | error | loading`) solo para elegir rol ARIA y estilo, sin cambiar el comportamiento.

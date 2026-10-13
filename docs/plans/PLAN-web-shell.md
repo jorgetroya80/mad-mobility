@@ -148,7 +148,7 @@ T11 cierre (tras T10)
   - Archivos: `web/src/shared/ui/base-map/{BaseMap.tsx,BaseMap.test.tsx,index.ts}`, `web/src/shared/ui/index.ts`, `web/src/pages/map/ui/MapPage.tsx`.
   - Commit: `feat(web): add maplibre base map centered on madrid`.
 
-- [ ] **T8: Tiempo relativo y mensajes de estado** (S, ~45 min)
+- [x] **T8: Tiempo relativo y mensajes de estado** (S, ~45 min)
   - Descripción: `shared/lib/time/formatRelative.ts` (TDD), `shared/ui/relative-time`, `shared/ui/state-message` (vacío / error / cargando, con `role="status"` o `role="alert"`) y `shared/ui/data-attribution` ("Datos: EMT Madrid MobilityLabs").
   - Aceptación:
     - `formatRelative`: "hace 30 segundos", "hace 1 minuto", "hace 5 minutos" y el límite de 60 s.
@@ -185,12 +185,12 @@ T11 cierre (tras T10)
 ### Fase 4: Cierre
 
 - [ ] **T11: Documentación y verificación final** (S, ~45 min)
-  - Descripción: `web/README.md` (quita "Not built yet"; comandos, requisito de `~/.npmrc` con la línea de `_authToken` y de `NODE_AUTH_TOKEN` con `read:packages`, `dev` frente a `dev:mock`). Medir el JS de `dist/` (SC13). Repasar SC1-SC13 y anotar en el PR los manuales (SC6, SC7, SC9, SC10, SC13, capturas). Spec y plan a **implemented** y Capability Map actualizado.
+  - Descripción: `web/README.md` (quita "Not built yet"; comandos, requisito de `~/.npmrc` con la línea de `_authToken` y de `NODE_AUTH_TOKEN` con `read:packages`, `dev` frente a `dev:mock`). Añadir un favicon (`web/public/favicon.ico` o SVG enlazado desde `index.html`) para quitar el 404 de la consola visto en T7. Medir el JS de `dist/` (SC13). Repasar SC1-SC13 y anotar en el PR los manuales (SC6, SC7, SC9, SC10, SC13, capturas). Spec y plan a **implemented** y Capability Map actualizado.
   - Aceptación:
     - SC3 y SC4 en local y en CI; SC13: JS de la carga inicial ≤ 300 KB gzip.
     - Todos los SC anotados en el PR menos SC12, que se confirma en la primera release de `web`.
   - Verificación: `pnpm --filter web lint && pnpm --filter web typecheck && pnpm --filter web test && pnpm --filter web build`; CI del PR en verde.
-  - Archivos: `web/README.md`, `docs/specs/SPEC-web-shell.md`, `docs/plans/PLAN-web-shell.md`, `docs/specs/CAPABILITY-MAP.md`.
+  - Archivos: `web/README.md`, `web/public/favicon.*`, `web/index.html`, `docs/specs/SPEC-web-shell.md`, `docs/plans/PLAN-web-shell.md`, `docs/specs/CAPABILITY-MAP.md`.
   - Commit: `docs: close web-shell module`.
 
 #### Checkpoint final
@@ -234,3 +234,5 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: checkpoint 2 revisado por el usuario.
 - 2026-10-13: `maplibre-gl` baja a 6.11.2 (decisión del usuario): 6.12.0 se publicó el 2026-10-03 a las 21:45 UTC y aún no cumplía los 10 días de `minimumReleaseAge` a la hora de T7. Corregida la numeración de los SC en este plan, desfasada desde que se quitó el SC4 de la spec (lint FSD).
 - 2026-10-13: T7 implementada con `maplibre-gl` 6.11.2 (TDD: rojo por import sin resolver; 22 tests, `base-map` al 100 %). `BaseMap.tsx` es el único archivo que importa MapLibre: estilo `liberty` (`MAP_STYLE_URL` en `shared/config`), centro y zoom de Madrid, `AttributionControl` compacto y `remove()` al desmontar; contenedor `<section aria-label="Mapa de Madrid">` (jsx-a11y rechaza `role="region"` en un `div`). Desviaciones aprobadas: `setWorkerUrl` con la URL de Vite (sin ella, "Worker failed to load") y carga diferida (`LazyBaseMap`, exportado como `BaseMap`) porque MapLibre llevaba el JS a ≈ 495 KB gzip. Build: carga inicial 77,43 KB (`index` 73,89 + `config` 3,54), chunk de MapLibre 274,93 KB, worker ≈ 144 KB. SC9 (parte OSM/OpenFreeMap) comprobado en Chrome headless con el build de producción a 1280x800 y 360x740: mapa centrado en Sol y atribución visible. Único error de consola: `favicon.ico` 404 (fuera de T7). `MapPage` muestra el mapa a pantalla completa con un `<h1>` `sr-only` (provisional hasta T10).
+- 2026-10-13: T11 añade un favicon (decisión del usuario), para quitar el 404 de `favicon.ico`.
+- 2026-10-13: T8 implementada con TDD (cada unidad en rojo antes de implementar; 32 tests). `formatRelative`: "ahora" (0 s), "hace 30 segundos", "hace 59 segundos", "hace 1 minuto" (60 s), "hace 5 minutos"; los segundos se redondean antes del límite de 60 s. `RelativeTime` con `now` obligatorio (`react/purity`). `StateMessage({ variant, title, children })`: `status` para vacío, `alert` para error, `status` + `aria-busy` para cargando; borde de color y título, nunca solo color. `DataAttribution`: "Datos: EMT Madrid MobilityLabs" con enlace a emtmadrid.es (`noopener noreferrer`). Ninguna pieza entra aún en el bundle (73,92 KB gzip inicial).
