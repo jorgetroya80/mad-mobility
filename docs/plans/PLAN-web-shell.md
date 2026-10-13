@@ -157,13 +157,13 @@ T11 cierre (tras T10)
   - Archivos: `web/src/shared/lib/{time/formatRelative.ts,time/formatRelative.test.ts,index.ts}`, `web/src/shared/ui/{relative-time,state-message,data-attribution}/*`, `web/src/shared/ui/index.ts`.
   - Commit: `feat(web): add relative time, state message and data attribution`.
 
-- [ ] **T9: Bottom sheet y panel lateral** (S, ~1 h)
+- [x] **T9: Bottom sheet y panel lateral** (S, ~1 h)
   - Descripción: `shared/ui/bottom-sheet` (dos estados, asa `button` con `aria-expanded` y `aria-controls`, ≥ 44 px, foco visible, desplegado al 60 % de la altura) y `shared/ui/side-panel` (360 px, fijo a la izquierda). Ambos reciben el contenido por `children`.
   - Aceptación:
     - `BottomSheet`: se abre y se cierra con clic, con `Enter` y con `Espacio`; `aria-expanded` cambia; el contenido se renderiza.
     - `SidePanel` renderiza `children` dentro de un `aside` con nombre accesible.
   - Verificación: `pnpm --filter web test`.
-  - Archivos: `web/src/shared/ui/bottom-sheet/{BottomSheet.tsx,BottomSheet.test.tsx,index.ts}`, `web/src/shared/ui/side-panel/{SidePanel.tsx,index.ts}`, `web/src/shared/ui/index.ts`.
+  - Archivos: `web/src/shared/ui/bottom-sheet/{BottomSheet.tsx,BottomSheet.test.tsx,index.ts}`, `web/src/shared/ui/side-panel/{SidePanel.tsx,SidePanel.test.tsx,index.ts}`, `web/src/shared/ui/index.ts`.
   - Commit: `feat(web): add bottom sheet and side panel`.
 
 - [ ] **T10: Layout responsive y página del mapa** (M, ~1 h)
@@ -236,3 +236,4 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: T7 implementada con `maplibre-gl` 6.11.2 (TDD: rojo por import sin resolver; 22 tests, `base-map` al 100 %). `BaseMap.tsx` es el único archivo que importa MapLibre: estilo `liberty` (`MAP_STYLE_URL` en `shared/config`), centro y zoom de Madrid, `AttributionControl` compacto y `remove()` al desmontar; contenedor `<section aria-label="Mapa de Madrid">` (jsx-a11y rechaza `role="region"` en un `div`). Desviaciones aprobadas: `setWorkerUrl` con la URL de Vite (sin ella, "Worker failed to load") y carga diferida (`LazyBaseMap`, exportado como `BaseMap`) porque MapLibre llevaba el JS a ≈ 495 KB gzip. Build: carga inicial 77,43 KB (`index` 73,89 + `config` 3,54), chunk de MapLibre 274,93 KB, worker ≈ 144 KB. SC9 (parte OSM/OpenFreeMap) comprobado en Chrome headless con el build de producción a 1280x800 y 360x740: mapa centrado en Sol y atribución visible. Único error de consola: `favicon.ico` 404 (fuera de T7). `MapPage` muestra el mapa a pantalla completa con un `<h1>` `sr-only` (provisional hasta T10).
 - 2026-10-13: T11 añade un favicon (decisión del usuario), para quitar el 404 de `favicon.ico`.
 - 2026-10-13: T8 implementada con TDD (cada unidad en rojo antes de implementar; 32 tests). `formatRelative`: "ahora" (0 s), "hace 30 segundos", "hace 59 segundos", "hace 1 minuto" (60 s), "hace 5 minutos"; los segundos se redondean antes del límite de 60 s. `RelativeTime` con `now` obligatorio (`react/purity`). `StateMessage({ variant, title, children })`: `status` para vacío, `alert` para error, `status` + `aria-busy` para cargando; borde de color y título, nunca solo color. `DataAttribution`: "Datos: EMT Madrid MobilityLabs" con enlace a emtmadrid.es (`noopener noreferrer`). Ninguna pieza entra aún en el bundle (73,92 KB gzip inicial).
+- 2026-10-13: T9 implementada con TDD (40 tests). `BottomSheet({ label, defaultExpanded?, children })`, no controlado: asa `button` de ancho completo y `min-h-11` con `aria-expanded`, `aria-controls` y foco visible; contenido en `<section aria-labelledby hidden>` (oculto también para lectores de pantalla); desplegado a `h-[60dvh]`. Sin animación (opcional en la spec). `SidePanel` reenvía las props de `aside` con `label` obligatorio, `w-90` (360 px) y scroll propio; la visibilidad por breakpoint la decide `AppLayout`. Añadido `SidePanel.test.tsx`.
