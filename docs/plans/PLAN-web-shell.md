@@ -166,7 +166,7 @@ T11 cierre (tras T10)
   - Archivos: `web/src/shared/ui/bottom-sheet/{BottomSheet.tsx,BottomSheet.test.tsx,index.ts}`, `web/src/shared/ui/side-panel/{SidePanel.tsx,SidePanel.test.tsx,index.ts}`, `web/src/shared/ui/index.ts`.
   - Commit: `feat(web): add bottom sheet and side panel`.
 
-- [ ] **T10: Layout responsive y página del mapa** (M, ~1 h)
+- [x] **T10: Layout responsive y página del mapa** (M, ~1 h)
   - Descripción: `widgets/app-layout` con `AppLayout` (`h-dvh`; recibe `map` y `panel` como slots): `BottomSheet` por debajo de `md`, `SidePanel` desde `md`. `MapPage` compone `AppLayout` con `BaseMap`, un `StateMessage` vacío ("Las estaciones llegan en la siguiente versión" o similar, a confirmar en el PR) y `DataAttribution`.
   - Aceptación:
     - Test de `AppLayout`: renderiza el mapa y el panel recibidos. Test de `MapPage` (con `BaseMap` simulado): estado vacío y atribución de EMT visibles.
@@ -178,8 +178,8 @@ T11 cierre (tras T10)
 
 #### Checkpoint 3: mapa y layout
 
-- [ ] `lint`, `typecheck`, `test` (con cobertura ≥ 80 %) y `build` en verde.
-- [ ] SC8 y SC9 comprobados en el navegador.
+- [x] `lint`, `typecheck`, `test` (con cobertura ≥ 80 %) y `build` en verde.
+- [x] SC8 y SC9 comprobados en el navegador.
 - [ ] Revisión con el usuario.
 
 ### Fase 4: Cierre
@@ -237,3 +237,4 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: T11 añade un favicon (decisión del usuario), para quitar el 404 de `favicon.ico`.
 - 2026-10-13: T8 implementada con TDD (cada unidad en rojo antes de implementar; 32 tests). `formatRelative`: "ahora" (0 s), "hace 30 segundos", "hace 59 segundos", "hace 1 minuto" (60 s), "hace 5 minutos"; los segundos se redondean antes del límite de 60 s. `RelativeTime` con `now` obligatorio (`react/purity`). `StateMessage({ variant, title, children })`: `status` para vacío, `alert` para error, `status` + `aria-busy` para cargando; borde de color y título, nunca solo color. `DataAttribution`: "Datos: EMT Madrid MobilityLabs" con enlace a emtmadrid.es (`noopener noreferrer`). Ninguna pieza entra aún en el bundle (73,92 KB gzip inicial).
 - 2026-10-13: T9 implementada con TDD (40 tests). `BottomSheet({ label, defaultExpanded?, children })`, no controlado: asa `button` de ancho completo y `min-h-11` con `aria-expanded`, `aria-controls` y foco visible; contenido en `<section aria-labelledby hidden>` (oculto también para lectores de pantalla); desplegado a `h-[60dvh]`. Sin animación (opcional en la spec). `SidePanel` reenvía las props de `aside` con `label` obligatorio, `w-90` (360 px) y scroll propio; la visibilidad por breakpoint la decide `AppLayout`. Añadido `SidePanel.test.tsx`.
+- 2026-10-13: T10 implementada con TDD (56 tests; `widgets` y `pages` al 100 %), en dos commits: `feat(web): animate the bottom sheet` (animación con `translate-y`, `inert` en lugar de `hidden`, franja del asa en el flujo) y `feat(web): add responsive app layout to the map page`. `AppLayout({ map, panel, panelLabel })`: columna por debajo de `md`, fila con `SidePanel` de 360 px desde `md`; panel montado en los dos contenedores por CSS. `MapPage`: `<h1>` `sr-only`, estado vacío "Las estaciones llegan en la siguiente versión" (confirmado) y `DataAttribution` al pie. Atribución de MapLibre arriba a la derecha por debajo de `md` (decisión del usuario; `MD_MEDIA_QUERY` en `shared/config`). Carga inicial ≈ 81,8 KB gzip (JS 78,56 + CSS 3,24); MapLibre sigue en el chunk diferido (274,99 KB). SC8 y SC9 comprobados con el build de producción en Chrome headless a 360x740 (plegado, desplegado y a mitad de animación), 768x1024 y 1280x800: las dos atribuciones visibles en todos. `inert` no lo respetan jsdom ni Testing Library: los tests comprueban el atributo.

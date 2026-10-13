@@ -122,7 +122,7 @@ web/
         index.ts
       config/
         env.ts                 lee y valida import.meta.env una sola vez (ver abajo)
-        constants.ts           POLL_INTERVAL_MS = 60_000, MADRID_CENTER (Puerta del Sol), MADRID_ZOOM, MAP_STYLE_URL
+        constants.ts           POLL_INTERVAL_MS = 60_000, MADRID_CENTER (Puerta del Sol), MADRID_ZOOM, MAP_STYLE_URL, MD_MEDIA_QUERY
         index.ts
       lib/
         time/formatRelative.ts "hace X" con Intl.RelativeTimeFormat (es)
@@ -157,7 +157,9 @@ web/
 - `md` en adelante: `SidePanel` fijo a la izquierda (360 px), mapa en el resto.
 - Controles táctiles ≥ 44 px; foco visible; el asa es un `button` con `aria-expanded`.
 - Se prueba a 360, 768 y 1280 px de ancho.
-- Atribución siempre visible: `AttributionControl` de MapLibre (OpenStreetMap / OpenFreeMap) y `DataAttribution` (EMT).
+- Atribución siempre visible: `AttributionControl` de MapLibre (OpenStreetMap / OpenFreeMap) y `DataAttribution` (EMT, al pie del panel). Por debajo de `md` la de MapLibre va arriba a la derecha, para que el bottom sheet desplegado no la tape; desde `md`, abajo a la derecha. `BaseMap` la recoloca al cambiar de breakpoint (`matchMedia` con `MD_MEDIA_QUERY = '(min-width: 48rem)'`, igual que el `md` por defecto de Tailwind; hay que mantenerlos sincronizados).
+- Bottom sheet animado: siempre mide `60dvh` y se desplaza con `translate-y` (300 ms, sin animación con `motion-reduce`); plegado solo asoma el asa (44 px, variable CSS `--handle-height`) y el contenido queda `inert`. Una franja del alto del asa ocupa sitio en el flujo, así el mapa termina encima del asa y queda centrado en la zona visible.
+- `AppLayout({ map, panel, panelLabel })` muestra el panel con CSS (`md:hidden` / `hidden md:block`): el contenido del panel se monta dos veces y la copia oculta queda fuera del árbol de accesibilidad. Si `web-bicimad` añade estado local al panel, habrá que subir ese estado o elegir el contenedor con `matchMedia`.
 
 ### Cambios fuera de `web/`
 
@@ -293,3 +295,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: el cliente pasa a 0.4.0, que acepta un `fetch` propio (PR #44, release `api-v0.4.0`); `web` usa `createBicimadClient` sin depender de `openapi-fetch` (decisión del usuario, en lugar de añadirlo como dependencia directa). La `baseUrl` del cliente se hace absoluta para que funcione con el `Request` de Node en los tests (aprobado).
 - 2026-10-13: T7. MapLibre suma ≈ 495 KB gzip (hilo principal + worker); por decisión del usuario, `BaseMap` se carga en diferido y SC13 pasa a medir la carga inicial (77,43 KB). Arreglo del worker con `setWorkerUrl` (aprobado). `maplibre-gl` 6.11.2. Corregida la referencia de SC13: el prototipo de 81 KB no incluía MapLibre.
 - 2026-10-13: T8. `RelativeTime` recibe `now` obligatorio: el valor por defecto `new Date()` incumple `react/purity` de oxlint, y quien pasa `now` decide cuándo se refresca el texto. `StateMessage` usa `variant` (`empty | error | loading`) solo para elegir rol ARIA y estilo, sin cambiar el comportamiento.
+- 2026-10-13: T10. Atribución de MapLibre arriba a la derecha por debajo de `md` (decisión del usuario), bottom sheet animado (decisión del usuario: barra + texto "Estaciones" en el asa) y panel montado por CSS en los dos contenedores. Texto del estado vacío confirmado; sin título visible en el panel lateral.

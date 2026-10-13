@@ -1,4 +1,11 @@
-import { env, MADRID_CENTER, MADRID_ZOOM, MAP_STYLE_URL, POLL_INTERVAL_MS } from '.';
+import {
+  env,
+  MADRID_CENTER,
+  MADRID_ZOOM,
+  MAP_STYLE_URL,
+  MD_MEDIA_QUERY,
+  POLL_INTERVAL_MS,
+} from '.';
 
 describe('shared/config public API', () => {
   it('exposes the API base URL read from the environment', () => {
@@ -16,5 +23,9 @@ describe('shared/config public API', () => {
 
   it('uses the OpenFreeMap liberty style', () => {
     expect(MAP_STYLE_URL).toBe('https://tiles.openfreemap.org/styles/liberty');
+  });
+
+  it("matches Tailwind's md breakpoint", () => {
+    expect(MD_MEDIA_QUERY).toBe('(min-width: 48rem)');
   });
 });
