@@ -21,7 +21,10 @@ Dejar lista una SPA vacía pero completa (mapa de Madrid, layout responsive, cli
 ## Assumptions
 
 1. El cliente se instala desde GitHub Packages con versión exacta (hoy `0.3.0`), nunca con `workspace:`. `api/client` sigue en el workspace solo para compilarse y publicarse; `web` no lo enlaza.
-2. GitHub Packages exige autenticación también para paquetes públicos. En local hace falta `NODE_AUTH_TOKEN` (PAT con `read:packages`); en CI, `GITHUB_TOKEN` con `packages: read`.
+2. GitHub Packages exige autenticación también para paquetes públicos. pnpm 12 no expande variables de entorno en las credenciales del `.npmrc` del repo (las ignora con un aviso), así que el `.npmrc` del repo solo enruta el scope y el token va en un `.npmrc` de usuario:
+   - En local: `~/.npmrc` con `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` y `NODE_AUTH_TOKEN` (PAT con `read:packages`) exportado en el perfil del shell.
+   - En CI: `actions/setup-node` con `registry-url: https://npm.pkg.github.com` y `scope: '@jorgetroya80'` genera ese `.npmrc` de usuario; el paso de `pnpm install` recibe `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` y el job, `packages: read`.
+   - Comprobado el 2026-10-13 con pnpm 12.8.1.
 3. Como el workspace es uno, todo job que ejecute `pnpm install` (`api`, `web`, `tooling`, `publish-api-client`, `publish-web`) necesita ese token, no solo el de `web`.
 4. `minimumReleaseAge` (10 días) bloquearía la versión del cliente recién publicada: `@jorgetroya80/bicimad-client` va en `minimumReleaseAgeExclude`.
 5. La estructura `features/bicimad`, `shared/map`, etc. de la idea queda sustituida por FSD (ver [Project Structure](#project-structure)).
@@ -66,7 +69,8 @@ Dejar lista una SPA vacía pero completa (mapa de Madrid, layout responsive, cli
 ## Commands
 
 ```bash
-export NODE_AUTH_TOKEN=<PAT con read:packages>   # solo para pnpm install
+# Una vez: ~/.npmrc con //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+export NODE_AUTH_TOKEN=<PAT con read:packages>   # en el perfil del shell
 pnpm install
 
 pnpm --filter web dev            # Vite en :5173, proxy /api -> localhost:8080
@@ -157,13 +161,13 @@ web/
 
 | Archivo                         | Cambio                                                                                                                                                                                                   |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.npmrc` (nuevo)                | `@jorgetroya80:registry=https://npm.pkg.github.com` y `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}`                                                                                              |
+| `.npmrc` (nuevo)                | solo `@jorgetroya80:registry=https://npm.pkg.github.com` (sin credenciales)                                                                                                                              |
 | `api/client/package.json`       | `devDependencies` con versión exacta: `typescript` 5.9.3, `openapi-typescript` 7.13.0                                                                                                                    |
 | `pnpm-workspace.yaml`           | `minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']`; `saveExact: true`                                                                                                                          |
 | `.prettierignore`               | añade `web/`                                                                                                                                                                                             |
 | `lint-staged.config.mjs`        | `web/**/*.{ts,tsx,css,json}`: `pnpm --filter web exec oxlint --fix` (solo ts/tsx) + `pnpm --filter web exec oxfmt`, para usar `.oxlintrc.json` y `.oxfmtrc.json` de `web/` (sustituye eslint + prettier) |
-| `.github/workflows/ci.yml`      | `packages: read` y `NODE_AUTH_TOKEN` en los jobs con `pnpm install`; job `web` añade `format:check`                                                                                                      |
-| `.github/workflows/release.yml` | `packages: read` y `NODE_AUTH_TOKEN` en `publish-web` (y en `publish-api-client` si instala el workspace)                                                                                                |
+| `.github/workflows/ci.yml`      | jobs con `pnpm install`: `packages: read`, `setup-node` con `registry-url` y `scope`, y `NODE_AUTH_TOKEN` en el paso de instalación; job `web` añade `format:check`                                      |
+| `.github/workflows/release.yml` | lo mismo en los jobs que ejecutan `pnpm install` (`publish-web`, `publish-api-client`)                                                                                                                   |
 | `web/README.md`                 | quita "Not built yet"; comandos y requisito del token                                                                                                                                                    |
 
 ## Code Style
@@ -244,7 +248,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 
 ## Success Criteria
 
-1. `pnpm install --frozen-lockfile` funciona con `NODE_AUTH_TOKEN` en local y en CI, e instala `@jorgetroya80/bicimad-client@0.3.0` desde GitHub Packages.
+1. `pnpm install --frozen-lockfile` funciona en local (con `~/.npmrc` y `NODE_AUTH_TOKEN`) y en CI (con `setup-node` y `GITHUB_TOKEN`), e instala `@jorgetroya80/bicimad-client@0.3.0` desde GitHub Packages.
 2. `web/package.json` no tiene ningún `^` ni `~`; las `devDependencies` de `api/client` tampoco. En el lockfile, `web` resuelve `typescript@6.0.3` y `api/client` `typescript@5.9.3`; el job `api` sigue generando y compilando el cliente.
 3. `pnpm --filter web lint`, `format:check`, `typecheck`, `test` y `build` pasan en local y en el job `web` de CI.
 4. Cobertura ≥ 80 % de líneas en `src/shared` y `src/widgets`.
@@ -275,3 +279,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: hallazgos medios de la revisión. Reglas de oxlint que hacen cumplir Clean Code (lista en Code Style); umbral de cobertura en `test.coverage.thresholds`; comportamiento de `env.ts` con valores inválidos; `lint-staged` ejecuta oxlint y oxfmt dentro de `web/`.
 - 2026-10-13: hallazgos menores de la revisión. `h-dvh` en el layout móvil; `test/` y `vite.config.ts` en el `include` del `tsconfig`; presupuesto de 300 KB gzip de JS (SC13); SC12 se confirma tras la primera release.
 - 2026-10-13: spec aprobada tras la revisión.
+- 2026-10-13: autenticación de GitHub Packages corregida en T1. pnpm 12 ignora `${NODE_AUTH_TOKEN}` en el `.npmrc` del repo; el token va en un `.npmrc` de usuario (`~/.npmrc` en local, el que genera `setup-node` con `registry-url` en CI). El `.npmrc` del repo solo enruta el scope. Además, `minimumReleaseAgeExclude` es obligatorio: sin él pnpm falla con `ERR_PNPM_NO_MATURE_MATCHING_VERSION`.

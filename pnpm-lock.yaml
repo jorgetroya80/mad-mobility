@@ -189,13 +189,17 @@ importers:
         version: 0.17.0
     devDependencies:
       openapi-typescript:
-        specifier: ^7.13.0
+        specifier: 7.13.0
         version: 7.13.0(typescript@5.9.3)
       typescript:
-        specifier: ~5.9.3
+        specifier: 5.9.3
         version: 5.9.3
 
-  web: {}
+  web:
+    dependencies:
+      '@jorgetroya80/bicimad-client':
+        specifier: 0.3.0
+        version: 0.3.0
 
 packages:
 
@@ -291,6 +295,9 @@ packages:
   '@conventional-changelog/template@1.4.0':
     resolution: {integrity: sha512-aalGyl7dbB5PArRebDIX43ZvBlXrYm9uWzGJ26t+4SzJVPsOuvfILGGbw5X4yX7i50YEmJ8zvbiWnqH/AAnZqg==}
     engines: {node: '>=22'}
+
+  '@jorgetroya80/bicimad-client@0.3.0':
+    resolution: {integrity: sha512-NuD5s7CP7py77UxXUzCs+Ypt5FW7CTlB/z/B0f1KybA/xyUjZag6R0uDrX2KKzyiOPkuIu8YfDRzxOAwFA9NTg==, tarball: https://npm.pkg.github.com/download/@jorgetroya80/bicimad-client/0.3.0/445b4d7db4fc17e9a3514f6f1871265009647d63}
 
   '@redocly/ajv@8.11.2':
     resolution: {integrity: sha512-io1JpnwtIcvojV7QKDUSIuMN/ikdOUd1ReEnUnMKGfDVridQZ31J0MmIuqwuRjWDZfmvr+Q0MqCcfHM2gTivOg==}
@@ -874,6 +881,10 @@ snapshots:
       conventional-commits-parser: 7.1.2
 
   '@conventional-changelog/template@1.4.0': {}
+
+  '@jorgetroya80/bicimad-client@0.3.0':
+    dependencies:
+      openapi-fetch: 0.17.0
 
   '@redocly/ajv@8.11.2':
     dependencies:

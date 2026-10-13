@@ -126,6 +126,8 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: '@jorgetroya80'
       - run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: pnpm --filter @jorgetroya80/bicimad-client run generate
       - run: pnpm --filter @jorgetroya80/bicimad-client run build
       # package.json keeps 0.0.0 in git: the client always takes the API version, set only here
@@ -148,6 +150,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+      packages: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -157,7 +160,11 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+          registry-url: https://npm.pkg.github.com
+          scope: '@jorgetroya80'
       - run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: pnpm --filter web run build
       - name: Attach build to the GitHub Release
         env:

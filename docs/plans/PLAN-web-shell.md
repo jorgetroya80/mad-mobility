@@ -66,10 +66,10 @@ T11 cierre (tras T10)
 
 ### Fase 1: Base del proyecto
 
-- [ ] **T1: Registro de GitHub Packages, cliente y tokens en CI** (M, ~1 h)
-  - Descripción: `.npmrc` en la raíz con el registro de `@jorgetroya80` y `_authToken=${NODE_AUTH_TOKEN}`. En `pnpm-workspace.yaml`, `minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']` y `saveExact: true`. `web/package.json` añade `@jorgetroya80/bicimad-client` 0.3.0 en `dependencies`. `api/client/package.json` fija sus `devDependencies` (5.9.3 y 7.13.0). En `ci.yml` (`api`, `web`, `tooling`) y `release.yml` (`publish-web`, `publish-api-client`), `permissions: packages: read` (o `write` donde ya está) y `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` en el paso de `pnpm install`.
+- [x] **T1: Registro de GitHub Packages, cliente y tokens en CI** (M, ~1 h)
+  - Descripción: `.npmrc` en la raíz solo con el registro de `@jorgetroya80` (sin credenciales: pnpm 12 no expande variables en las del repo). En local el token va en `~/.npmrc` (ver supuesto 2 de la spec). En `pnpm-workspace.yaml`, `minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']` y `saveExact: true`. `web/package.json` añade `@jorgetroya80/bicimad-client` 0.3.0 en `dependencies`. `api/client/package.json` fija sus `devDependencies` (5.9.3 y 7.13.0). En `ci.yml` (`api`, `web`, `tooling`) y `release.yml` (`publish-web`, `publish-api-client`): `permissions: packages: read` (o `write` donde ya está), `actions/setup-node` con `registry-url: https://npm.pkg.github.com` y `scope: '@jorgetroya80'`, y `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` en el paso de `pnpm install`.
   - Aceptación:
-    - SC1: con `NODE_AUTH_TOKEN` en local, `pnpm install --frozen-lockfile` instala `@jorgetroya80/bicimad-client@0.3.0` desde `npm.pkg.github.com`; sin token, falla con 401 (mensaje claro, documentado en T11).
+    - SC1: con `~/.npmrc` y `NODE_AUTH_TOKEN` en local, `pnpm install --frozen-lockfile` instala `@jorgetroya80/bicimad-client@0.3.0` desde `npm.pkg.github.com`; sin token, falla con 401 (mensaje claro, documentado en T11).
     - SC2 (parte de `api/client`): sin `^` ni `~` en `devDependencies`; el lockfile resuelve `typescript@5.9.3` para `api/client`.
     - `actionlint` sin errores.
   - Verificación: `pnpm install --frozen-lockfile`; `pnpm --filter @jorgetroya80/bicimad-client run build` tras `./api/gradlew -p api generateOpenApi` y `generate`; `actionlint`. SC11 (jobs `api` y `tooling` en verde) se confirma en el checkpoint 1, con el PR abierto.
@@ -185,7 +185,7 @@ T11 cierre (tras T10)
 ### Fase 4: Cierre
 
 - [ ] **T11: Documentación y verificación final** (S, ~45 min)
-  - Descripción: `web/README.md` (quita "Not built yet"; comandos, requisito de `NODE_AUTH_TOKEN` con `read:packages`, `dev` frente a `dev:mock`). Medir el JS de `dist/` (SC13). Repasar SC1-SC13 y anotar en el PR los manuales (SC6, SC7, SC9, SC10, SC13, capturas). Spec y plan a **implemented** y Capability Map actualizado.
+  - Descripción: `web/README.md` (quita "Not built yet"; comandos, requisito de `~/.npmrc` con la línea de `_authToken` y de `NODE_AUTH_TOKEN` con `read:packages`, `dev` frente a `dev:mock`). Medir el JS de `dist/` (SC13). Repasar SC1-SC13 y anotar en el PR los manuales (SC6, SC7, SC9, SC10, SC13, capturas). Spec y plan a **implemented** y Capability Map actualizado.
   - Aceptación:
     - SC3 y SC5 en local y en CI; SC13: JS de `dist/` ≤ 300 KB gzip.
     - Todos los SC anotados en el PR menos SC12, que se confirma en la primera release de `web`.
@@ -203,7 +203,7 @@ T11 cierre (tras T10)
 | Riesgo                                                                                                           | Impacto | Mitigación                                                                                                                            |
 | ---------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `GITHUB_TOKEN` no puede leer el paquete en CI (el paquete no está enlazado al repo o le falta acceso de Actions) | Alto    | Es T1, lo primero. Si falla, revisar en GitHub "Manage Actions access" del paquete; no se usa un PAT en CI sin preguntar              |
-| `.npmrc` con `${NODE_AUTH_TOKEN}` rompe `pnpm install` a quien no tenga token, incluida la raíz                  | Medio   | Documentado en el README de `web` (T11) y en el mensaje de error; es una consecuencia aceptada en la spec                             |
+| Sin `~/.npmrc` o sin token válido, `pnpm install` falla con 401 para todo el workspace, incluida la raíz         | Medio   | Documentado en el README de `web` (T11); es una consecuencia aceptada en la spec                                                      |
 | Dependabot no resuelve el paquete privado del registro                                                           | Bajo    | Aceptado: Dependabot se gestiona desde GitHub (supuesto 12 de la spec)                                                                |
 | Versiones anteriores a las del prototipo (`oxlint` 1.86.0, `msw` 3.0.2, `vitest` 5.0.3) se comportan distinto    | Bajo    | Se revalidan las reglas de oxlint en T3 y `onUnhandledFrame` en T5; si algo falla, se anota y se pregunta antes de cambiar de versión |
 | El plugin que sirve `mockServiceWorker.js` no funciona con Vite 8                                                | Medio   | Alternativa sin dependencias: copiar el worker a una carpeta fuera de `public/` y usarla como `publicDir` solo en modo `mock`         |
@@ -223,3 +223,5 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 
 - 2026-10-13: versión inicial.
 - 2026-10-13: plan aprobado.
+- 2026-10-13: T1 corregida: el token no va en el `.npmrc` del repo (pnpm 12 no expande variables en credenciales del repo), sino en `~/.npmrc` en local y en el `.npmrc` que genera `setup-node` con `registry-url` en CI.
+- 2026-10-13: T1 implementada. `setup-node` con `registry-url` y `scope` en `api`, `web`, `tooling` y `publish-web`; `publish-api-client` ya los tenía y solo recibe el token en la instalación. Lockfile con el cliente 0.3.0 desde `npm.pkg.github.com` (paquete real, no enlazado a `api/client`); el cliente sigue compilando con TypeScript 5.9.3; `actionlint` sin errores. Pendiente: SC1 desde cero con un token local válido (el actual da 401; el lockfile salió de la caché de pnpm) y SC11 en el PR.
