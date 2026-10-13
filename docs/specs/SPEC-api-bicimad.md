@@ -142,7 +142,7 @@ Los errores de la EMT sin caché siguen la tabla de `ProblemDetailsHandler`.
 ### Cliente publicado (`@jorgetroya80/bicimad-client`)
 
 - `api/client/`: `package.json`, `tsconfig.json`, `src/index.ts`. `src/schema.d.ts` se genera y lo ignora git.
-- `src/index.ts` exporta los tipos generados (`paths`, `components`), alias cómodos (`Station`, `StationsResponse`) y `createBicimadClient(baseUrl: string)`, que devuelve `createClient<paths>({ baseUrl })` de openapi-fetch.
+- `src/index.ts` exporta los tipos generados (`paths`, `components`), alias cómodos (`Station`, `StationsResponse`) y `createBicimadClient(baseUrl: string, options?: { fetch })`, que devuelve `createClient<paths>({ baseUrl, ...options })` de openapi-fetch. `fetch` es opcional: permite que quien lo use (por ejemplo, tests con MSW) busque el `fetch` global en cada petición.
 - Release (`publish-api-client` en `release.yml`, tras `release-please` cuando se crea release de `api`):
   1. `./gradlew generateOpenApi` escribe `api/build/openapi/bicimad.json`.
   2. `openapi-typescript` genera `schema.d.ts`; `tsc` compila a `dist/` (JS + `.d.ts`).
@@ -286,3 +286,4 @@ data class GeoPoint(val lat: Double, val lon: Double) {
 - 2026-10-05: spec implementada (T1-T10, PR #36). SC12 se confirma en la primera release de `api`.
 - 2026-10-05: SC12 confirmado en la release `api-v0.2.0`: `@jorgetroya80/bicimad-client@0.2.0` publicado en GitHub Packages.
 - 2026-10-05: el detalle pasa de `/stations/{id}` a `/stations/{number}` (cambio incompatible, 0.3.0). Motivo y análisis en [SPEC-api-bicimad-station-number.md](SPEC-api-bicimad-station-number.md).
+- 2026-10-13: `createBicimadClient` acepta un segundo parámetro opcional con `fetch` (cambio compatible, release 0.4.0). Lo necesita `web-shell`: openapi-fetch guarda el `fetch` global al crear el cliente y MSW no podría interceptar las peticiones en los tests.

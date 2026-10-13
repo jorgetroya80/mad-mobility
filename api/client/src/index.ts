@@ -1,4 +1,4 @@
-import createClient, { type Client } from 'openapi-fetch';
+import createClient, { type Client, type ClientOptions } from 'openapi-fetch';
 import type { components, paths } from './schema.js';
 
 export type { components, paths } from './schema.js';
@@ -8,6 +8,11 @@ export type StationsResponse = components['schemas']['StationsResponse'];
 export type StationDetailResponse = components['schemas']['StationDetailResponse'];
 export type Problem = components['schemas']['Problem'];
 
-export function createBicimadClient(baseUrl: string): Client<paths> {
-  return createClient<paths>({ baseUrl });
+export type BicimadClientOptions = Pick<ClientOptions, 'fetch'>;
+
+export function createBicimadClient(
+  baseUrl: string,
+  options: BicimadClientOptions = {},
+): Client<paths> {
+  return createClient<paths>({ baseUrl, ...options });
 }
