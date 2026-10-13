@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.4.0...api-v0.5.0) (2026-10-13)
+
+
+### Features
+
+* **web:** add web shell ([04b4a8d](https://github.com/jorgetroya80/mad-mobility/commit/04b4a8dcede3c0bccdcf75965d6c3aa07fd8e146))
+
 ## [0.4.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.3.0...api-v0.4.0) (2026-10-13)
 
 
