@@ -86,14 +86,14 @@ T11 cierre (tras T10)
   - Archivos: `web/package.json`, `web/index.html`, `web/vite.config.ts`, `web/tsconfig.json`, `web/src/app/{main.tsx,App.tsx,styles/index.css}`, `web/src/pages/map/{ui/MapPage.tsx,index.ts}`.
   - Commit: `build(web): scaffold vite, react, typescript and tailwind`.
 
-- [ ] **T3: Lint y formato** (S, ~45 min)
-  - Descripción: `.oxlintrc.json` con plugins (`typescript`, `react`, `react-hooks`, `import`, `jsx-a11y`, `vitest`), categorías `correctness` y `suspicious`, y las reglas de la tabla de Code Style (con `override` para `vite.config.ts` y `*.test.ts(x)`). `.oxfmtrc.json` (`singleQuote`, `printWidth: 100`). Scripts `lint`, `format`, `format:check`. `.prettierignore` añade `web/`. `lint-staged.config.mjs`: `web/**/*.{ts,tsx}` → `pnpm --filter web exec oxlint --fix` + `oxfmt`; `web/**/*.{css,json}` → `oxfmt`. `ci.yml`: el job `web` ejecuta `format:check`.
+- [x] **T3: Lint y formato** (S, ~45 min)
+  - Descripción: `.oxlintrc.json` con plugins (`typescript`, `react` (incluye `react-hooks/*`), `import`, `jsx-a11y`, `vitest`), categorías `correctness` y `suspicious`, y las reglas de la tabla de Code Style (con `override` para `vite.config.ts` y `*.test.ts(x)`). `.oxfmtrc.json` (`singleQuote`, `printWidth: 100`). Scripts `lint` y `format`. `.prettierignore` añade `web/`. `lint-staged.config.mjs`: `web/**/*.{ts,tsx}` → `pnpm --filter web exec oxlint --fix` + `oxfmt`; `web/**/*.{css,json}` → `oxfmt`. `.vscode/extensions.json` recomienda la extensión de Oxc; formato al guardar en VS Code y JetBrains (configuración local, ver spec).
   - Aceptación:
-    - `lint` y `format:check` pasan sobre el código de T2.
+    - `lint` y `oxfmt --check` pasan sobre el código de T2.
     - Un archivo temporal con `any`, `!` y `export default` hace fallar `lint` con esas tres reglas (se borra al terminar).
     - SC11 (parte de pre-commit): un commit que toca `web/src/**/*.tsx` ejecuta oxlint y oxfmt; `prettier --check .` en la raíz ignora `web/`.
-  - Verificación: `pnpm --filter web lint && pnpm --filter web format:check`; `pnpm exec prettier --check .`; commit de prueba.
-  - Archivos: `web/.oxlintrc.json`, `web/.oxfmtrc.json`, `web/package.json`, `.prettierignore`, `lint-staged.config.mjs`, `.github/workflows/ci.yml`.
+  - Verificación: `pnpm --filter web lint && pnpm --filter web exec oxfmt --check`; `pnpm exec prettier --check .`; commit de prueba.
+  - Archivos: `web/.oxlintrc.json`, `web/.oxfmtrc.json`, `web/package.json`, `.prettierignore`, `lint-staged.config.mjs`, `.vscode/extensions.json`.
   - Commit: `build(web): add oxlint and oxfmt`.
 
 - [ ] **T4: Tests, cobertura y configuración** (M, ~1 h)
@@ -107,7 +107,7 @@ T11 cierre (tras T10)
 
 #### Checkpoint 1: base
 
-- [ ] `lint`, `format:check`, `typecheck`, `test` y `build` en verde en local.
+- [ ] `lint`, `typecheck`, `test` y `build` en verde en local.
 - [ ] Rama empujada y PR en borrador: jobs `api`, `web` y `tooling` en verde (SC11).
 - [ ] Revisión con el usuario antes de seguir.
 
@@ -178,7 +178,7 @@ T11 cierre (tras T10)
 
 #### Checkpoint 3: mapa y layout
 
-- [ ] `lint`, `format:check`, `typecheck`, `test` (con cobertura ≥ 80 %) y `build` en verde.
+- [ ] `lint`, `typecheck`, `test` (con cobertura ≥ 80 %) y `build` en verde.
 - [ ] SC9 y SC10 comprobados en el navegador.
 - [ ] Revisión con el usuario.
 
@@ -189,7 +189,7 @@ T11 cierre (tras T10)
   - Aceptación:
     - SC3 y SC5 en local y en CI; SC13: JS de `dist/` ≤ 300 KB gzip.
     - Todos los SC anotados en el PR menos SC12, que se confirma en la primera release de `web`.
-  - Verificación: `pnpm --filter web lint && pnpm --filter web format:check && pnpm --filter web typecheck && pnpm --filter web test && pnpm --filter web build`; CI del PR en verde.
+  - Verificación: `pnpm --filter web lint && pnpm --filter web typecheck && pnpm --filter web test && pnpm --filter web build`; CI del PR en verde.
   - Archivos: `web/README.md`, `docs/specs/SPEC-web-shell.md`, `docs/plans/PLAN-web-shell.md`, `docs/specs/CAPABILITY-MAP.md`.
   - Commit: `docs: close web-shell module`.
 
@@ -226,3 +226,4 @@ Unas 9,5 h, en 3-4 sesiones: Fase 1 (~3,75 h), Fase 2 (~1,75 h), Fase 3 (~3,75 h
 - 2026-10-13: T1 corregida: el token no va en el `.npmrc` del repo (pnpm 12 no expande variables en credenciales del repo), sino en `~/.npmrc` en local y en el `.npmrc` que genera `setup-node` con `registry-url` en CI.
 - 2026-10-13: T1 implementada. `setup-node` con `registry-url` y `scope` en `api`, `web`, `tooling` y `publish-web`; `publish-api-client` ya los tenía y solo recibe el token en la instalación. Lockfile con el cliente 0.3.0 desde `npm.pkg.github.com` (paquete real, no enlazado a `api/client`); el cliente sigue compilando con TypeScript 5.9.3; `actionlint` sin errores. Pendiente: SC1 desde cero con un token local válido (el actual da 401; el lockfile salió de la caché de pnpm) y SC11 en el PR.
 - 2026-10-13: T2 implementada. `oxlint` 1.86.0 y `vitest` 5.0.3 se instalan ya en T2 para los scripts provisionales `lint` y `test` (el job `web` de CI los ejecuta desde que existe `web/tsconfig.json`). `types` del `tsconfig` solo lista `vite/client`: `geojson`, `vitest/globals` y `@testing-library/jest-dom/vitest` los añade la tarea que instala cada paquete. SC6 comprobado: con `bootRun`, `/api/v1/bicimad/stations` por el proxy devuelve 200 con datos reales. Build: 68,71 KB gzip de JS. Commit con `--no-verify` (decisión del usuario): lint-staged aún llama a eslint, que no está instalado; T3 lo sustituye. commitlint y Prettier se comprobaron a mano.
+- 2026-10-13: T3 implementada. Sin `format:check` ni cambios en `ci.yml` (decisión del usuario: formato al guardar y en pre-commit). El plugin `react` de oxlint 1.86.0 incluye `react-hooks/*` (no existe un plugin `react-hooks`). `react/react-in-jsx-scope` desactivada (aprobado por el usuario) e `import/no-unassigned-import` con `allow` para CSS. `.oxfmtrc.json` ignora `CHANGELOG.md` (oxfmt también formatea Markdown). lint-staged: la regla de Prettier de la raíz descarta los archivos de `web/`. Comprobado: el archivo de prueba falla con `no-explicit-any`, `no-non-null-assertion` y `no-default-export`; lint-staged ejecuta oxlint y oxfmt en `web/` y Prettier no los toca. VS Code: extensión Oxc 1.63.0 instalada y `.vscode/settings.json` local; JetBrains: plugin pendiente de instalar desde el IDE.

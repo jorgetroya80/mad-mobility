@@ -77,7 +77,6 @@ pnpm --filter web dev            # Vite en :5173, proxy /api -> localhost:8080
 pnpm --filter web dev:mock       # vite --mode mock: MSW en el navegador, sin backend
 pnpm --filter web lint           # oxlint
 pnpm --filter web format         # oxfmt (escribe)
-pnpm --filter web format:check   # oxfmt --check (CI)
 pnpm --filter web typecheck      # tsc --noEmit
 pnpm --filter web test           # vitest run --coverage
 pnpm --filter web build          # tsc --noEmit && vite build -> web/dist
@@ -95,7 +94,7 @@ web/
   tsconfig.json                strict, skipLibCheck, types explícitos, alias @/ -> src/; include: src, test, vite.config.ts
   vite.config.ts               plugins, proxy /api, config de Vitest; en modo mock sirve /mockServiceWorker.js
   .oxlintrc.json               reglas de lint
-  .oxfmtrc.json                singleQuote, printWidth 100 (como Prettier en la raíz)
+  .oxfmtrc.json                singleQuote, printWidth 100 (como Prettier en la raíz); ignora CHANGELOG.md
   src/
     app/
       main.tsx                 punto de entrada; en modo mock carga MSW con import() dinámico
@@ -142,6 +141,9 @@ web/
 
 - Cada slice (y cada segmento de `shared`) expone su API pública en `index.ts`. Fuera del slice solo se importa desde ese `index.ts`. Las reglas FSD no se comprueban con lint: se revisan en cada PR.
 - Dentro de un slice se usan imports relativos; entre slices, siempre el alias `@/`.
+- Formato: no hay comprobación de formato en CI ni script `format:check`. oxfmt formatea al guardar en el editor y lint-staged lo aplica en cada commit.
+  - VS Code: extensión `oxc.oxc-vscode` (recomendada en `.vscode/extensions.json`). En `.vscode/settings.json`, que está en `.gitignore` y es de cada desarrollador: `oxc.path.oxfmt` y `oxc.path.oxlint` apuntan a `web/node_modules/.bin`, y `editor.defaultFormatter: oxc.oxc-vscode` con `editor.formatOnSave` para TypeScript, TSX y CSS.
+  - JetBrains: plugin Oxc (`com.github.oxc.project.oxcintellijplugin`) con oxfmt al guardar; se configura en el IDE (`.idea/` está en `.gitignore`).
 - `env.ts` valida `VITE_API_BASE_URL` al cargar el módulo. Sin valor usa `/api`. Acepta una ruta que empieza por `/` o una URL `http(s)://`, y le quita la `/` final. Con cualquier otro valor lanza `Error('VITE_API_BASE_URL must be a path starting with / or an http(s) URL: <valor>')`, así que la app no arranca con una URL mal configurada.
 - MSW nunca llega a producción:
   - `main.tsx` arranca el worker solo si `import.meta.env.MODE === 'mock'`, con `import('@/shared/api/mocks/browser')`. En el build de producción esa rama es código muerto y Vite la elimina.
@@ -159,16 +161,17 @@ web/
 
 ### Cambios fuera de `web/`
 
-| Archivo                         | Cambio                                                                                                                                                                                                   |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.npmrc` (nuevo)                | solo `@jorgetroya80:registry=https://npm.pkg.github.com` (sin credenciales)                                                                                                                              |
-| `api/client/package.json`       | `devDependencies` con versión exacta: `typescript` 5.9.3, `openapi-typescript` 7.13.0                                                                                                                    |
-| `pnpm-workspace.yaml`           | `minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']`; `saveExact: true`                                                                                                                          |
-| `.prettierignore`               | añade `web/`                                                                                                                                                                                             |
-| `lint-staged.config.mjs`        | `web/**/*.{ts,tsx,css,json}`: `pnpm --filter web exec oxlint --fix` (solo ts/tsx) + `pnpm --filter web exec oxfmt`, para usar `.oxlintrc.json` y `.oxfmtrc.json` de `web/` (sustituye eslint + prettier) |
-| `.github/workflows/ci.yml`      | jobs con `pnpm install`: `packages: read`, `setup-node` con `registry-url` y `scope`, y `NODE_AUTH_TOKEN` en el paso de instalación; job `web` añade `format:check`                                      |
-| `.github/workflows/release.yml` | lo mismo en los jobs que ejecutan `pnpm install` (`publish-web`, `publish-api-client`)                                                                                                                   |
-| `web/README.md`                 | quita "Not built yet"; comandos y requisito del token                                                                                                                                                    |
+| Archivo                           | Cambio                                                                                                                                                                                                   |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.npmrc` (nuevo)                  | solo `@jorgetroya80:registry=https://npm.pkg.github.com` (sin credenciales)                                                                                                                              |
+| `api/client/package.json`         | `devDependencies` con versión exacta: `typescript` 5.9.3, `openapi-typescript` 7.13.0                                                                                                                    |
+| `pnpm-workspace.yaml`             | `minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']`; `saveExact: true`                                                                                                                          |
+| `.prettierignore`                 | añade `web/`                                                                                                                                                                                             |
+| `lint-staged.config.mjs`          | `web/**/*.{ts,tsx,css,json}`: `pnpm --filter web exec oxlint --fix` (solo ts/tsx) + `pnpm --filter web exec oxfmt`, para usar `.oxlintrc.json` y `.oxfmtrc.json` de `web/` (sustituye eslint + prettier) |
+| `.github/workflows/ci.yml`        | jobs con `pnpm install`: `packages: read`, `setup-node` con `registry-url` y `scope`, y `NODE_AUTH_TOKEN` en el paso de instalación                                                                      |
+| `.github/workflows/release.yml`   | lo mismo en los jobs que ejecutan `pnpm install` (`publish-web`, `publish-api-client`)                                                                                                                   |
+| `.vscode/extensions.json` (nuevo) | recomienda la extensión `oxc.oxc-vscode`                                                                                                                                                                 |
+| `web/README.md`                   | quita "Not built yet"; comandos y requisito del token                                                                                                                                                    |
 
 ## Code Style
 
@@ -222,7 +225,7 @@ export function RelativeTime({ date, now = new Date() }: RelativeTimeProps) {
 | `max-params` (3), `max-depth` (3), `complexity` (10)               | funciones con demasiados parámetros, anidación o ramas         |
 | `max-lines-per-function` (50, sin líneas en blanco ni comentarios) | componentes y funciones largos; desactivada en `*.test.ts(x)`  |
 
-Además, las categorías `correctness` y `suspicious` de oxlint activas, y los plugins `jsx-a11y` y `vitest` con sus reglas recomendadas. Lo que no cubre una regla (nombres, comentarios, SOLID) se revisa en el PR.
+Además, las categorías `correctness` y `suspicious` de oxlint activas, y los plugins `jsx-a11y` y `vitest` con sus reglas recomendadas. En oxlint 1.86.0 no existe el plugin `react-hooks`: sus reglas (`react-hooks/*`) las trae el plugin `react`. Dos ajustes sobre las categorías: `react/react-in-jsx-scope` desactivada (aprobado por el usuario: con el JSX runtime automático de React 17+ no hace falta importar `React`) e `import/no-unassigned-import` con `allow: ['**/*.css']` para el import de estilos de `main.tsx`. Lo que no cubre una regla (nombres, comentarios, SOLID) se revisa en el PR.
 
 ## Testing Strategy
 
@@ -242,7 +245,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 
 ## Boundaries
 
-- **Always:** versiones exactas; importar solo por la API pública de cada slice; `lint`, `format:check`, `typecheck`, `test` y `build` en verde antes del PR; Conventional Commits con scope `web` (o `ci` para workflows, `repo` para tooling de la raíz).
+- **Always:** versiones exactas; importar solo por la API pública de cada slice; `lint`, `typecheck`, `test` y `build` en verde antes del PR; Conventional Commits con scope `web` (o `ci` para workflows, `repo` para tooling de la raíz).
 - **Ask first:** cualquier dependencia fuera del Tech Stack (router, librería de bottom sheet, `react-map-gl`, iconos…); desactivar una regla de oxlint; bajar el umbral de cobertura; cambiar las reglas de Prettier en la raíz; activar el lint con tipos de oxlint (`--type-aware`).
 - **Never:** `^` o `~` en `web/package.json` o en las `devDependencies` de `api/client`; `workspace:` para el cliente; `fetch` directo o `maplibre-gl` fuera de `shared`; commitear `.env.local`, tokens o `dist/`; ESLint o Prettier dentro de `web/`; `// oxlint-disable` sin motivo escrito al lado.
 
@@ -250,7 +253,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 
 1. `pnpm install --frozen-lockfile` funciona en local (con `~/.npmrc` y `NODE_AUTH_TOKEN`) y en CI (con `setup-node` y `GITHUB_TOKEN`), e instala `@jorgetroya80/bicimad-client@0.3.0` desde GitHub Packages.
 2. `web/package.json` no tiene ningún `^` ni `~`; las `devDependencies` de `api/client` tampoco. En el lockfile, `web` resuelve `typescript@6.0.3` y `api/client` `typescript@5.9.3`; el job `api` sigue generando y compilando el cliente.
-3. `pnpm --filter web lint`, `format:check`, `typecheck`, `test` y `build` pasan en local y en el job `web` de CI.
+3. `pnpm --filter web lint`, `typecheck`, `test` y `build` pasan en local y en el job `web` de CI.
 4. Cobertura ≥ 80 % de líneas en `src/shared` y `src/widgets`.
 5. Con `bootRun` y `pnpm --filter web dev` levantados, `curl -s -o /dev/null -w '%{http_code}' localhost:5173/api/v1/bicimad/stations` devuelve `200` (proxy de Vite).
 6. Con `pnpm --filter web dev:mock` y sin backend, `await (await fetch('/api/v1/bicimad/stations')).json()` en la consola del navegador devuelve el fixture de `shared/api/mocks`.
@@ -280,3 +283,4 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - 2026-10-13: hallazgos menores de la revisión. `h-dvh` en el layout móvil; `test/` y `vite.config.ts` en el `include` del `tsconfig`; presupuesto de 300 KB gzip de JS (SC13); SC12 se confirma tras la primera release.
 - 2026-10-13: spec aprobada tras la revisión.
 - 2026-10-13: autenticación de GitHub Packages corregida en T1. pnpm 12 ignora `${NODE_AUTH_TOKEN}` en el `.npmrc` del repo; el token va en un `.npmrc` de usuario (`~/.npmrc` en local, el que genera `setup-node` con `registry-url` en CI). El `.npmrc` del repo solo enruta el scope. Además, `minimumReleaseAgeExclude` es obligatorio: sin él pnpm falla con `ERR_PNPM_NO_MATURE_MATCHING_VERSION`.
+- 2026-10-13: sin `format:check` ni comprobación de formato en CI (decisión del usuario): oxfmt formatea al guardar (VS Code y JetBrains, extensión/plugin de Oxc) y en pre-commit. Ajustes de oxlint descubiertos en T3: el plugin `react` incluye las reglas `react-hooks/*`; `react/react-in-jsx-scope` desactivada (aprobado); `import/no-unassigned-import` permite CSS.

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
+    "format": "oxfmt",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "oxfmt": "0.71.0",
     "oxlint": "1.86.0",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
