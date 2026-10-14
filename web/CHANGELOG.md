@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/jorgetroya80/mad-mobility/compare/web-v0.2.0...web-v0.3.0) (2026-10-14)
+
+
+### Features
+
+* **web:** add bicimad stations ([2d07576](https://github.com/jorgetroya80/mad-mobility/commit/2d0757664c7fdc1aba0eef3fafd42b8aa72ed9f6))
+
 ## [0.2.0](https://github.com/jorgetroya80/mad-mobility/compare/web-v0.1.0...web-v0.2.0) (2026-10-13)
 
 
