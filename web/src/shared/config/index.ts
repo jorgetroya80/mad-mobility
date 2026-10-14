@@ -13,5 +13,6 @@ export {
   NOW_TICK_MS,
   POLL_INTERVAL_MS,
   QUERY_RETRY_COUNT,
+  REDUCED_MOTION_QUERY,
   SEARCH_MAX_RESULTS,
 } from './constants';

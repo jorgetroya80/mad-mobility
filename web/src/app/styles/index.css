@@ -1,1 +1,16 @@
 @import 'tailwindcss';
+
+/* Availability colors for the map and the badges. `static` keeps them in the CSS even when
+   no class uses them: BaseMap reads them with getComputedStyle. Each foreground passes
+   WCAG AA (4.5:1) on its color. */
+@theme static {
+  --color-availability-good: #15803d;
+  --color-availability-good-foreground: #ffffff;
+  --color-availability-low: #fbbf24;
+  --color-availability-low-foreground: #030712;
+  --color-availability-empty: #b91c1c;
+  --color-availability-empty-foreground: #ffffff;
+  --color-availability-off: #4b5563;
+  --color-availability-off-foreground: #ffffff;
+  --color-map-user-location: #2563eb;
+}

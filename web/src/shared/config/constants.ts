@@ -12,6 +12,8 @@ export const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 // keep both in sync if the theme ever changes it.
 export const MD_MEDIA_QUERY = '(min-width: 48rem)';
 
+export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
 export const NEARBY_RADIUS_M = 500;
 
 // 4 decimals ≈ 11 m: smaller moves reuse the cached nearby list.

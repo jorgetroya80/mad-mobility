@@ -13,6 +13,7 @@ import {
   NOW_TICK_MS,
   POLL_INTERVAL_MS,
   QUERY_RETRY_COUNT,
+  REDUCED_MOTION_QUERY,
   SEARCH_MAX_RESULTS,
 } from '.';
 
@@ -40,6 +41,10 @@ describe('shared/config public API', () => {
 
   it("matches Tailwind's md breakpoint", () => {
     expect(MD_MEDIA_QUERY).toBe('(min-width: 48rem)');
+  });
+
+  it('detects the reduced motion preference', () => {
+    expect(REDUCED_MOTION_QUERY).toBe('(prefers-reduced-motion: reduce)');
   });
 
   it('lists stations within 500 m', () => {

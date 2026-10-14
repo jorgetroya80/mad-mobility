@@ -1,14 +1,13 @@
 import { lazy, Suspense } from 'react';
+import type { BaseMapProps } from './BaseMap';
 
 // MapLibre and its worker are most of the bundle: load them after the initial chunk.
 const MapLibreMap = lazy(() => import('./BaseMap').then((module) => ({ default: module.BaseMap })));
 
-type LazyBaseMapProps = { className?: string };
-
-export function LazyBaseMap({ className }: LazyBaseMapProps) {
+export function LazyBaseMap(props: BaseMapProps) {
   return (
-    <Suspense fallback={<div className={className} aria-hidden="true" />}>
-      <MapLibreMap className={className} />
+    <Suspense fallback={<div className={props.className} aria-hidden="true" />}>
+      <MapLibreMap {...props} />
     </Suspense>
   );
 }
