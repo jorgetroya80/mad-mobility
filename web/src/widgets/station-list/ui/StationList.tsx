@@ -1,0 +1,39 @@
+import type { Coordinates } from '@/entities/station';
+import { useNeed } from '@/features/filter-by-need';
+import { useSelectedStation } from '@/features/select-station';
+import { useNearbyList } from '../model/useNearbyList';
+import { FavoriteStations } from './FavoriteStations';
+import { NearbyStations } from './NearbyStations';
+import { PanelNotice } from './PanelNotice';
+import { StaleNotice } from './StaleNotice';
+import { StationSection } from './StationSection';
+
+type StationListProps = {
+  // Undefined while the location is still being resolved: the nearby list waits for it.
+  center: Coordinates | undefined;
+  // True when `center` is the Puerta del Sol fallback instead of the user's position.
+  isApproximateLocation: boolean;
+};
+
+export function StationList({ center, isApproximateLocation }: StationListProps) {
+  const [need] = useNeed();
+  const { select } = useSelectedStation();
+  const nearby = useNearbyList(center, need);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {isApproximateLocation ? (
+        <PanelNotice>Sin ubicación: mostrando estaciones cerca de la Puerta del Sol</PanelNotice>
+      ) : null}
+      {nearby.status === 'ready' && nearby.stale ? (
+        <StaleNotice updatedAt={nearby.updatedAt} />
+      ) : null}
+      <FavoriteStations need={need} onSelect={select} />
+      <StationSection
+        heading={isApproximateLocation ? 'Cerca de la Puerta del Sol' : 'Cerca de ti'}
+      >
+        <NearbyStations list={nearby} need={need} onSelect={select} />
+      </StationSection>
+    </div>
+  );
+}
