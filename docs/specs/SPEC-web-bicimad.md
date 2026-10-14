@@ -165,6 +165,7 @@ export type SearchSource = {
   id: string;          // 'bicimad'; 'bus' en el futuro
   label: string;       // 'BiciMAD'
   itemLabel: string;   // 'estación'; 'parada' en el futuro (placeholder, textos accesibles)
+  itemLabelPlural: string; // 'estaciones', 'paradas': el plural en español no se deduce bien
   items: readonly SearchItem[];
   status: 'loading' | 'ready' | 'error';
   onSelect: (number: string) => void;
@@ -175,7 +176,7 @@ export type SearchSource = {
   - Con una fuente no muestra selector: hoy el usuario ve directamente "Buscar estación por número".
   - Con dos o más muestra un selector de servicio (botones de opción, ≥ 44 px) y busca solo en la fuente elegida. Cambiar de servicio conserva el texto y recalcula los resultados.
   - El servicio elegido es estado local del componente (no va a la URL ni a `localStorage`). La URL lo podrá llevar cuando exista una ruta por servicio.
-  - Patrón ARIA combobox: `role="combobox"` con `aria-expanded` y `aria-controls`, lista `role="listbox"`, flechas para moverse, `Enter` para elegir y `Escape` para cerrar.
+  - Campo `type="search"` y debajo una lista de botones (uno por resultado, ≥ 44 px, nombre "1a, Puerta del Sol A, dirección"). Las flechas mueven el foco real: `↓` en el campo va al primer resultado, `↓`/`↑` recorren la lista (sin dar la vuelta) y `↑` en el primero, o `Escape` en cualquiera, vuelve al campo sin borrar el texto. `Enter` en el campo elige la coincidencia exacta, si la hay; `Enter` o espacio en un botón lo elige. Al elegir se vacía el campo y el foco vuelve a él. Un `<output>` anuncia el número de resultados ("3 estaciones") y los estados.
   - Estados: fuente cargando ("Cargando estaciones…"), con error ("No se pudieron cargar las estaciones") y sin resultados ("Ninguna estación con el número 99Z"). Los textos usan `itemLabel`.
 - `matchByNumber(items, query, max)` es una función pura y genérica sobre `SearchItem`. Quita espacios, ignora mayúsculas, busca por prefijo, ordena como el API (numérico, después alfabético: `5`, `5a`, `5b`, `10`) y devuelve como mucho `max` (`SEARCH_MAX_RESULTS = 8`). Una coincidencia exacta va la primera.
 - `features/search-by-number` no importa de `entities` ni de otras `features`. La fuente de BiciMAD se monta en `widgets/transit-search`: `useBicimadSource()` toma `useAllStations()`, convierte cada `Station` en `SearchItem` (`number`, `name`, `address`) y en `onSelect` llama a `useSelectedStation().select(number)`.
@@ -218,7 +219,7 @@ export function availabilityFor(station: Station, need: Need): Availability {
 | Unidad      | Vitest                           | `availabilityFor` (los 4 niveles, límite 4/5, ambas `need`), `parseUpdatedAt`, `matchByNumber` (mayúsculas, espacios, prefijo, orden, coincidencia exacta primero, máximo 8), `validateMapSearch` (valores ausentes o inválidos), redondeo de `near`        |
 | Hooks       | Vitest + `renderHook`            | `useGeolocation` (concedida, denegada, sin API, timeout), `useLocalStorage` / `useFavorites` (valor corrupto, `setItem` que lanza), `useNow` |
 | Datos       | Vitest + MSW                     | las tres queries con sus parámetros; 404 del detalle sin reintento; `stale: true`; error con datos previos                                                     |
-| Componentes | Testing Library                  | `NeedToggle`, `SearchByNumber` (con 1 fuente sin selector; con 2 fuentes simuladas busca solo en la elegida; teclado y ARIA de combobox; estados cargando / error / sin resultados), `TransitSearch` (elegir abre el detalle), `FavoriteButton`, `AvailabilityBadge` (texto accesible además del color), `StationList` (estados), `StationDetail` (404, volver, foco) |
+| Componentes | Testing Library                  | `NeedToggle`, `SearchByNumber` (con 1 fuente sin selector; con 2 fuentes simuladas busca solo en la elegida; teclado con foco real; estados cargando / error / sin resultados), `TransitSearch` (elegir abre el detalle), `FavoriteButton`, `AvailabilityBadge` (texto accesible además del color), `StationList` (estados), `StationDetail` (404, volver, foco) |
 | Mapa        | Vitest con `maplibre-gl` simulado | `BaseMap` crea fuente y capas, llama a `setData` al cambiar `points`, emite `onSelectPoint`, hace `easeTo` con `focus`                                         |
 | Página      | Testing Library + MSW + router   | `MapPage` con el router real y `createMemoryHistory`: abrir `?station=1a` muestra el detalle; elegir "Anclajes" escribe `?need=docks` y reordena; atrás cierra el detalle; `?need=xyz` cuenta como `bikes` |
 | Manual      | navegador                        | 360 / 768 / 1280 px; ubicación concedida y denegada; `dev:mock` y `dev` contra `bootRun` (anotado en el PR)                                                      |
@@ -261,3 +262,4 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: buscador genérico por número (decisión del usuario): `features/search-by-number` trabaja con fuentes (`SearchSource`) y muestra un selector de servicio cuando hay más de una. Hoy solo existe la fuente de BiciMAD (`widgets/transit-search`); el módulo `bus` añadirá la suya sin cambiar el buscador. Nuevo SC14.
 - 2026-10-14: spec aprobada.
 - 2026-10-14: supuesto 12 corregido con lo comprobado en T1: `parseSearchWith` no evita la conversión a número; se lee con `URLSearchParams`, se escribe con `stringifySearchWith(String, …)` y `stripSearchParams` quita `need=bikes`.
+- 2026-10-14: el buscador deja el combobox ARIA por una lista de botones con navegación por flechas y foco real (decisión del usuario): funciona igual con lectores de pantalla en móvil y escritorio y no necesita desactivar `jsx-a11y/prefer-tag-over-role`.
