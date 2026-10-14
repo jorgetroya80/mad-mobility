@@ -1,7 +1,7 @@
 # Plan: web-bicimad
 
 - Created: 2026-10-14
-- Status: **approved** (2026-10-14)
+- Status: **implemented** (2026-10-14)
 - Spec: [SPEC-web-bicimad.md](../specs/SPEC-web-bicimad.md)
 
 ## Overview
@@ -195,7 +195,7 @@ Todo en verde; revisión del usuario de la API de `SearchSource` antes de los wi
 
 ### Fase 5: Cierre
 
-- [ ] **T16: Verificación y documentación** (S, ~1 h)
+- [x] **T16: Verificación y documentación** (S, ~1 h)
   - Descripción: `dev` contra `bootRun` (677 puntos, polling de 60 s con `304`, pestaña oculta sin peticiones: SC4, SC10); ubicación concedida y denegada en el navegador (SC2); teclado y 44 px (SC13); carga inicial gzip (SC12). `web/README.md` (qué hace la app). Spec y plan a **implemented**, Capability Map actualizado, sección Resultado.
   - Aceptación: SC1-SC14 anotados en el PR.
   - Archivos: `web/README.md`, `docs/specs/SPEC-web-bicimad.md`, `docs/plans/PLAN-web-bicimad.md`, `docs/specs/CAPABILITY-MAP.md`.
@@ -225,6 +225,19 @@ Un solo desarrollador: orden T1 → T16. Independientes entre sí: T4, T5 y T6 (
 
 Unas 22 h, en 6-8 sesiones: Fase 1 (~3,75 h), Fase 2 (~5,75 h), Fase 3 (~4,25 h), Fase 4 (~6,75 h), Fase 5 (~1 h). Cada checkpoint es un buen punto para cortar.
 
+## Resultado
+
+- T1-T16 en la rama `feat/web-bicimad`, un commit por tarea más un arreglo tras el checkpoint 4 (`fix(web)`: la estación seleccionada queda visible encima del bottom sheet). 351 tests; cobertura de líneas 99,66 % (umbral 80 % por capa cumplido).
+- Verificación manual del 2026-10-14, `pnpm --filter web dev` contra `./gradlew bootRun` con la EMT real, en Chrome headless (CDP):
+  - SC1: con ubicación concedida (Sol), "Cerca de ti" lista 13 estaciones en el orden del API (primero las que tienen bicis), con distancia y disponibilidad.
+  - SC2: con la ubicación denegada, aviso "Sin ubicación…" y "Cerca de la Puerta del Sol".
+  - SC4: el mapa pinta las 678 estaciones del API en una capa (captura); seleccionar abre el detalle (tests).
+  - SC10: polling a los 61 s y 121 s (una petición por query); el navegador envía `If-None-Match` y recibe `304` si nada cambió (`200` cuando la EMT actualizó); con la pestaña oculta, 0 peticiones en 70 s; al volver, una por query.
+  - SC12: carga inicial 115,89 KB gzip (`index` 112,22 + `config` 3,67); MapLibre sigue en diferido.
+  - SC13: a 360 px el orden de tabulación es mapa, atribución, asa, buscador, Bicis, Anclajes, Mi ubicación y las filas, con foco visible; todos los controles miden ≥ 44 px salvo el enlace en línea de la atribución de la EMT (texto en línea, exento en WCAG 2.5.8).
+  - SC3, SC5-SC9 y SC14: cubiertos por los tests de página, widgets y features; SC5 también con captura a 360 y 1280 px.
+- Pendiente fuera de este módulo: mientras "Mi ubicación" reintenta, el título dice "Cerca de ti" sobre la lista anterior (menor).
+
 ## Changelog
 
 - 2026-10-14: versión inicial. Prototipo de TanStack Router 1.170.41: parser por defecto convierte `538` en número; se usa `URLSearchParams` para leer y `stringifySearchWith(String)` para escribir; `stripSearchParams` para omitir `need=bikes`.
@@ -245,3 +258,4 @@ Unas 22 h, en 6-8 sesiones: Fase 1 (~3,75 h), Fase 2 (~5,75 h), Fase 3 (~4,25 h)
 - 2026-10-14: T14 hecha. `widgets/transit-search`: `TransitSearch()` (sin props) pinta `SearchByNumber sources={[bicimad]}`; con una sola fuente no hay selector de servicio. `useBicimadSource()` construye la fuente BiciMAD (`id`, etiquetas y textos en constantes con nombre) a partir de `useAllStations()` (`number`, `title` = `name`, `subtitle` = `address`) y `onSelect` = `select` de `useSelectedStation()` (push). `status`: `ready` si hay datos (los de un éxito anterior siguen buscables aunque falle un refresco), `error` si falló sin datos, `loading` en otro caso. `items` y la fuente entera con `useMemo`: el polling con datos iguales no cambia la referencia. Tests con `renderWithRouter` + MSW: etiqueta y sin selector, SC7 con 13 estaciones de prueba (prefijo `1`, orden numérico, como mucho `SEARCH_MAX_RESULTS`), `1A` y ` 1a ` → `1a`, `sol` sin resultados, clic y `Enter` dejan `?station=<número>` y vacían el campo, "Cargando estaciones…" con el handler retenido y error tras el reintento de la app. Tests: 315 → 325.
 - 2026-10-14: T15 hecha. `pages/map`: `MapPage` compone `StationsMap`, y en el panel `TransitSearch`, una fila con `NeedToggle` y `LocateButton`, `StationDetail` si hay `?station` (si no, `StationList`) y `DataAttribution` al pie (`MapPanel`). `useMapLocation()` sobre `useGeolocation`: `center` = posición si se concede, `MADRID_CENTER` si se deniega o no hay API, `undefined` mientras está pendiente; `isApproximateLocation` = denegada o no disponible; "Mi ubicación" llama a `retry`. `usePanelExpanded(number)`: el bottom sheet empieza desplegado con `?station` y se despliega cada vez que cambia a una estación (mapa, lista, buscador o enlace); el estado se ajusta durante el render (no en un efecto), así el detalle monta fuera del `inert` y su título toma el foco; el asa sigue plegándolo. Foco al volver (`useListFocusReturn`): un *callback ref* con limpieza (React 19) escucha en el contenedor del panel los clics que suben de las filas (`Enter`/espacio en un botón también son clic; un `onClick` en el `div` lo rechaza `jsx-a11y`) y guarda sección + número (`lib/stationListFocus.ts`); al pasar de detalle a lista enfoca esa fila en su sección o, si no hay origen (mapa, buscador, enlace) o la fila ya no está (p. ej. se quitó de favoritas), el primer título de la lista. Se eligió el título y no el campo de búsqueda porque enfocar un campo abre el teclado en móvil y el título anuncia dónde se está. El origen se olvida tras usarse, así abrir luego la misma estación desde el mapa no devuelve el foco a una fila antigua. `widgets/station-list`: cada `<section>` lleva `data-station-list="favorites" | "nearby"` y su `h2` `tabIndex={-1}` con foco visible (contrato DOM documentado, sin API nueva). Pendiente de T11: `useNearbyStations` con `placeholderData: keepPreviousData`, así cambiar `need` o el centro mantiene las filas anteriores hasta que llegan las nuevas en vez de volver a "Cargando…"; `useNearbyList` no mira `isPlaceholderData`: "Actualizado hace X" y el aviso `stale` describen los datos que se ven, que son reales, y la distancia del detalle puede ser la del centro anterior solo durante esa petición. Cobertura: umbral de 80 % de líneas también en `src/entities`, `src/features` y `src/pages`. Comprobado en `dev:mock` con Chrome headless a 360×740 y 1280×800 (lista y `?station=1a`, ubicación concedida por CDP). Carga inicial: 115,76 KB gzip (`index` 112,09 + `config` 3,67). Tests: 325 → 339.
 - 2026-10-14: arreglo tras el checkpoint 4: por debajo de `md`, con el bottom sheet desplegado, la estación seleccionada quedaba centrada en todo el mapa y tapada por el sheet. `BaseMap` acepta `focusPadding?: { bottom }` (px) y lo pasa siempre como `padding` a `easeTo` (MapLibre conserva el último padding); un cambio de padding con el mismo foco vuelve a centrarlo (así sigue visible al desplegar, plegar o girar el móvil, a cambio de recentrar si el usuario había movido el mapa); sigue sin animación con `prefers-reduced-motion`. `StationsMap` reenvía `focusPadding`. `useMapFocusPadding(panelExpanded)` en `pages/map`: solo por debajo de `md` y con el sheet desplegado vale `useBottomSheetOverlap()`, si no 0. `shared/ui/bottom-sheet/sheetSize.ts` es la única fuente del tamaño (60 % del viewport, asa de 44 px): `BottomSheet` pasa a estilos en línea (`height: 60dvh`, `--handle-height: 44px`) porque Tailwind no genera clases a partir de constantes, y `useBottomSheetOverlap()` = `round(innerHeight × 0,6 − 44)` (el asa ya está en el flujo, fuera del mapa). `useViewportHeight()` nuevo en `shared/lib/media` (`resize`, que también salta al girar o al cambiar la barra del navegador). Se descarta medir el sheet: haría falta un `ResizeObserver` y subir la medida desde `BottomSheet` por `AppLayout`, y la transformación del deslizamiento complica la lectura. Carga inicial: 115,89 KB gzip (`index` 112,22 + `config` 3,67). Tests: 339 → 351.
+- 2026-10-14: T16 hecha. Verificación contra `bootRun` (ver Resultado); README de `web` actualizado; spec y plan a **implemented**.

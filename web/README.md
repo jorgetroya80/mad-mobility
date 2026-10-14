@@ -6,7 +6,11 @@ React frontend (Vite + TypeScript) for Mad Mobility.
 
 Shows BiciMAD stations on a map of Madrid, with how many bikes and free docks each one has, refreshed every minute. It gets the data from the [API](../api/README.md) only through the typed client `@jorgetroya80/bicimad-client`.
 
-Today it shows the map of Madrid in a responsive layout (bottom sheet on mobile, side panel from tablet up). Stations come in the next module, `web-bicimad`.
+- Lists the stations within 500 m of you (or of Puerta del Sol if location is off), ordered by the API: those with bikes (or free docks) first.
+- Filter by bikes or free docks; availability shows as color and number on the map and in the list.
+- Station detail with bikes, free docks, status and last update; shareable links such as `/?station=538&need=docks`, and the Back button closes the detail.
+- Search by station number; favorites stored in the browser (`localStorage`).
+- Responsive: bottom sheet on mobile, side panel from tablet up.
 
 ## Requirements
 
@@ -33,7 +37,7 @@ pnpm --filter web dev:mock   # MSW in the browser, no backend needed
 pnpm --filter web lint       # oxlint
 pnpm --filter web format     # oxfmt (writes)
 pnpm --filter web typecheck  # tsc --noEmit
-pnpm --filter web test       # Vitest with coverage (>= 80% lines in shared/ and widgets/)
+pnpm --filter web test       # Vitest with coverage (>= 80% lines per layer)
 pnpm --filter web build      # type-check and build to web/dist
 pnpm --filter web preview    # serve web/dist
 ```
@@ -42,7 +46,7 @@ pnpm --filter web preview    # serve web/dist
 
 ## Architecture
 
-[Feature-Sliced Design](https://feature-sliced.design) with the layers `app`, `pages`, `widgets` and `shared`. Each slice exposes its public API through its `index.ts`; import from there, not from internal files.
+[Feature-Sliced Design](https://feature-sliced.design) with the layers `app`, `pages`, `widgets`, `features`, `entities` and `shared`. Routing and URL state (`?station`, `?need`) use TanStack Router. Each slice exposes its public API through its `index.ts`; import from there, not from internal files.
 
 Code is formatted with oxfmt (on save and in pre-commit) and linted with oxlint.
 

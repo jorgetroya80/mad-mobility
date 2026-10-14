@@ -1,7 +1,7 @@
 # Spec: web-bicimad
 
 - Created: 2026-10-14
-- Status: **approved** (2026-10-14)
+- Status: **implemented** (2026-10-14)
 - Plan: [PLAN-web-bicimad.md](../plans/PLAN-web-bicimad.md)
 
 Módulo `web-bicimad` del [Capability Map](CAPABILITY-MAP.md). Sobre la SPA de [web-shell](SPEC-web-shell.md) añade las estaciones de BiciMAD: mapa, lista de cercanas, detalle, filtro bicis/anclajes, buscador y favoritos. Consume el API de [api-bicimad](SPEC-api-bicimad.md) con el cliente `@jorgetroya80/bicimad-client`. Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md).
@@ -240,7 +240,7 @@ export function availabilityFor(station: Station, need: Need): Availability {
 1. Con `dev:mock`, al cargar con ubicación concedida, la lista muestra las estaciones de la respuesta de `?near` en el orden del API, cada una con número, nombre, distancia y disponibilidad (color + número).
 2. Con la ubicación denegada, el mapa se centra en la Puerta del Sol, la lista se calcula desde ahí y aparece el aviso "Sin ubicación…"; "Mi ubicación" vuelve a pedir permiso.
 3. Elegir "Anclajes" cambia la URL a `?need=docks`, pide `need=docks` al API y cambia el número y el color de la lista y del mapa a anclajes libres; "Bicis" quita `need` de la URL.
-4. El mapa pinta todas las estaciones de `GET /v1/bicimad/stations` (677 contra `bootRun`) con una capa, sin marcadores DOM; tocar una abre su detalle y, por debajo de `md`, despliega el bottom sheet.
+4. El mapa pinta todas las estaciones de `GET /v1/bicimad/stations` (677 en la spec; 678 contra `bootRun` el 2026-10-14) con una capa, sin marcadores DOM; tocar una abre su detalle y, por debajo de `md`, despliega el bottom sheet.
 5. Abrir `/?station=1a` muestra el detalle de esa estación y centra el mapa en ella; abrir una estación con número `538` deja la URL como `?station=538` (sin comillas ni `%22`); `/?station=nope` muestra "Estación no encontrada" sin reintentar la petición.
 6. Con el detalle abierto desde la lista, el botón atrás del navegador vuelve a la lista y devuelve el foco a la fila de origen.
 7. Buscar `1` lista solo estaciones cuyo número empieza por `1`, en orden numérico y como mucho 8; buscar `1A` o ` 1a ` encuentra `1a`; buscar `sol` no encuentra nada (no busca por nombre); elegir un resultado, o `Enter` con coincidencia exacta, abre su detalle.
@@ -265,3 +265,4 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: supuesto 12 corregido con lo comprobado en T1: `parseSearchWith` no evita la conversión a número; se lee con `URLSearchParams`, se escribe con `stringifySearchWith(String, …)` y `stripSearchParams` quita `need=bikes`.
 - 2026-10-14: el buscador deja el combobox ARIA por una lista de botones con navegación por flechas y foco real (decisión del usuario): funciona igual con lectores de pantalla en móvil y escritorio y no necesita desactivar `jsx-a11y/prefer-tag-over-role`.
 - 2026-10-14: arreglo tras el checkpoint 4: por debajo de `md` la estación seleccionada quedaba detrás del bottom sheet desplegado. Nueva prop opcional `focusPadding` de `BaseMap` y `useBottomSheetOverlap()` en `shared/ui`; desde `md` no cambia nada.
+- 2026-10-14: spec implementada (T1-T16, rama `feat/web-bicimad`). SC1-SC14 verificados (ver Resultado del plan); SC11 en CI se confirma en el PR. El API devuelve hoy 678 estaciones.
