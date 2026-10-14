@@ -1,0 +1,231 @@
+# Plan: web-bicimad
+
+- Created: 2026-10-14
+- Status: **approved** (2026-10-14)
+- Spec: [SPEC-web-bicimad.md](../specs/SPEC-web-bicimad.md)
+
+## Overview
+
+Añadir a la SPA de `web-shell` las estaciones de BiciMAD: TanStack Router para `?station` y `?need`, la entidad `station` (modelo, queries y UI), las features (seleccionar, filtrar, favoritos, ubicación y buscador genérico por número), los widgets (mapa, lista, detalle, buscador) y la página que los compone. Todo dentro de `web/`; el API y el cliente no cambian.
+
+## Decisiones de implementación
+
+- **Lista de tareas en este documento.** Las casillas de abajo son la fuente de verdad del progreso.
+- **Una rama (`feat/web-bicimad`) y un solo PR, con un commit por tarea.** Squash merge: en `main` queda un commit `feat(web)`. Tipos por tarea: `build(web)` para dependencias y configuración, `feat(web)` para comportamiento, `test(web)` si solo cambian tests, `docs` para el cierre.
+- **Solo `web/` y `docs/`.** No hace falta un PR previo para otro componente: el job `release-scope` pasa.
+- **Primero lo más arriesgado.** T1 integra TanStack Router con el parser de search params propio: si la URL no queda limpia o los tipos no encajan, cambian las features que leen la URL.
+- **De abajo arriba en FSD.** `shared` y `entities` antes que `features`; `features` antes que `widgets`; la página al final. Hasta T15, `MapPage` sigue mostrando el estado vacío de `web-shell`, así que cada tarea deja la app funcionando.
+- **TDD en la lógica.** `validateMapSearch`, `availabilityFor`, `parseUpdatedAt`, `matchByNumber`, los hooks de `shared/lib` y las queries se escriben test primero. Los componentes se testean con Testing Library tras escribirlos.
+- **Tests con la URL:** helper `renderWithRouter(ui, { initialEntries })` en `web/test/`, con el router real y `createMemoryHistory` (T1).
+
+### Prototipo de TanStack Router (2026-10-14, scratchpad)
+
+Con `@tanstack/react-router` 1.170.41 en Node:
+
+- El parser por defecto convierte `?station=538` en el número `538` y escribe `'538'` como `?station=%22538%22`. **`parseSearchWith((v) => v)` no lo arregla**: sigue devolviendo `538` número.
+- Lo que funciona: `parseSearch: (search) => Object.fromEntries(new URLSearchParams(search))` y `stringifySearch: stringifySearchWith(String, (v) => v)`. `?station=538&need=docks` se lee como `{ station: '538', need: 'docks' }` y `buildLocation` escribe `/?station=538`, `/?station=25A&need=docks`.
+- `stripSearchParams({ need: 'bikes' })` como middleware de búsqueda de la ruta quita `need=bikes` de la URL (la spec pide que `bikes` no se escriba).
+- `validateSearch` convierte `?need=xyz` en `bikes`; `router.state.location.search` guarda el valor crudo, así que los componentes leen siempre de `Route.useSearch()`, nunca de `location`.
+
+La spec (supuesto 12) proponía `parseSearchWith` y `stringifySearchWith`; T1 usa la variante comprobada y la spec se corrige en ese commit.
+
+### Versiones
+
+Comprobada el 2026-10-14 en npm. Las demás no cambian (tabla de [PLAN-web-shell](PLAN-web-shell.md#versiones)).
+
+| Paquete                  | Versión  | Publicada  | Notas                                                                                     |
+| ------------------------ | -------- | ---------- | ----------------------------------------------------------------------------------------- |
+| `@tanstack/react-router` | 1.170.41 | 2026-09-30 | 1.170.44 es del 2026-10-12. Peers `react`/`react-dom` ≥ 18. Trae `@tanstack/history` y `router-core` |
+
+## Grafo de dependencias
+
+```
+T1 TanStack Router + mapSearch + renderWithRouter
+ └── T2 entities/station/model (availability, parseUpdatedAt, constantes)
+        ├── T3 entities/station/api (3 queries) + mocks
+        ├── T7 entities/station/ui (AvailabilityBadge, StationRow)
+        └── ...
+T4 shared/lib (useGeolocation, useNow, useLocalStorage)        (independiente de T2-T3)
+T5 shared/ui/base-map: capa de puntos, selección, focus, ubicación
+T6 shared/ui/bottom-sheet controlado + AppLayout
+T8 features: select-station, filter-by-need, locate-user        (T1, T2, T4)
+T9 features/toggle-favorite                                      (T4)
+T10 features/search-by-number (genérico)                         (solo shared)
+T11 widgets/station-list                                         (T3, T7, T8, T9)
+T12 widgets/station-detail                                       (T3, T7, T8, T9)
+T13 widgets/stations-map                                         (T3, T5, T8)
+T14 widgets/transit-search                                       (T3, T8, T10)
+T15 pages/map: composición + tests de página + cobertura         (T6, T11-T14)
+T16 verificación manual + cierre
+```
+
+## Task List
+
+### Fase 1: Router y dominio
+
+- [ ] **T1: TanStack Router y search params de la página** (M, ~1,5 h)
+  - Descripción: añadir `@tanstack/react-router` 1.170.41. `app/router.tsx`: ruta raíz y ruta `/` en código, `validateSearch: validateMapSearch`, middleware `stripSearchParams({ need: 'bikes' })`, `parseSearch`/`stringifySearch` del prototipo, `declare module '@tanstack/react-router' { interface Register { router: typeof router } }`. `App.tsx`: `QueryProvider` + `RouterProvider`. `pages/map/model/mapSearch.ts` con `validateMapSearch(raw) -> { station?: string; need: Need }` (el tipo `Need` vive aquí hasta T2, que lo mueve a `entities/station`). `test/renderWithRouter.tsx`. Corregir el supuesto 12 de la spec.
+  - Aceptación:
+    - `validateMapSearch`: sin valores → `{ need: 'bikes' }`; `station` numérica o con letras → string; `need` desconocido → `bikes`.
+    - Con el router en memoria, `?station=538` llega como `'538'`; navegar a la estación `538` deja `/?station=538`; con `need: 'bikes'` no aparece `need`; con `docks`, `&need=docks`.
+    - `MapPage` sigue pintándose igual (test existente en verde con `renderWithRouter`).
+  - Verificación: `pnpm --filter web test`, `typecheck`, `build`; anotar el aumento de la carga inicial (gzip) frente a 78,56 KB.
+  - Archivos: `web/package.json`, `pnpm-lock.yaml`, `web/src/app/router.tsx`, `web/src/app/App.tsx`, `web/src/pages/map/model/mapSearch.ts` (+ test), `web/test/renderWithRouter.tsx`, spec.
+  - Commit: `build(web): add tanstack router with plain-text search params`.
+
+- [ ] **T2: Modelo de estación** (S, ~45 min)
+  - Descripción: `entities/station/model`: `types.ts` (`Station` del cliente, `Need`, `AvailabilityLevel`), `availabilityFor`, `parseUpdatedAt`. Constantes nuevas en `shared/config`: `NEARBY_RADIUS_M`, `LOW_AVAILABILITY_THRESHOLD`, `NOW_TICK_MS`, `SEARCH_MAX_RESULTS`, `FAVORITES_STORAGE_KEY`. `pages/map` importa `Need` de la entidad.
+  - Aceptación: `availabilityFor` cubre `off`, `empty`, `low` (4) y `good` (5) para `bikes` y `docks`; `NO_SERVICE` gana aunque haya bicis. `parseUpdatedAt('nope')` → `undefined`.
+  - Verificación: `pnpm --filter web test -- entities/station`.
+  - Archivos: `web/src/entities/station/model/*`, `web/src/entities/station/index.ts`, `web/src/shared/config/constants.ts`, `web/src/pages/map/model/mapSearch.ts`.
+  - Commit: `feat(web): add station availability model`.
+
+- [ ] **T3: Queries de estaciones y mocks** (M, ~1,5 h)
+  - Descripción: `entities/station/api/stationQueries.ts`: query keys, `useAllStations`, `useNearbyStations(center, need)` (con `enabled`, `near` redondeado a 4 decimales), `useStation(number)` (sin reintento en 404; error tipado "no encontrada"). Todas con `refetchInterval: POLL_INTERVAL_MS`. Fixtures y handlers de MSW: los 4 niveles, una `NO_SERVICE`, `?near`, `/stations/{number}` (200 y 404) y una variante `stale: true` para tests.
+  - Aceptación: las peticiones llevan `near`, `radius=500` y `need`; dos posiciones a < 11 m comparten la misma query key; un 404 hace una sola petición; `stale` y `updatedAt` llegan al consumidor.
+  - Verificación: tests con MSW; `dev:mock` sigue respondiendo.
+  - Archivos: `web/src/entities/station/api/*`, `web/src/shared/api/mocks/{fixtures,handlers}.ts`, `web/src/entities/station/index.ts`.
+  - Commit: `feat(web): add station queries`.
+
+#### Checkpoint 1: router y dominio
+
+`lint`, `typecheck`, `test`, `build` en verde; URL limpia comprobada en tests; revisión del usuario antes de tocar `shared/ui`.
+
+### Fase 2: Piezas compartidas
+
+- [ ] **T4: Hooks de `shared/lib`** (M, ~1,5 h)
+  - Descripción: `geo/useGeolocation` (`pending | granted | denied | unavailable`, `retry`; `getCurrentPosition` con timeout 10 s y `maximumAge` 60 s), `time/useNow(intervalMs)`, `storage/useLocalStorage(key, parse)` (valor inválido → valor por defecto; `getItem`/`setItem` que lanzan no rompen la app). Sin `console.*`.
+  - Aceptación: tests de concedida, denegada, sin `navigator.geolocation` y timeout; `retry` vuelve a pedir; `useNow` avanza con temporizadores falsos; `useLocalStorage` con JSON corrupto y con `setItem` que lanza.
+  - Verificación: `pnpm --filter web test -- shared/lib`.
+  - Archivos: `web/src/shared/lib/{geo,time,storage}/*`, `web/src/shared/lib/index.ts`.
+  - Commit: `feat(web): add geolocation, clock and storage hooks`.
+
+- [ ] **T5: Capa de puntos en `BaseMap`** (L, ~2,5 h)
+  - Descripción: props `points`, `selectedId`, `onSelectPoint`, `focus`, `userLocation` según la spec. Fuente GeoJSON + capas `circle` (color por `tone`, borde si seleccionado) y `symbol` (`label`); `setData` al cambiar `points`; las capas se añaden tras `load`; `easeTo` con `focus` (`duration: 0` con `prefers-reduced-motion`); cursor `pointer` sobre puntos; punto de usuario en su propia fuente. `LazyBaseMap` reenvía las props. Colores como tokens en `index.css` (leídos con `getComputedStyle` o constantes en `shared/config`, se decide en la tarea y se anota).
+  - Aceptación: con `maplibre-gl` simulado, se crean fuente y capas una vez; cambiar `points` llama a `setData` sin recrear el mapa; un clic en la capa llama a `onSelectPoint(id)`; cambiar `focus` llama a `easeTo`.
+  - Verificación: tests de `BaseMap`; en `dev:mock`, los 3+ puntos del fixture con color y número (con `points` de prueba temporales en `MapPage`, sin commitear).
+  - Archivos: `web/src/shared/ui/base-map/{BaseMap,LazyBaseMap}.tsx` (+ tests), `web/src/shared/ui/base-map/{index,points}.ts`, `web/src/app/styles/index.css`.
+  - Commit: `feat(web): draw selectable points on the base map`.
+
+- [ ] **T6: `BottomSheet` controlado** (S, ~45 min)
+  - Descripción: `expanded` y `onExpandedChange` opcionales en `BottomSheet`; `AppLayout` acepta `panelExpanded` y `onPanelExpandedChange` (opcionales) y los pasa al bottom sheet. Sin cambiar el comportamiento no controlado.
+  - Aceptación: tests existentes en verde; en modo controlado el asa llama a `onExpandedChange` y el estado lo decide el padre.
+  - Verificación: `pnpm --filter web test -- bottom-sheet app-layout`.
+  - Archivos: `web/src/shared/ui/bottom-sheet/BottomSheet.tsx` (+ test), `web/src/widgets/app-layout/ui/AppLayout.tsx` (+ test).
+  - Commit: `feat(web): let the page control the bottom sheet`.
+
+- [ ] **T7: UI de la estación** (S, ~1 h)
+  - Descripción: `AvailabilityBadge({ level, count, need })` con color, número y texto accesible ("3 bicis", "Sin servicio"); `StationRow({ station, need, distanceMeters?, onSelect })` como `button` ≥ 44 px.
+  - Aceptación: el nombre accesible de la fila incluye número, nombre, distancia y disponibilidad; el badge nunca depende solo del color.
+  - Verificación: tests de componentes.
+  - Archivos: `web/src/entities/station/ui/*`, `web/src/entities/station/index.ts`.
+  - Commit: `feat(web): add station row and availability badge`.
+
+#### Checkpoint 2: piezas compartidas
+
+Todo en verde; mapa con puntos de prueba revisado en `dev:mock` a 360 y 1280 px; revisión del usuario.
+
+### Fase 3: Features
+
+- [ ] **T8: Selección, filtro y ubicación** (M, ~1,5 h)
+  - Descripción: `features/select-station`: `useSelectedStation()` → `{ number, select(number), clear() }` con `navigate` (push) y `getRouteApi('/')`. `features/filter-by-need`: `useNeed()` (replace) y `NeedToggle` (grupo de dos botones con `aria-pressed`). `features/locate-user`: `LocateButton({ status, onLocate })`.
+  - Aceptación: con `renderWithRouter`, `select('538')` deja `?station=538` y atrás lo quita; `NeedToggle` en "Anclajes" deja `?need=docks` sin nueva entrada en el historial; "Bicis" quita `need`.
+  - Verificación: tests con el router en memoria.
+  - Archivos: `web/src/features/{select-station,filter-by-need,locate-user}/**`.
+  - Commit: `feat(web): add station selection, need filter and locate button`.
+
+- [ ] **T9: Favoritos** (S, ~45 min)
+  - Descripción: `features/toggle-favorite`: `useFavorites()` sobre `useLocalStorage(FAVORITES_STORAGE_KEY)` (array de strings, sin duplicados) y `FavoriteButton({ number })` con `aria-pressed`.
+  - Aceptación: marcar y desmarcar persiste; valor corrupto → sin favoritas y sin errores; dos componentes que usan el hook se mantienen sincronizados.
+  - Verificación: tests.
+  - Archivos: `web/src/features/toggle-favorite/**`.
+  - Commit: `feat(web): add favorite stations`.
+
+- [ ] **T10: Buscador genérico por número** (M, ~2 h)
+  - Descripción: `features/search-by-number`: tipos `SearchItem` y `SearchSource`, `matchByNumber(items, query, max)` puro y `SearchByNumber({ sources })` (selector solo con ≥ 2 fuentes, combobox ARIA, estados con `itemLabel`). Sin imports de `entities`.
+  - Aceptación: `matchByNumber` (prefijo, mayúsculas, espacios, orden `5, 5a, 5b, 10`, exacta primero, máximo 8); con una fuente no hay selector; con dos fuentes simuladas (`bicimad`, `bus`) busca solo en la elegida y conserva el texto al cambiar (SC14); flechas, `Enter` y `Escape`; estados cargando, error y sin resultados.
+  - Verificación: tests; `grep -r "entities\|bicimad-client" web/src/features/search-by-number` sin resultados.
+  - Archivos: `web/src/features/search-by-number/**`.
+  - Commit: `feat(web): add generic search by number`.
+
+#### Checkpoint 3: features
+
+Todo en verde; revisión del usuario de la API de `SearchSource` antes de los widgets.
+
+### Fase 4: Widgets y página
+
+- [ ] **T11: Lista de estaciones** (M, ~1,5 h)
+  - Descripción: `widgets/station-list`: favoritas (de `useAllStations`, omitiendo las que no existen) y cercanas (`useNearbyStations`), aviso de ubicación, aviso `stale`, "No se pudo actualizar", estados cargando / vacío ("Ninguna estación en 500 m") / error con "Reintentar", "Actualizado hace X" con `useNow`.
+  - Aceptación: SC1, SC8 (parte de lista) y SC9 en tests con MSW.
+  - Verificación: tests.
+  - Archivos: `web/src/widgets/station-list/**`.
+  - Commit: `feat(web): add nearby and favorite station list`.
+
+- [ ] **T12: Detalle de estación** (M, ~1,5 h)
+  - Descripción: `widgets/station-detail`: `useStation(number)`, datos de la spec, `FavoriteButton`, "Volver" (`history.back()` si hay entrada previa de la app; si no, `clear()`), "Estación no encontrada", foco al título al abrir.
+  - Aceptación: SC5 (404 sin reintento) y SC6 (volver) en tests.
+  - Verificación: tests con `renderWithRouter` y MSW.
+  - Archivos: `web/src/widgets/station-detail/**`.
+  - Commit: `feat(web): add station detail`.
+
+- [ ] **T13: Mapa de estaciones** (S, ~1 h)
+  - Descripción: `widgets/stations-map`: `useAllStations` → `MapPoint[]` con `availabilityFor` y `need`; `selectedId` y `focus` desde la estación seleccionada; `userLocation`; `onSelectPoint` → `select`.
+  - Aceptación: la conversión a puntos (tono y número según `need`) en un test puro; con `BaseMap` simulado, tocar un punto selecciona la estación.
+  - Verificación: tests.
+  - Archivos: `web/src/widgets/stations-map/**`.
+  - Commit: `feat(web): show stations on the map`.
+
+- [ ] **T14: Buscador de transporte** (S, ~45 min)
+  - Descripción: `widgets/transit-search`: `useBicimadSource()` (`useAllStations` → `SearchSource` con `itemLabel: 'estación'`, `onSelect` → `select`) y `TransitSearch` con `SearchByNumber sources={[bicimad]}`.
+  - Aceptación: SC7 con MSW y router: elegir un resultado deja `?station=<número>`.
+  - Verificación: tests.
+  - Archivos: `web/src/widgets/transit-search/**`.
+  - Commit: `feat(web): search bicimad stations by number`.
+
+- [ ] **T15: Página del mapa** (M, ~2 h)
+  - Descripción: `MapPage` compone `StationsMap`, `TransitSearch`, `NeedToggle`, `LocateButton`, `StationList` o `StationDetail` según `?station`, y `DataAttribution`. Geolocalización con `useGeolocation`; centro = posición o `MADRID_CENTER`. Bottom sheet controlado: se despliega al seleccionar una estación. Foco a la fila de origen al volver. `test.coverage.thresholds` ≥ 80 % en `src/entities`, `src/features` y `src/pages`.
+  - Aceptación: tests de página de la spec (`?station=1a`, "Anclajes", atrás, `?need=xyz`, ubicación denegada → aviso y Sol); SC11 en local.
+  - Verificación: `pnpm --filter web lint && pnpm --filter web typecheck && pnpm --filter web test && pnpm --filter web build`.
+  - Archivos: `web/src/pages/map/ui/MapPage.tsx` (+ test), `web/vite.config.ts`, `web/src/pages/map/index.ts`.
+  - Commit: `feat(web): compose the bicimad map page`.
+
+#### Checkpoint 4: app completa
+
+`dev:mock` recorrido entero a 360, 768 y 1280 px; revisión del usuario.
+
+### Fase 5: Cierre
+
+- [ ] **T16: Verificación y documentación** (S, ~1 h)
+  - Descripción: `dev` contra `bootRun` (677 puntos, polling de 60 s con `304`, pestaña oculta sin peticiones: SC4, SC10); ubicación concedida y denegada en el navegador (SC2); teclado y 44 px (SC13); carga inicial gzip (SC12). `web/README.md` (qué hace la app). Spec y plan a **implemented**, Capability Map actualizado, sección Resultado.
+  - Aceptación: SC1-SC14 anotados en el PR.
+  - Archivos: `web/README.md`, `docs/specs/SPEC-web-bicimad.md`, `docs/plans/PLAN-web-bicimad.md`, `docs/specs/CAPABILITY-MAP.md`.
+  - Commit: `docs: record web-bicimad verification`.
+
+#### Checkpoint final
+
+CI en verde en el PR; revisión del usuario; squash merge con título `feat(web): add bicimad stations`.
+
+## Riesgos y mitigaciones
+
+| Riesgo                                                                                       | Impacto | Mitigación                                                                                                       |
+| -------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| La serialización de search params se comporta distinto en el navegador que en Node            | Medio   | T1 lo prueba con el router en memoria y en `dev:mock`; el prototipo ya cubre lectura y escritura                  |
+| `navigate` de TanStack Router no hace commit fuera de `RouterProvider` (visto en el prototipo) | Bajo    | Los tests de navegación siempre montan `RouterProvider` con `renderWithRouter`                                    |
+| Capas de MapLibre difíciles de testear con el mapa simulado                                   | Medio   | Lógica de puntos en funciones puras (`points.ts`, T13); el mock solo comprueba llamadas a `addSource`/`setData`   |
+| El estilo `liberty` no tiene la fuente de glifos que pide la capa `symbol`                    | Medio   | En T5 se usa la `text-font` del propio estilo; si falla, el número va en un círculo más grande sin `symbol` (se pregunta) |
+| El router y los widgets nuevos superan 300 KB gzip de carga inicial                           | Bajo    | Hoy 78,56 KB; se mide en T1 y T15                                                                                |
+| Geolocalización imposible de probar en jsdom                                                 | Bajo    | `navigator.geolocation` simulado en tests; prueba real manual en T16                                             |
+| Foco al volver del detalle se pierde al re-montar la lista                                   | Medio   | El número de la estación de origen se guarda en `MapPage` y la fila recibe el foco tras montar (test en T15)     |
+
+## Paralelización
+
+Un solo desarrollador: orden T1 → T16. Independientes entre sí: T4, T5 y T6 (solo `shared`), y T9 y T10 (no usan el router).
+
+## Estimación
+
+Unas 22 h, en 6-8 sesiones: Fase 1 (~3,75 h), Fase 2 (~5,75 h), Fase 3 (~4,25 h), Fase 4 (~6,75 h), Fase 5 (~1 h). Cada checkpoint es un buen punto para cortar.
+
+## Changelog
+
+- 2026-10-14: versión inicial. Prototipo de TanStack Router 1.170.41: parser por defecto convierte `538` en número; se usa `URLSearchParams` para leer y `stringifySearchWith(String)` para escribir; `stripSearchParams` para omitir `need=bikes`.
+- 2026-10-14: plan aprobado.
