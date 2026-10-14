@@ -1,10 +1,8 @@
 import type { Need } from '@/entities/station';
 import { NEARBY_RADIUS_M } from '@/shared/config';
-import { StateMessage } from '@/shared/ui';
+import { PanelNotice, StateMessage, UpdatedAt } from '@/shared/ui';
 import type { NearbyList } from '../model/useNearbyList';
-import { PanelNotice } from './PanelNotice';
 import { StationRows } from './StationRows';
-import { UpdatedAt } from './UpdatedAt';
 
 type NearbyStationsProps = {
   list: NearbyList;

@@ -1,7 +1,7 @@
 import { NOW_TICK_MS } from '@/shared/config';
 import { useNow } from '@/shared/lib';
-import { RelativeTime } from '@/shared/ui';
-import { PanelNotice } from './PanelNotice';
+import { RelativeTime } from '../relative-time';
+import { PanelNotice } from '../panel-notice';
 
 type StaleNoticeProps = { updatedAt: Date | undefined };
 

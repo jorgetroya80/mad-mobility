@@ -1,11 +1,10 @@
 import type { Coordinates } from '@/entities/station';
 import { useNeed } from '@/features/filter-by-need';
 import { useSelectedStation } from '@/features/select-station';
+import { PanelNotice, StaleNotice } from '@/shared/ui';
 import { useNearbyList } from '../model/useNearbyList';
 import { FavoriteStations } from './FavoriteStations';
 import { NearbyStations } from './NearbyStations';
-import { PanelNotice } from './PanelNotice';
-import { StaleNotice } from './StaleNotice';
 import { StationSection } from './StationSection';
 
 type StationListProps = {
