@@ -1,6 +1,8 @@
 import {
   env,
   FAVORITES_STORAGE_KEY,
+  GEOLOCATION_MAX_AGE_MS,
+  GEOLOCATION_TIMEOUT_MS,
   LOW_AVAILABILITY_THRESHOLD,
   MADRID_CENTER,
   MADRID_ZOOM,
@@ -54,6 +56,11 @@ describe('shared/config public API', () => {
 
   it('refreshes relative times every 30 s', () => {
     expect(NOW_TICK_MS).toBe(30_000);
+  });
+
+  it('waits up to 10 s for a position and accepts one up to 1 min old', () => {
+    expect(GEOLOCATION_TIMEOUT_MS).toBe(10_000);
+    expect(GEOLOCATION_MAX_AGE_MS).toBe(60_000);
   });
 
   it('shows at most 8 search results', () => {

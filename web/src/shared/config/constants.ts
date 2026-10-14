@@ -21,6 +21,11 @@ export const LOW_AVAILABILITY_THRESHOLD = 5;
 
 export const NOW_TICK_MS = 30_000;
 
+export const GEOLOCATION_TIMEOUT_MS = 10_000;
+
+// Reuses a position up to 1 min old, so a reload does not wait for a new fix.
+export const GEOLOCATION_MAX_AGE_MS = 60_000;
+
 export const SEARCH_MAX_RESULTS = 8;
 
 export const FAVORITES_STORAGE_KEY = 'bicimad-now:favorites';
