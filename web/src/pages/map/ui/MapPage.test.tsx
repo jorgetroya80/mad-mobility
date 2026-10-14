@@ -34,12 +34,14 @@ const USER = { lat: 40.4169, lng: -3.7033 };
 const PUERTA_DEL_SOL_A = { lat: 40.4170224, lng: -3.7024255 };
 const PERMISSION_DENIED = 1;
 
-type GeoAnswer = 'granted' | 'denied';
+// 'pending' never answers, like a browser still asking for the position.
+type GeoAnswer = 'granted' | 'denied' | 'pending';
 
 // jsdom has no geolocation: every request is answered at once with the current answer.
 function stubGeolocation(initialAnswer: GeoAnswer) {
   let answer = initialAnswer;
   const getCurrentPosition = vi.fn<Geolocation['getCurrentPosition']>((onSuccess, onError) => {
+    if (answer === 'pending') return;
     if (answer === 'granted') {
       onSuccess({ coords: { latitude: USER.lat, longitude: USER.lng } } as GeolocationPosition);
       return;
@@ -273,6 +275,27 @@ describe('MapPage', () => {
       expect(geolocation.getCurrentPosition).toHaveBeenCalledTimes(2);
       expect(await rowIn('Cerca de ti', '1a')).toBeInTheDocument();
       expect(lastMapProps()).toMatchObject({ focus: USER, userLocation: USER });
+    });
+  });
+
+  describe('while "Mi ubicación" asks again', () => {
+    it('keeps describing the list it shows: still near Puerta del Sol', async () => {
+      const geolocation = stubGeolocation('denied');
+      const user = userEvent.setup();
+      await renderPage();
+      await rowIn('Cerca de la Puerta del Sol', '1a');
+
+      geolocation.answerWith('pending');
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+
+      expect(screen.getByRole('button', { name: 'Localizando…' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Cerca de la Puerta del Sol' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
+      ).toBeInTheDocument();
+      expect(lastMapProps()).toMatchObject({ focus: MADRID_CENTER });
     });
   });
 
