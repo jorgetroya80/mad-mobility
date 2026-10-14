@@ -1,4 +1,4 @@
-import { availabilityFor } from './availability';
+import { availabilityFor, availabilityLabel } from './availability';
 import type { AvailabilityLevel, Need, Station } from './types';
 
 type StationCounts = Pick<Station, 'status' | 'bikes' | 'freeDocks'>;
@@ -31,4 +31,14 @@ describe('availabilityFor', () => {
       expect(availabilityFor(station, need)).toEqual({ level: 'off', count });
     },
   );
+});
+
+describe('availabilityLabel', () => {
+  it.each<AvailabilityLevel>(['good', 'low', 'empty'])('shows the count when %s', (level) => {
+    expect(availabilityLabel({ level, count: 3 })).toBe('3');
+  });
+
+  it('shows a dash instead of the count when off', () => {
+    expect(availabilityLabel({ level: 'off', count: 7 })).toBe('–');
+  });
 });

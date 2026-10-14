@@ -1,3 +1,4 @@
+import { availabilityLabel } from '../model/availability';
 import type { AvailabilityLevel, Need } from '../model/types';
 import { availabilityText } from './availabilityText';
 
@@ -11,8 +12,6 @@ const TONES = {
   off: 'bg-availability-off text-availability-off-foreground',
 } as const satisfies Record<AvailabilityLevel, string>;
 
-const OFF_SYMBOL = '–';
-
 // Color is never the only cue: the pill shows the number (or a dash when off) and screen
 // readers get the full text.
 export function AvailabilityBadge({ level, count, need }: AvailabilityBadgeProps) {
@@ -20,7 +19,7 @@ export function AvailabilityBadge({ level, count, need }: AvailabilityBadgeProps
     <span
       className={`inline-flex h-6 min-w-8 shrink-0 items-center justify-center rounded-full px-2 text-sm font-semibold tabular-nums ${TONES[level]}`}
     >
-      <span aria-hidden="true">{level === 'off' ? OFF_SYMBOL : count}</span>
+      <span aria-hidden="true">{availabilityLabel({ level, count })}</span>
       <span className="sr-only">{availabilityText(level, count, need)}</span>
     </span>
   );

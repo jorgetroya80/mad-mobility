@@ -13,3 +13,11 @@ export function availabilityFor(
   if (count < LOW_AVAILABILITY_THRESHOLD) return { level: 'low', count };
   return { level: 'good', count };
 }
+
+const OFF_LABEL = '–';
+
+// The visible number of a station, shared by the list badge and the map point. An off
+// station's count is meaningless, so it shows a dash.
+export function availabilityLabel({ level, count }: Availability): string {
+  return level === 'off' ? OFF_LABEL : String(count);
+}
