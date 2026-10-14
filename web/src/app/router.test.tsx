@@ -1,12 +1,8 @@
 import { act } from '@testing-library/react';
-import type * as SharedUi from '@/shared/ui';
 import { renderWithRouter } from '../../test/renderWithRouter';
 
-// jsdom has no WebGL: replace the map, keep the rest of the shared UI real.
-vi.mock('@/shared/ui', async (importOriginal) => ({
-  ...(await importOriginal<typeof SharedUi>()),
-  BaseMap: () => <div data-testid="base-map" />,
-}));
+// These tests are about the URL, not the page: a stub keeps the map out of jsdom.
+const routeContent = <p>map route</p>;
 
 type AppRouter = Awaited<ReturnType<typeof renderWithRouter>>['router'];
 
@@ -20,19 +16,21 @@ function currentUrl(router: AppRouter): URL {
 
 describe('app router', () => {
   it('reads ?station=538 as a string', async () => {
-    const { router } = await renderWithRouter({ initialEntries: ['/?station=538&need=docks'] });
+    const { router } = await renderWithRouter(routeContent, {
+      initialEntries: ['/?station=538&need=docks'],
+    });
 
     expect(currentSearch(router)).toEqual({ station: '538', need: 'docks' });
   });
 
   it('treats an unknown need as bikes', async () => {
-    const { router } = await renderWithRouter({ initialEntries: ['/?need=xyz'] });
+    const { router } = await renderWithRouter(routeContent, { initialEntries: ['/?need=xyz'] });
 
     expect(currentSearch(router)).toEqual({ need: 'bikes' });
   });
 
   it('writes the station as plain text and leaves out need=bikes', async () => {
-    const { router } = await renderWithRouter();
+    const { router } = await renderWithRouter(routeContent);
 
     await act(() => router.navigate({ to: '/', search: { station: '538', need: 'bikes' } }));
 
@@ -40,7 +38,7 @@ describe('app router', () => {
   });
 
   it('writes need=docks next to the station', async () => {
-    const { router } = await renderWithRouter();
+    const { router } = await renderWithRouter(routeContent);
 
     await act(() => router.navigate({ to: '/', search: { station: '538', need: 'docks' } }));
 
