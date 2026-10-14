@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
-import { POLL_INTERVAL_MS } from '@/shared/config';
+import { POLL_INTERVAL_MS, QUERY_RETRY_COUNT } from '@/shared/config';
 
 export function createQueryClient(): QueryClient {
   return new QueryClient({
@@ -9,7 +9,7 @@ export function createQueryClient(): QueryClient {
         staleTime: POLL_INTERVAL_MS,
         refetchIntervalInBackground: false,
         refetchOnWindowFocus: true,
-        retry: 1,
+        retry: QUERY_RETRY_COUNT,
       },
     },
   });

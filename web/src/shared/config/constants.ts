@@ -1,5 +1,7 @@
 export const POLL_INTERVAL_MS = 60_000;
 
+export const QUERY_RETRY_COUNT = 1;
+
 export const MADRID_CENTER = { lng: -3.7038, lat: 40.4168 } as const;
 
 export const MADRID_ZOOM = 15;
@@ -11,6 +13,9 @@ export const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 export const MD_MEDIA_QUERY = '(min-width: 48rem)';
 
 export const NEARBY_RADIUS_M = 500;
+
+// 4 decimals ≈ 11 m: smaller moves reuse the cached nearby list.
+export const NEAR_COORDINATE_DECIMALS = 4;
 
 export const LOW_AVAILABILITY_THRESHOLD = 5;
 

@@ -6,9 +6,11 @@ import {
   MADRID_ZOOM,
   MAP_STYLE_URL,
   MD_MEDIA_QUERY,
+  NEAR_COORDINATE_DECIMALS,
   NEARBY_RADIUS_M,
   NOW_TICK_MS,
   POLL_INTERVAL_MS,
+  QUERY_RETRY_COUNT,
   SEARCH_MAX_RESULTS,
 } from '.';
 
@@ -19,6 +21,10 @@ describe('shared/config public API', () => {
 
   it('polls every minute', () => {
     expect(POLL_INTERVAL_MS).toBe(60_000);
+  });
+
+  it('retries a failed query once', () => {
+    expect(QUERY_RETRY_COUNT).toBe(1);
   });
 
   it('centers the map on Puerta del Sol', () => {
@@ -36,6 +42,10 @@ describe('shared/config public API', () => {
 
   it('lists stations within 500 m', () => {
     expect(NEARBY_RADIUS_M).toBe(500);
+  });
+
+  it('rounds the nearby center to 4 decimals', () => {
+    expect(NEAR_COORDINATE_DECIMALS).toBe(4);
   });
 
   it('marks availability as low below 5', () => {
