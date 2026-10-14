@@ -15,6 +15,9 @@ export type BaseMapProps = {
   selectedId?: string;
   onSelectPoint?: (id: string) => void;
   focus?: LngLat;
+  // Pixels at the bottom of the map hidden by something on top of it: the focus is centered
+  // in the area above them.
+  focusPadding?: { bottom: number };
   userLocation?: LngLat;
 };
 
@@ -28,13 +31,14 @@ export function BaseMap({
   selectedId,
   onSelectPoint,
   focus,
+  focusPadding,
   userLocation,
 }: BaseMapProps) {
   const containerRef = useRef<HTMLElement>(null);
   const map = useMapLibre(containerRef, onSelectPoint);
   usePointsData(map, points, selectedId);
   useUserLocationData(map, userLocation);
-  useEaseTo(map, focus);
+  useEaseTo(map, focus, focusPadding?.bottom);
 
   return <section ref={containerRef} aria-label="Mapa de Madrid" className={className} />;
 }

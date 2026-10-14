@@ -30,11 +30,13 @@ describe('BottomSheet', () => {
     const sheet = handle.parentElement;
 
     // One variable sets the handle height, the visible strip and the space kept in the flow.
-    expect(sheet).toHaveClass('h-[60dvh]', 'translate-y-[calc(100%-var(--handle-height))]');
+    expect(sheet).toHaveStyle({ height: '60dvh' });
+    expect(sheet).toHaveClass('translate-y-[calc(100%-var(--handle-height))]');
     expect(handle).toHaveClass('h-(--handle-height)');
 
     await user.click(handle);
-    expect(sheet).toHaveClass('h-[60dvh]', 'translate-y-0');
+    expect(sheet).toHaveStyle({ height: '60dvh' });
+    expect(sheet).toHaveClass('translate-y-0');
     expect(sheet).not.toHaveClass('translate-y-[calc(100%-var(--handle-height))]');
   });
 
@@ -42,7 +44,8 @@ describe('BottomSheet', () => {
     const { handle } = renderSheet();
     const strip = handle.parentElement?.parentElement;
 
-    expect(strip).toHaveClass('[--handle-height:--spacing(11)]', 'h-(--handle-height)', 'shrink-0');
+    expect(strip).toHaveStyle({ '--handle-height': '44px' });
+    expect(strip).toHaveClass('h-(--handle-height)', 'shrink-0');
   });
 
   it('animates the slide unless the user prefers reduced motion', () => {

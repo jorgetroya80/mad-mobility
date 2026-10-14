@@ -347,20 +347,59 @@ describe('BaseMap points', () => {
     expect(map.easeTo).not.toHaveBeenCalled();
 
     act(() => map.fire('load'));
-    expect(map.easeTo).toHaveBeenLastCalledWith({ center: [-3.7, 40.4] });
+    expect(map.easeTo).toHaveBeenLastCalledWith({ center: [-3.7, 40.4], padding: { bottom: 0 } });
 
     rerender(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} />);
     expect(map.easeTo).toHaveBeenCalledOnce();
 
     rerender(<BaseMap focus={{ lng: -3.71, lat: 40.41 }} />);
-    expect(map.easeTo).toHaveBeenLastCalledWith({ center: [-3.71, 40.41] });
+    expect(map.easeTo).toHaveBeenLastCalledWith({
+      center: [-3.71, 40.41],
+      padding: { bottom: 0 },
+    });
+  });
+
+  it('centers the focus in the area above the bottom padding', () => {
+    render(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} focusPadding={{ bottom: 400 }} />);
+    const map = loadedMap();
+
+    expect(map.easeTo).toHaveBeenCalledExactlyOnceWith({
+      center: [-3.7, 40.4],
+      padding: { bottom: 400 },
+    });
+  });
+
+  it('eases again to the same focus when the padding changes, not on an equal padding', () => {
+    const focus = { lng: -3.7, lat: 40.4 };
+    const { rerender } = render(<BaseMap focus={focus} focusPadding={{ bottom: 400 }} />);
+    const map = loadedMap();
+
+    rerender(<BaseMap focus={focus} focusPadding={{ bottom: 400 }} />);
+    expect(map.easeTo).toHaveBeenCalledOnce();
+
+    rerender(<BaseMap focus={focus} focusPadding={{ bottom: 0 }} />);
+    expect(map.easeTo).toHaveBeenLastCalledWith({ center: [-3.7, 40.4], padding: { bottom: 0 } });
+    expect(map.easeTo).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not move the map on a padding change without a focus', () => {
+    const { rerender } = render(<BaseMap focusPadding={{ bottom: 400 }} />);
+    const map = loadedMap();
+
+    rerender(<BaseMap focusPadding={{ bottom: 0 }} />);
+
+    expect(map.easeTo).not.toHaveBeenCalled();
   });
 
   it('jumps to the focus without animation when the user prefers reduced motion', () => {
     stubMatchMedia(true, true);
-    render(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} />);
+    render(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} focusPadding={{ bottom: 400 }} />);
     const map = loadedMap();
 
-    expect(map.easeTo).toHaveBeenCalledExactlyOnceWith({ center: [-3.7, 40.4], duration: 0 });
+    expect(map.easeTo).toHaveBeenCalledExactlyOnceWith({
+      center: [-3.7, 40.4],
+      padding: { bottom: 400 },
+      duration: 0,
+    });
   });
 });

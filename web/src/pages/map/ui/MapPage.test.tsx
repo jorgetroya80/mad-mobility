@@ -14,6 +14,7 @@ type CapturedMapProps = {
   onSelectPoint?: (id: string) => void;
   focus?: LngLat;
   userLocation?: LngLat;
+  focusPadding?: { bottom: number };
 };
 
 const mapRenders = vi.hoisted(() => [] as CapturedMapProps[]);
@@ -301,6 +302,24 @@ describe('MapPage', () => {
       expect(sheetHandle()).toHaveAttribute('aria-expanded', 'false');
     });
 
+    it('leaves the whole map to the focus while the sheet is collapsed', async () => {
+      await renderPage();
+
+      expect(lastMapProps().focusPadding).toEqual({ bottom: 0 });
+    });
+
+    it('centers the selected station above the expanded sheet, and in the whole map once collapsed', async () => {
+      const user = userEvent.setup();
+      await renderPage();
+
+      await act(async () => lastMapProps().onSelectPoint?.('1b'));
+      expect(await detailTitle('1b · Puerta del Sol B')).toBeInTheDocument();
+      expect(lastMapProps().focusPadding?.bottom).toBeGreaterThan(0);
+
+      await user.click(sheetHandle());
+      expect(lastMapProps().focusPadding).toEqual({ bottom: 0 });
+    });
+
     // jsdom ignores `inert`, so the row of the collapsed sheet can be clicked.
     it('expands when a row is chosen', async () => {
       const user = userEvent.setup();
@@ -310,6 +329,20 @@ describe('MapPage', () => {
 
       expect(await detailTitle('1b · Puerta del Sol B')).toBeInTheDocument();
       expect(sheetHandle()).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  describe('side panel from md', () => {
+    beforeEach(() => {
+      stubGeolocation('granted');
+      stubMatchMedia(true);
+    });
+
+    it('centers the selected station in the whole map, the panel covers none of it', async () => {
+      await renderPage('/?station=1a');
+
+      expect(await detailTitle('1a · Puerta del Sol A')).toBeInTheDocument();
+      expect(lastMapProps().focusPadding).toEqual({ bottom: 0 });
     });
   });
 });

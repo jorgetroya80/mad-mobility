@@ -132,8 +132,9 @@ web/src/
   - `selectedId` (punto resaltado con borde) y `onSelectPoint(id)` (clic o toque en un punto; el cursor cambia a `pointer`).
   - `focus?: { lng, lat }`: cuando cambia, el mapa hace `easeTo` (sin animación con `prefers-reduced-motion`).
   - `userLocation?: { lng, lat }`: punto azul propio, distinto de las estaciones.
+  - `focusPadding?: { bottom }` (px): parte inferior del mapa tapada por algo encima; el `focus` se centra en la zona visible por encima. Si cambia con el mismo `focus`, el mapa vuelve a centrarlo.
   - Los puntos del mapa no son accesibles por teclado: la lista y el buscador son el camino accesible a cada estación (el mapa es un apoyo visual).
-- **`BottomSheet`** acepta `expanded` y `onExpandedChange` (controlado) además de `defaultExpanded`. Seleccionar una estación en el mapa por debajo de `md` despliega el panel.
+- **`BottomSheet`** acepta `expanded` y `onExpandedChange` (controlado) además de `defaultExpanded`. Seleccionar una estación en el mapa por debajo de `md` despliega el panel. `useBottomSheetOverlap()` da los px del contenido de encima que tapa el sheet desplegado (60 % del viewport menos el asa, que ya está en el flujo); su tamaño sale de una sola fuente. `MapPage` lo pasa como `focusPadding` solo por debajo de `md` y con el sheet desplegado, para que la estación seleccionada quede visible encima del sheet (SC5).
 - **`AppLayout`** pasa el estado del bottom sheet sin cambiar su API pública: `MapPage` le da `panelExpanded` y `onPanelExpandedChange` (opcionales).
 
 ### Datos y polling
@@ -263,3 +264,4 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: spec aprobada.
 - 2026-10-14: supuesto 12 corregido con lo comprobado en T1: `parseSearchWith` no evita la conversión a número; se lee con `URLSearchParams`, se escribe con `stringifySearchWith(String, …)` y `stripSearchParams` quita `need=bikes`.
 - 2026-10-14: el buscador deja el combobox ARIA por una lista de botones con navegación por flechas y foco real (decisión del usuario): funciona igual con lectores de pantalla en móvil y escritorio y no necesita desactivar `jsx-a11y/prefer-tag-over-role`.
+- 2026-10-14: arreglo tras el checkpoint 4: por debajo de `md` la estación seleccionada quedaba detrás del bottom sheet desplegado. Nueva prop opcional `focusPadding` de `BaseMap` y `useBottomSheetOverlap()` en `shared/ui`; desde `md` no cambia nada.

@@ -8,6 +8,7 @@ import { toMapPoints } from '../lib/toMapPoints';
 type StationsMapProps = {
   center: Coordinates | undefined;
   userLocation: Coordinates | undefined;
+  focusPadding?: { bottom: number };
   className?: string;
 };
 
@@ -22,7 +23,7 @@ function findStation(stations: readonly Station[], number: string | undefined) {
 }
 
 // The map never blocks on the stations: the list shows loading and errors.
-export function StationsMap({ center, userLocation, className }: StationsMapProps) {
+export function StationsMap({ center, userLocation, focusPadding, className }: StationsMapProps) {
   const { data } = useAllStations();
   const [need] = useNeed();
   const { number, select } = useSelectedStation();
@@ -38,6 +39,7 @@ export function StationsMap({ center, userLocation, className }: StationsMapProp
       selectedId={selected?.number}
       onSelectPoint={select}
       focus={selected ? { lng: selected.lon, lat: selected.lat } : center}
+      focusPadding={focusPadding}
       userLocation={userLocation}
     />
   );

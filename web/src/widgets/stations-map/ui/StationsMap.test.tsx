@@ -12,6 +12,7 @@ type CapturedMapProps = {
   onSelectPoint?: (id: string) => void;
   focus?: { lng: number; lat: number };
   userLocation?: { lng: number; lat: number };
+  focusPadding?: { bottom: number };
   className?: string;
 };
 
@@ -125,6 +126,14 @@ describe('StationsMap', () => {
     await renderMap();
 
     expect(lastMapProps().userLocation).toEqual(USER);
+  });
+
+  it('passes the focus padding through', async () => {
+    await renderWithRouter(
+      <StationsMap center={SOL} userLocation={USER} focusPadding={{ bottom: 400 }} />,
+    );
+
+    expect(lastMapProps().focusPadding).toEqual({ bottom: 400 });
   });
 
   it('selects the station of the tapped point', async () => {

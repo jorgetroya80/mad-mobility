@@ -1,4 +1,4 @@
-import { AttributionControl, Map } from 'maplibre-gl';
+import { AttributionControl, Map, type EaseToOptions } from 'maplibre-gl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import {
   MADRID_CENTER,
@@ -101,15 +101,20 @@ export function useUserLocationData(map: Map | undefined, location?: LngLat) {
   }, [map, lng, lat]);
 }
 
-// Depends on the coordinates, not the object, so an equal focus does not move the map again.
-export function useEaseTo(map: Map | undefined, focus?: LngLat) {
+// Depends on the numbers, not the objects, so an equal focus or padding does not move the map
+// again. A new padding re-eases to the same focus, so it stays in the visible area. The padding
+// is always passed: MapLibre keeps the last one for later camera moves.
+export function useEaseTo(map: Map | undefined, focus?: LngLat, paddingBottom = 0) {
   const lng = focus?.lng;
   const lat = focus?.lat;
   useEffect(() => {
     const target = toLngLat(lng, lat);
     if (!map || !target) return;
-    const center: [number, number] = [target.lng, target.lat];
+    const camera: EaseToOptions = {
+      center: [target.lng, target.lat],
+      padding: { bottom: paddingBottom },
+    };
     const reduceMotion = window.matchMedia(REDUCED_MOTION_QUERY).matches;
-    map.easeTo(reduceMotion ? { center, duration: 0 } : { center });
-  }, [map, lng, lat]);
+    map.easeTo(reduceMotion ? { ...camera, duration: 0 } : camera);
+  }, [map, lng, lat, paddingBottom]);
 }
