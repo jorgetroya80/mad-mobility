@@ -118,6 +118,18 @@ describe('StationList', () => {
     expect(first).toHaveAttribute('data-station-number', '1a');
   });
 
+  it('tags each section and lets its heading take the focus, for the page to return it', async () => {
+    saveFavorites(['1a']);
+
+    await renderList();
+
+    const favorites = await screen.findByRole('region', { name: 'Favoritas' });
+    const nearby = await nearbyRegion();
+    expect(favorites).toHaveAttribute('data-station-list', 'favorites');
+    expect(nearby).toHaveAttribute('data-station-list', 'nearby');
+    expect(within(nearby).getByRole('heading', { level: 2 })).toHaveAttribute('tabindex', '-1');
+  });
+
   it('warns about the approximate location and names the fallback place', async () => {
     await renderList({ isApproximateLocation: true });
 

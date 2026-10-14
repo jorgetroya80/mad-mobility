@@ -29,6 +29,7 @@ export function StationList({ center, isApproximateLocation }: StationListProps)
       ) : null}
       <FavoriteStations need={need} onSelect={select} />
       <StationSection
+        section="nearby"
         heading={isApproximateLocation ? 'Cerca de la Puerta del Sol' : 'Cerca de ti'}
       >
         <NearbyStations list={nearby} need={need} onSelect={select} />

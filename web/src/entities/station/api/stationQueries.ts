@@ -1,4 +1,4 @@
-import { skipToken, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, skipToken, useQuery } from '@tanstack/react-query';
 import { POLL_INTERVAL_MS, QUERY_RETRY_COUNT } from '@/shared/config';
 import type { Need } from '../model/types';
 import { fetchAllStations, fetchNearbyStations, fetchStation } from './fetchStations';
@@ -13,12 +13,15 @@ export function useAllStations() {
   });
 }
 
+// Switching need or center keeps the previous rows on screen until the new ones arrive,
+// instead of flashing back to loading.
 export function useNearbyStations(center: Coordinates | undefined, need: Need) {
   return useQuery({
     queryKey: stationKeys.nearby(center, need),
     queryFn: center
       ? ({ signal }) => fetchNearbyStations({ near: toNearParam(center), need, signal })
       : skipToken,
+    placeholderData: keepPreviousData,
     refetchInterval: POLL_INTERVAL_MS,
   });
 }

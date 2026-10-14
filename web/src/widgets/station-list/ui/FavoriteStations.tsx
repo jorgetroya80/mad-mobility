@@ -10,7 +10,7 @@ export function FavoriteStations({ need, onSelect }: FavoriteStationsProps) {
 
   if (stations.length === 0) return null;
   return (
-    <StationSection heading="Favoritas">
+    <StationSection section="favorites" heading="Favoritas">
       <StationRows stations={stations} need={need} onSelect={onSelect} />
     </StationSection>
   );

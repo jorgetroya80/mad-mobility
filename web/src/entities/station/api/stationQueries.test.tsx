@@ -9,6 +9,7 @@ import {
   stationsFixture,
 } from '@/shared/api/mocks/fixtures';
 import { env, QUERY_RETRY_COUNT } from '@/shared/config';
+import type { Need } from '../model/types';
 import { StationNotFoundError } from './StationNotFoundError';
 import { stationKeys } from './stationKeys';
 import { useAllStations, useNearbyStations, useStation } from './stationQueries';
@@ -113,6 +114,22 @@ describe('useNearbyStations', () => {
 
     expect(second.result.current.data).toEqual(nearbyStationsFixture);
     expect(urls).toHaveLength(1);
+  });
+
+  it('keeps the previous stations while another need or center loads', async () => {
+    const urls = recordRequests();
+    const { result, rerender } = renderHook(({ need }) => useNearbyStations(SOL, need), {
+      wrapper: createWrapper(),
+      initialProps: { need: 'bikes' as Need },
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    rerender({ need: 'docks' });
+
+    expect(result.current.data).toEqual(nearbyStationsFixture);
+    expect(result.current.isPlaceholderData).toBe(true);
+    await waitFor(() => expect(result.current.isPlaceholderData).toBe(false));
+    expect(urls.map((url) => url.searchParams.get('need'))).toEqual(['bikes', 'docks']);
   });
 });
 
