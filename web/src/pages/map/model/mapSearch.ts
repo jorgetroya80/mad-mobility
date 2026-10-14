@@ -1,4 +1,4 @@
-export type Need = 'bikes' | 'docks';
+import type { Need } from '@/entities/station';
 
 export type MapSearch = { station?: string; need: Need };
 

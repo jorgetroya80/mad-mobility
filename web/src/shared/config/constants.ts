@@ -9,3 +9,13 @@ export const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 // Tailwind's default `md` breakpoint (--breakpoint-md: 48rem, not overridden in index.css):
 // keep both in sync if the theme ever changes it.
 export const MD_MEDIA_QUERY = '(min-width: 48rem)';
+
+export const NEARBY_RADIUS_M = 500;
+
+export const LOW_AVAILABILITY_THRESHOLD = 5;
+
+export const NOW_TICK_MS = 30_000;
+
+export const SEARCH_MAX_RESULTS = 8;
+
+export const FAVORITES_STORAGE_KEY = 'bicimad-now:favorites';

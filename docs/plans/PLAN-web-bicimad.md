@@ -73,7 +73,7 @@ T16 verificación manual + cierre
   - Archivos: `web/package.json`, `pnpm-lock.yaml`, `web/src/app/router.tsx`, `web/src/app/App.tsx`, `web/src/pages/map/model/mapSearch.ts` (+ test), `web/test/renderWithRouter.tsx`, spec.
   - Commit: `build(web): add tanstack router with plain-text search params`.
 
-- [ ] **T2: Modelo de estación** (S, ~45 min)
+- [x] **T2: Modelo de estación** (S, ~45 min)
   - Descripción: `entities/station/model`: `types.ts` (`Station` del cliente, `Need`, `AvailabilityLevel`), `availabilityFor`, `parseUpdatedAt`. Constantes nuevas en `shared/config`: `NEARBY_RADIUS_M`, `LOW_AVAILABILITY_THRESHOLD`, `NOW_TICK_MS`, `SEARCH_MAX_RESULTS`, `FAVORITES_STORAGE_KEY`. `pages/map` importa `Need` de la entidad.
   - Aceptación: `availabilityFor` cubre `off`, `empty`, `low` (4) y `good` (5) para `bikes` y `docks`; `NO_SERVICE` gana aunque haya bicis. `parseUpdatedAt('nope')` → `undefined`.
   - Verificación: `pnpm --filter web test -- entities/station`.
@@ -230,3 +230,4 @@ Unas 22 h, en 6-8 sesiones: Fase 1 (~3,75 h), Fase 2 (~5,75 h), Fase 3 (~4,25 h)
 - 2026-10-14: versión inicial. Prototipo de TanStack Router 1.170.41: parser por defecto convierte `538` en número; se usa `URLSearchParams` para leer y `stringifySearchWith(String)` para escribir; `stripSearchParams` para omitir `need=bikes`.
 - 2026-10-14: plan aprobado.
 - 2026-10-14: T1 hecha. `@tanstack/react-router` 1.170.41; `app/router.tsx` con `createAppRouter({ history })`, ruta `/` en código, search en texto plano y `stripSearchParams`; `validateMapSearch` en `pages/map`; `test/renderWithRouter.tsx` monta el router real con `createMemoryHistory`; el test de `MapPage` pasa a usarlo y `test/setup.ts` simula `window.scrollTo` (jsdom no lo implementa y el router lo llama al navegar). Carga inicial: 104,54 KB gzip (`index` 100,96 + `config` 3,58), +25,98 KB frente a 78,56 KB.
+- 2026-10-14: T2 hecha. `entities/station` con `types.ts` (`Station` del cliente, `Need`, `AvailabilityLevel`), `availabilityFor` y `parseUpdatedAt` (fecha inválida → `undefined`). `availabilityFor` recibe `Pick<Station, 'status' | 'bikes' | 'freeDocks'>` en vez de `Station` entera: solo usa esos campos y los tests no necesitan fixtures completas. Constantes nuevas en `shared/config` (con test). `Need` se mueve a la entidad; `pages/map` ya no lo reexporta (no tenía importadores).
