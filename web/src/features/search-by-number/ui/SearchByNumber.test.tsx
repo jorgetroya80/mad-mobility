@@ -150,7 +150,7 @@ describe('SearchByNumber', () => {
       expect(resultNumbers()).toEqual(['1a', '1b', '10']);
     });
 
-    it('chooses the focused result with Enter, clears the box and focuses it', async () => {
+    it('chooses the focused result with Enter and clears the box', async () => {
       const source = bicimadSource();
       render(<SearchByNumber sources={[source]} />);
       await userEvent.type(searchBox(), '1');
@@ -159,7 +159,6 @@ describe('SearchByNumber', () => {
 
       expect(source.onSelect).toHaveBeenCalledExactlyOnceWith('1b');
       expect(searchBox()).toHaveValue('');
-      expect(searchBox()).toHaveFocus();
       expect(screen.queryByRole('list')).not.toBeInTheDocument();
     });
 
@@ -171,7 +170,6 @@ describe('SearchByNumber', () => {
 
       expect(source.onSelect).toHaveBeenCalledExactlyOnceWith('25A');
       expect(searchBox()).toHaveValue('');
-      expect(searchBox()).toHaveFocus();
     });
 
     it('ignores Enter in the box without an exact match', async () => {
@@ -195,7 +193,7 @@ describe('SearchByNumber', () => {
   });
 
   describe('pointer', () => {
-    it('chooses a result on click and focuses the box', async () => {
+    it('chooses a result on click and clears the box', async () => {
       const source = bicimadSource();
       render(<SearchByNumber sources={[source]} />);
       await userEvent.type(searchBox(), '1');
@@ -204,7 +202,37 @@ describe('SearchByNumber', () => {
 
       expect(source.onSelect).toHaveBeenCalledExactlyOnceWith('1b');
       expect(searchBox()).toHaveValue('');
-      expect(searchBox()).toHaveFocus();
+    });
+
+    // The source decides where the focus goes (the page opens the detail and focuses its title);
+    // pulling it back to the box would open the on-screen keyboard on mobile.
+    it.each([
+      {
+        how: 'click',
+        choose: () => userEvent.click(screen.getByRole('button', { name: /Puerta del Sol B/ })),
+      },
+      {
+        how: 'Enter on a result',
+        choose: () => userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}'),
+      },
+      { how: 'Enter on an exact match', choose: () => userEvent.keyboard('b{Enter}') },
+    ])('leaves the focus where the source put it ($how)', async ({ choose }) => {
+      const source = bicimadSource({
+        onSelect: vi.fn<SearchSource['onSelect']>(() =>
+          screen.getByRole('button', { name: 'Detalle' }).focus(),
+        ),
+      });
+      render(
+        <>
+          <SearchByNumber sources={[source]} />
+          <button type="button">Detalle</button>
+        </>,
+      );
+      await userEvent.type(searchBox(), '1');
+
+      await choose();
+
+      expect(screen.getByRole('button', { name: 'Detalle' })).toHaveFocus();
     });
   });
 

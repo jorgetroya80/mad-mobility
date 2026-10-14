@@ -13,7 +13,7 @@ type SearchByNumberProps = {
 export function SearchByNumber({ sources }: SearchByNumberProps) {
   const search = useNumberSearch(sources);
   const { source, query, results } = search;
-  const { inputRef, listRef, choose, onInputKeyDown, onResultKeyDown } = useResultsKeyboard({
+  const { inputRef, listRef, onInputKeyDown, onResultKeyDown } = useResultsKeyboard({
     results,
     query,
     onChoose: search.choose,
@@ -35,7 +35,7 @@ export function SearchByNumber({ sources }: SearchByNumberProps) {
         <ResultList
           ref={listRef}
           results={results}
-          onChoose={choose}
+          onChoose={search.choose}
           onResultKeyDown={onResultKeyDown}
         />
       ) : null}

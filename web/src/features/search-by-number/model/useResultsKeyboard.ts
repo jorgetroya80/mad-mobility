@@ -12,7 +12,10 @@ type ResultsKeyboardOptions = {
 // Target index for the search box: ArrowUp on the first result also lands there.
 const INPUT = -1;
 
-/** Arrow keys move the real focus between the search box and the result buttons. */
+/**
+ * Arrow keys move the real focus between the search box and the result buttons. Choosing does
+ * not move it: the source decides (the page focuses the detail it opens).
+ */
 export function useResultsKeyboard({ results, query, onChoose }: ResultsKeyboardOptions) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -21,10 +24,6 @@ export function useResultsKeyboard({ results, query, onChoose }: ResultsKeyboard
   // Out of range (before the first or after the last) leaves the focus where it is.
   const focusResult = (index: number) =>
     listRef.current?.querySelectorAll('button')[index]?.focus();
-  const choose = (item: SearchItem) => {
-    onChoose(item);
-    focusInput();
-  };
 
   const onInputKeyDown = (event: KeyboardEvent) => {
     const [first] = results;
@@ -33,7 +32,7 @@ export function useResultsKeyboard({ results, query, onChoose }: ResultsKeyboard
       focusResult(0);
     } else if (event.key === 'Enter' && first && isExactMatch(first, query)) {
       event.preventDefault();
-      choose(first);
+      onChoose(first);
     }
   };
 
@@ -50,5 +49,5 @@ export function useResultsKeyboard({ results, query, onChoose }: ResultsKeyboard
     else focusResult(target);
   };
 
-  return { inputRef, listRef, choose, onInputKeyDown, onResultKeyDown };
+  return { inputRef, listRef, onInputKeyDown, onResultKeyDown };
 }
