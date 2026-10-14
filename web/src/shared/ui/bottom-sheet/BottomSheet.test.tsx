@@ -102,3 +102,76 @@ describe('BottomSheet', () => {
     expect(content).toHaveAttribute('inert');
   });
 });
+
+describe('BottomSheet controlled', () => {
+  function renderControlled(
+    expanded: boolean,
+    onExpandedChange = vi.fn<(expanded: boolean) => void>(),
+  ) {
+    const view = render(
+      <BottomSheet label="Estaciones" expanded={expanded} onExpandedChange={onExpandedChange}>
+        <p>Contenido del panel</p>
+      </BottomSheet>,
+    );
+    const handle = screen.getByRole('button', { name: 'Estaciones' });
+    const content = screen.getByText('Contenido del panel').parentElement;
+    return { ...view, handle, content, onExpandedChange };
+  }
+
+  it('asks the parent to expand and stays collapsed until the parent agrees', async () => {
+    const user = userEvent.setup();
+    const { handle, content, onExpandedChange } = renderControlled(false);
+
+    await user.click(handle);
+
+    expect(onExpandedChange).toHaveBeenCalledExactlyOnceWith(true);
+    expect(handle).toHaveAttribute('aria-expanded', 'false');
+    expect(content).toHaveAttribute('inert');
+  });
+
+  it('asks the parent to collapse when expanded', async () => {
+    const user = userEvent.setup();
+    const { handle, onExpandedChange } = renderControlled(true);
+
+    await user.click(handle);
+
+    expect(onExpandedChange).toHaveBeenCalledExactlyOnceWith(false);
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('follows the parent when it changes expanded', () => {
+    const { handle, content, rerender } = renderControlled(false);
+
+    rerender(
+      <BottomSheet
+        label="Estaciones"
+        expanded
+        onExpandedChange={vi.fn<(expanded: boolean) => void>()}
+      >
+        <p>Contenido del panel</p>
+      </BottomSheet>,
+    );
+
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+    expect(content).not.toHaveAttribute('inert');
+  });
+
+  it('toggles by itself and notifies when only onExpandedChange is given', async () => {
+    const user = userEvent.setup();
+    const onExpandedChange = vi.fn<(expanded: boolean) => void>();
+    render(
+      <BottomSheet label="Estaciones" onExpandedChange={onExpandedChange}>
+        <p>Contenido del panel</p>
+      </BottomSheet>,
+    );
+    const handle = screen.getByRole('button', { name: 'Estaciones' });
+
+    await user.click(handle);
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+    expect(onExpandedChange).toHaveBeenLastCalledWith(true);
+
+    await user.click(handle);
+    expect(handle).toHaveAttribute('aria-expanded', 'false');
+    expect(onExpandedChange).toHaveBeenLastCalledWith(false);
+  });
+});

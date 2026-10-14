@@ -3,6 +3,9 @@ import { useId, useState, type ReactNode } from 'react';
 type BottomSheetProps = {
   label: string;
   defaultExpanded?: boolean;
+  // Passing `expanded` makes the parent own the state; the handle only asks for the change.
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   children: ReactNode;
 };
 
@@ -11,10 +14,22 @@ type BottomSheetProps = {
 // The sheet keeps its height and slides with a transform, so the change can be animated.
 // The root is an in-flow strip as tall as the handle, so the collapsed sheet covers nothing
 // above it (e.g. the map attribution). --handle-height is the only source for that height.
-export function BottomSheet({ label, defaultExpanded = false, children }: BottomSheetProps) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+export function BottomSheet({
+  label,
+  defaultExpanded = false,
+  expanded: controlledExpanded,
+  onExpandedChange,
+  children,
+}: BottomSheetProps) {
+  const [uncontrolledExpanded, setUncontrolledExpanded] = useState(defaultExpanded);
+  const expanded = controlledExpanded ?? uncontrolledExpanded;
   const handleId = useId();
   const contentId = useId();
+
+  function toggle() {
+    setUncontrolledExpanded(!expanded);
+    onExpandedChange?.(!expanded);
+  }
 
   return (
     <div className="h-(--handle-height) shrink-0 [--handle-height:--spacing(11)]">
@@ -26,7 +41,7 @@ export function BottomSheet({ label, defaultExpanded = false, children }: Bottom
           type="button"
           aria-expanded={expanded}
           aria-controls={contentId}
-          onClick={() => setExpanded((value) => !value)}
+          onClick={toggle}
           className="flex h-(--handle-height) w-full shrink-0 flex-col items-center justify-center gap-1 px-4 font-medium text-slate-800 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-700"
         >
           <span aria-hidden="true" className="h-1 w-10 rounded-full bg-slate-300" />
