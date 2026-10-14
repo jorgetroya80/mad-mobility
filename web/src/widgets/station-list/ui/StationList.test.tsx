@@ -94,6 +94,21 @@ describe('StationList', () => {
     server.events.removeAllListeners();
   });
 
+  it.each([
+    { entry: '/', caption: 'Bicis disponibles' },
+    { entry: '/?need=docks', caption: 'Anclajes libres' },
+  ])('says under each heading what the numbers count ($entry)', async ({ entry, caption }) => {
+    saveFavorites(['1b']);
+    await renderList({}, [entry]);
+
+    const nearby = await nearbyRegion();
+    const favorites = await screen.findByRole('region', { name: 'Favoritas' });
+
+    expect(nearby).toHaveAccessibleDescription(caption);
+    expect(within(nearby).getByText(caption)).toBeVisible();
+    expect(favorites).toHaveAccessibleDescription(caption);
+  });
+
   it('lists the nearby stations in API order with number, name, distance and availability (SC1)', async () => {
     await renderList();
 

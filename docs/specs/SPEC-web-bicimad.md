@@ -185,7 +185,7 @@ export type SearchSource = {
 
 ### Panel (lista y detalle)
 
-Sin `?station`: buscador, `NeedToggle`, aviso de ubicación o de datos antiguos (si aplica), "Favoritas" (si hay), "Cerca de ti" (o "Cerca de la Puerta del Sol") con hasta 500 m y "Actualizado hace X", y `DataAttribution` al pie.
+Sin `?station`: buscador, `NeedToggle`, aviso de ubicación o de datos antiguos (si aplica), "Favoritas" (si hay), "Cerca de ti" (o "Cerca de la Puerta del Sol") con hasta 500 m y "Actualizado hace X". Bajo el título de cada sección, el texto "Bicis disponibles" o "Anclajes libres" (según `need`) dice qué cuentan los números de las filas, y `DataAttribution` al pie.
 
 Con `?station`: `StationDetail` sustituye a la lista en el mismo panel (como dice la idea): botón "Volver" (`router.history.back()` si se llegó desde la app; si se llegó por un enlace, navega a `/` conservando `need`), número y nombre, dirección, bicis, anclajes libres y totales, estado, distancia (si está en la lista de cercanas), `FavoriteButton` y "Actualizado hace X". El foco pasa al título del detalle al abrirlo y vuelve a la fila de origen al cerrarlo.
 
@@ -266,3 +266,4 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: el buscador deja el combobox ARIA por una lista de botones con navegación por flechas y foco real (decisión del usuario): funciona igual con lectores de pantalla en móvil y escritorio y no necesita desactivar `jsx-a11y/prefer-tag-over-role`.
 - 2026-10-14: arreglo tras el checkpoint 4: por debajo de `md` la estación seleccionada quedaba detrás del bottom sheet desplegado. Nueva prop opcional `focusPadding` de `BaseMap` y `useBottomSheetOverlap()` en `shared/ui`; desde `md` no cambia nada.
 - 2026-10-14: spec implementada (T1-T16, rama `feat/web-bicimad`). SC1-SC14 verificados (ver Resultado del plan); SC11 en CI se confirma en el PR. El API devuelve hoy 678 estaciones.
+- 2026-10-14: tras la revisión del usuario, bajo el título de "Favoritas" y "Cerca de…" se indica "Bicis disponibles" o "Anclajes libres" según el filtro (también como descripción accesible de la sección).

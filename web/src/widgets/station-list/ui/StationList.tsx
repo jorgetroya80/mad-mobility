@@ -2,6 +2,7 @@ import type { Coordinates } from '@/entities/station';
 import { useNeed } from '@/features/filter-by-need';
 import { useSelectedStation } from '@/features/select-station';
 import { PanelNotice, StaleNotice } from '@/shared/ui';
+import { needCaption } from '../lib/needCaption';
 import { useNearbyList } from '../model/useNearbyList';
 import { FavoriteStations } from './FavoriteStations';
 import { NearbyStations } from './NearbyStations';
@@ -31,6 +32,7 @@ export function StationList({ center, isApproximateLocation }: StationListProps)
       <StationSection
         section="nearby"
         heading={isApproximateLocation ? 'Cerca de la Puerta del Sol' : 'Cerca de ti'}
+        caption={needCaption(need)}
       >
         <NearbyStations list={nearby} need={need} onSelect={select} />
       </StationSection>

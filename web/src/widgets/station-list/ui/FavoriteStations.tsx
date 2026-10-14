@@ -1,4 +1,5 @@
 import type { Need } from '@/entities/station';
+import { needCaption } from '../lib/needCaption';
 import { useFavoriteStations } from '../model/useFavoriteStations';
 import { StationRows } from './StationRows';
 import { StationSection } from './StationSection';
@@ -10,7 +11,7 @@ export function FavoriteStations({ need, onSelect }: FavoriteStationsProps) {
 
   if (stations.length === 0) return null;
   return (
-    <StationSection section="favorites" heading="Favoritas">
+    <StationSection section="favorites" heading="Favoritas" caption={needCaption(need)}>
       <StationRows stations={stations} need={need} onSelect={onSelect} />
     </StationSection>
   );
