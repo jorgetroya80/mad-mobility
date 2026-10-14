@@ -8,12 +8,22 @@ type AppLayoutProps = {
   map: ReactNode;
   panel: ReactNode;
   panelLabel: string;
+  // Below md only: the side panel from md up is always open.
+  panelExpanded?: boolean;
+  onPanelExpandedChange?: (expanded: boolean) => void;
 };
 
 // Full-screen map plus one panel: a bottom sheet below md (its handle strip takes the last row
 // of the column, so the map ends above it), a fixed side panel from md up.
 // Only one container is mounted, so the panel content and its state exist once.
-export function AppLayout({ title, map, panel, panelLabel }: AppLayoutProps) {
+export function AppLayout({
+  title,
+  map,
+  panel,
+  panelLabel,
+  panelExpanded,
+  onPanelExpandedChange,
+}: AppLayoutProps) {
   const isWideViewport = useMediaQuery(MD_MEDIA_QUERY);
 
   return (
@@ -25,7 +35,15 @@ export function AppLayout({ title, map, panel, panelLabel }: AppLayoutProps) {
         </SidePanel>
       )}
       <div className="relative min-h-0 min-w-0 flex-1">{map}</div>
-      {!isWideViewport && <BottomSheet label={panelLabel}>{panel}</BottomSheet>}
+      {!isWideViewport && (
+        <BottomSheet
+          label={panelLabel}
+          expanded={panelExpanded}
+          onExpandedChange={onPanelExpandedChange}
+        >
+          {panel}
+        </BottomSheet>
+      )}
     </main>
   );
 }

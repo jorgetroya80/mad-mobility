@@ -30,11 +30,13 @@ describe('BottomSheet', () => {
     const sheet = handle.parentElement;
 
     // One variable sets the handle height, the visible strip and the space kept in the flow.
-    expect(sheet).toHaveClass('h-[60dvh]', 'translate-y-[calc(100%-var(--handle-height))]');
+    expect(sheet).toHaveStyle({ height: '60dvh' });
+    expect(sheet).toHaveClass('translate-y-[calc(100%-var(--handle-height))]');
     expect(handle).toHaveClass('h-(--handle-height)');
 
     await user.click(handle);
-    expect(sheet).toHaveClass('h-[60dvh]', 'translate-y-0');
+    expect(sheet).toHaveStyle({ height: '60dvh' });
+    expect(sheet).toHaveClass('translate-y-0');
     expect(sheet).not.toHaveClass('translate-y-[calc(100%-var(--handle-height))]');
   });
 
@@ -42,7 +44,8 @@ describe('BottomSheet', () => {
     const { handle } = renderSheet();
     const strip = handle.parentElement?.parentElement;
 
-    expect(strip).toHaveClass('[--handle-height:--spacing(11)]', 'h-(--handle-height)', 'shrink-0');
+    expect(strip).toHaveStyle({ '--handle-height': '44px' });
+    expect(strip).toHaveClass('h-(--handle-height)', 'shrink-0');
   });
 
   it('animates the slide unless the user prefers reduced motion', () => {
@@ -100,5 +103,78 @@ describe('BottomSheet', () => {
     await user.keyboard(keys);
     expect(handle).toHaveAttribute('aria-expanded', 'false');
     expect(content).toHaveAttribute('inert');
+  });
+});
+
+describe('BottomSheet controlled', () => {
+  function renderControlled(
+    expanded: boolean,
+    onExpandedChange = vi.fn<(expanded: boolean) => void>(),
+  ) {
+    const view = render(
+      <BottomSheet label="Estaciones" expanded={expanded} onExpandedChange={onExpandedChange}>
+        <p>Contenido del panel</p>
+      </BottomSheet>,
+    );
+    const handle = screen.getByRole('button', { name: 'Estaciones' });
+    const content = screen.getByText('Contenido del panel').parentElement;
+    return { ...view, handle, content, onExpandedChange };
+  }
+
+  it('asks the parent to expand and stays collapsed until the parent agrees', async () => {
+    const user = userEvent.setup();
+    const { handle, content, onExpandedChange } = renderControlled(false);
+
+    await user.click(handle);
+
+    expect(onExpandedChange).toHaveBeenCalledExactlyOnceWith(true);
+    expect(handle).toHaveAttribute('aria-expanded', 'false');
+    expect(content).toHaveAttribute('inert');
+  });
+
+  it('asks the parent to collapse when expanded', async () => {
+    const user = userEvent.setup();
+    const { handle, onExpandedChange } = renderControlled(true);
+
+    await user.click(handle);
+
+    expect(onExpandedChange).toHaveBeenCalledExactlyOnceWith(false);
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('follows the parent when it changes expanded', () => {
+    const { handle, content, rerender } = renderControlled(false);
+
+    rerender(
+      <BottomSheet
+        label="Estaciones"
+        expanded
+        onExpandedChange={vi.fn<(expanded: boolean) => void>()}
+      >
+        <p>Contenido del panel</p>
+      </BottomSheet>,
+    );
+
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+    expect(content).not.toHaveAttribute('inert');
+  });
+
+  it('toggles by itself and notifies when only onExpandedChange is given', async () => {
+    const user = userEvent.setup();
+    const onExpandedChange = vi.fn<(expanded: boolean) => void>();
+    render(
+      <BottomSheet label="Estaciones" onExpandedChange={onExpandedChange}>
+        <p>Contenido del panel</p>
+      </BottomSheet>,
+    );
+    const handle = screen.getByRole('button', { name: 'Estaciones' });
+
+    await user.click(handle);
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+    expect(onExpandedChange).toHaveBeenLastCalledWith(true);
+
+    await user.click(handle);
+    expect(handle).toHaveAttribute('aria-expanded', 'false');
+    expect(onExpandedChange).toHaveBeenLastCalledWith(false);
   });
 });

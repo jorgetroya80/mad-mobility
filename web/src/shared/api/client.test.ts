@@ -1,4 +1,5 @@
 import type { StationsResponse } from '@jorgetroya80/bicimad-client';
+import { env } from '@/shared/config';
 import { stationsFixture } from './mocks/fixtures';
 import { apiClient } from './client';
 
@@ -12,16 +13,15 @@ describe('apiClient', () => {
     expectTypeOf(data).toEqualTypeOf<StationsResponse | undefined>();
   });
 
+  // Every client path has a handler, so the unhandled request goes through fetch directly.
   it('fails when a request has no MSW handler', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(
-      apiClient.GET('/v1/bicimad/stations/{number}', { params: { path: { number: '1a' } } }),
-    ).rejects.toThrow('fetch failed');
+    await expect(fetch(new URL(`${env.apiBaseUrl}/v1/unknown`, location.href))).rejects.toThrow(
+      'fetch failed',
+    );
     expect(consoleError).toHaveBeenCalledWith(
-      expect.stringMatching(
-        /without a matching request handler:\s+• GET \/api\/v1\/bicimad\/stations\/1a/,
-      ),
+      expect.stringMatching(/without a matching request handler:\s+• GET \/api\/v1\/unknown/),
     );
 
     consoleError.mockRestore();

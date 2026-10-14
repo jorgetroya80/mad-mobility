@@ -1,14 +1,19 @@
+import type { ComponentProps } from 'react';
 import { act, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { stubMatchMedia } from '../../../../test/matchMedia';
 import { AppLayout } from './AppLayout';
 
-function renderLayout() {
+function renderLayout(
+  props: Pick<ComponentProps<typeof AppLayout>, 'panelExpanded' | 'onPanelExpandedChange'> = {},
+) {
   return render(
     <AppLayout
       title="BiciMAD Now"
       map={<div data-testid="map" />}
       panelLabel="Estaciones"
       panel={<p>Contenido del panel</p>}
+      {...props}
     />,
   );
 }
@@ -66,5 +71,31 @@ describe('AppLayout', () => {
 
     // Column below md, so the bottom sheet strip sits under the map instead of over it.
     expect(screen.getByRole('main')).toHaveClass('flex', 'h-dvh', 'flex-col', 'md:flex-row');
+  });
+
+  it('lets the page control the bottom sheet below md', async () => {
+    const user = userEvent.setup();
+    const onPanelExpandedChange = vi.fn<(expanded: boolean) => void>();
+    renderLayout({ panelExpanded: true, onPanelExpandedChange });
+    const handle = screen.getByRole('button', { name: 'Estaciones' });
+
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(handle);
+    expect(onPanelExpandedChange).toHaveBeenCalledExactlyOnceWith(false);
+    expect(handle).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('ignores the expanded state from md up', () => {
+    stubMatchMedia(true);
+    renderLayout({
+      panelExpanded: false,
+      onPanelExpandedChange: vi.fn<(expanded: boolean) => void>(),
+    });
+
+    const sidePanel = screen.getByRole('region', { name: 'Estaciones' });
+    expect(sidePanel).not.toHaveAttribute('inert');
+    expect(within(sidePanel).getByText('Contenido del panel')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Estaciones' })).not.toBeInTheDocument();
   });
 });

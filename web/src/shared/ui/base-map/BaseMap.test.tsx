@@ -1,6 +1,22 @@
-import { render } from '@testing-library/react';
-import { MADRID_CENTER, MADRID_ZOOM, MAP_STYLE_URL, MD_MEDIA_QUERY } from '@/shared/config';
+import { act, render } from '@testing-library/react';
+import {
+  MADRID_CENTER,
+  MADRID_ZOOM,
+  MAP_STYLE_URL,
+  MD_MEDIA_QUERY,
+  REDUCED_MOTION_QUERY,
+} from '@/shared/config';
 import { BaseMap } from './BaseMap';
+import {
+  POINT_CIRCLE_LAYER_ID,
+  POINT_LABEL_LAYER_ID,
+  POINTS_SOURCE_ID,
+  toFeatureCollection,
+  toUserLocationCollection,
+  USER_LOCATION_LAYER_ID,
+  USER_LOCATION_SOURCE_ID,
+  type MapPoint,
+} from './points';
 
 const maplibre = vi.hoisted(() => {
   const instances: MockMap[] = [];
@@ -9,10 +25,49 @@ const maplibre = vi.hoisted(() => {
     constructor(readonly options: unknown) {}
   }
 
+  class MockSource {
+    readonly setData = vi.fn<(data: unknown) => void>();
+  }
+
+  type Handler = (event: Record<string, unknown>) => void;
+  type Subscription = { type: string; layerId: string | undefined; handler: Handler };
+
   class MockMap {
     readonly addControl = vi.fn<(control: unknown, position?: string) => void>();
     readonly removeControl = vi.fn<(control: unknown) => void>();
     readonly remove = vi.fn<() => void>();
+    readonly addLayer = vi.fn<(layer: { id: string; source?: unknown }) => void>();
+    readonly easeTo = vi.fn<(options: unknown) => void>();
+    readonly sources = new Map<string, MockSource>();
+    readonly subscriptions: Subscription[] = [];
+    readonly canvas = { style: { cursor: '' } };
+
+    readonly addSource = vi.fn<(id: string, source: unknown) => void>((id) => {
+      this.sources.set(id, new MockSource());
+    });
+
+    getSource(id: string) {
+      return this.sources.get(id);
+    }
+
+    getCanvas() {
+      return this.canvas;
+    }
+
+    on(type: string, layerOrHandler: string | Handler, handler?: Handler) {
+      if (typeof layerOrHandler === 'string' && handler) {
+        this.subscriptions.push({ type, layerId: layerOrHandler, handler });
+      } else if (typeof layerOrHandler === 'function') {
+        this.subscriptions.push({ type, layerId: undefined, handler: layerOrHandler });
+      }
+      return this;
+    }
+
+    fire(type: string, layerId?: string, event: Record<string, unknown> = {}) {
+      this.subscriptions
+        .filter((subscription) => subscription.type === type && subscription.layerId === layerId)
+        .forEach((subscription) => subscription.handler(event));
+    }
 
     constructor(readonly options: Record<string, unknown>) {
       instances.push(this);
@@ -39,7 +94,7 @@ vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({
 // jsdom has no matchMedia: a stub whose `change` listeners the tests can fire.
 type ChangeListener = (event: { matches: boolean }) => void;
 
-function stubMatchMedia(matches: boolean) {
+function stubMatchMedia(matches: boolean, reducedMotion = false) {
   const listeners = new Set<ChangeListener>();
   const query = {
     matches,
@@ -54,7 +109,9 @@ function stubMatchMedia(matches: boolean) {
       },
     ),
   };
-  const matchMedia = vi.fn<(media: string) => typeof query>(() => query);
+  const matchMedia = vi.fn<(media: string) => typeof query>((media) =>
+    media === REDUCED_MOTION_QUERY ? { ...query, matches: reducedMotion } : query,
+  );
   vi.stubGlobal('matchMedia', matchMedia);
   const change = (next: boolean) => listeners.forEach((listener) => listener({ matches: next }));
   return { matchMedia, query, listeners, change };
@@ -155,5 +212,194 @@ describe('BaseMap', () => {
     const { getByRole } = render(<BaseMap className="h-full" />);
 
     expect(getByRole('region', { name: 'Mapa de Madrid' })).toHaveClass('h-full');
+  });
+});
+
+const points: MapPoint[] = [
+  { id: '1a', lng: -3.7038, lat: 40.4168, label: '7', tone: 'good' },
+  { id: '2', lng: -3.7059, lat: 40.42, label: '0', tone: 'empty' },
+];
+
+function loadedMap() {
+  const map = renderedMap();
+  act(() => map.fire('load'));
+  return map;
+}
+
+function lastData(map: InstanceType<typeof maplibre.MockMap>, sourceId: string) {
+  return map.getSource(sourceId)?.setData.mock.lastCall?.[0];
+}
+
+describe('BaseMap points', () => {
+  beforeEach(() => {
+    maplibre.instances.length = 0;
+    stubMatchMedia(true);
+    document.documentElement.style.setProperty('--color-availability-good', '#15803d');
+    document.documentElement.style.setProperty('--color-map-user-location', '#2563eb');
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.documentElement.removeAttribute('style');
+  });
+
+  it('adds nothing until the style loads', () => {
+    render(<BaseMap points={points} />);
+
+    expect(renderedMap().addSource).not.toHaveBeenCalled();
+    expect(renderedMap().addLayer).not.toHaveBeenCalled();
+  });
+
+  it('adds the points and user location sources and layers once, after the style loads', () => {
+    const { rerender } = render(<BaseMap points={points} />);
+    const map = loadedMap();
+    rerender(<BaseMap points={[...points]} />);
+
+    expect(map.addSource.mock.calls.map(([id]) => id)).toEqual([
+      POINTS_SOURCE_ID,
+      USER_LOCATION_SOURCE_ID,
+    ]);
+    expect(map.addLayer.mock.calls.map(([layer]) => layer.id)).toEqual([
+      POINT_CIRCLE_LAYER_ID,
+      POINT_LABEL_LAYER_ID,
+      USER_LOCATION_LAYER_ID,
+    ]);
+  });
+
+  it('paints the layers with the theme colors', () => {
+    render(<BaseMap points={points} />);
+    const map = loadedMap();
+
+    const layers = map.addLayer.mock.calls.map(([layer]) => JSON.stringify(layer));
+    expect(layers[0]).toContain('#15803d');
+    expect(layers[2]).toContain('#2563eb');
+  });
+
+  it('applies the points passed before the style loaded', () => {
+    render(<BaseMap points={points} selectedId="2" />);
+    const map = loadedMap();
+
+    expect(lastData(map, POINTS_SOURCE_ID)).toEqual(toFeatureCollection(points, '2'));
+  });
+
+  it('updates the source data when points or selection change, without recreating the map', () => {
+    const { rerender } = render(<BaseMap points={points} />);
+    const map = loadedMap();
+    const [first] = points;
+
+    rerender(<BaseMap points={[first as MapPoint]} />);
+    expect(lastData(map, POINTS_SOURCE_ID)).toEqual(toFeatureCollection([first as MapPoint]));
+
+    rerender(<BaseMap points={[first as MapPoint]} selectedId="1a" />);
+    expect(lastData(map, POINTS_SOURCE_ID)).toEqual(toFeatureCollection([first as MapPoint], '1a'));
+    expect(maplibre.instances).toHaveLength(1);
+  });
+
+  it('draws the user location in its own source', () => {
+    const { rerender } = render(<BaseMap />);
+    const map = loadedMap();
+    expect(lastData(map, USER_LOCATION_SOURCE_ID)).toEqual(toUserLocationCollection(undefined));
+
+    rerender(<BaseMap userLocation={{ lng: -3.7, lat: 40.4 }} />);
+
+    expect(lastData(map, USER_LOCATION_SOURCE_ID)).toEqual(
+      toUserLocationCollection({ lng: -3.7, lat: 40.4 }),
+    );
+  });
+
+  it('selects the clicked point with the latest callback', () => {
+    const first = vi.fn<(id: string) => void>();
+    const latest = vi.fn<(id: string) => void>();
+    const { rerender } = render(<BaseMap points={points} onSelectPoint={first} />);
+    const map = loadedMap();
+    rerender(<BaseMap points={points} onSelectPoint={latest} />);
+
+    map.fire('click', POINT_CIRCLE_LAYER_ID, { features: [{ properties: { id: '2' } }] });
+
+    expect(latest).toHaveBeenCalledExactlyOnceWith('2');
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  it('ignores a click without a point', () => {
+    const onSelectPoint = vi.fn<(id: string) => void>();
+    render(<BaseMap points={points} onSelectPoint={onSelectPoint} />);
+    const map = loadedMap();
+
+    map.fire('click', POINT_CIRCLE_LAYER_ID, { features: [] });
+
+    expect(onSelectPoint).not.toHaveBeenCalled();
+  });
+
+  it('shows a pointer cursor over the points', () => {
+    render(<BaseMap points={points} />);
+    const map = loadedMap();
+
+    map.fire('mouseenter', POINT_CIRCLE_LAYER_ID);
+    expect(map.canvas.style.cursor).toBe('pointer');
+
+    map.fire('mouseleave', POINT_CIRCLE_LAYER_ID);
+    expect(map.canvas.style.cursor).toBe('');
+  });
+
+  it('eases to the focus once loaded and when it changes', () => {
+    const { rerender } = render(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} />);
+    const map = renderedMap();
+    expect(map.easeTo).not.toHaveBeenCalled();
+
+    act(() => map.fire('load'));
+    expect(map.easeTo).toHaveBeenLastCalledWith({ center: [-3.7, 40.4], padding: { bottom: 0 } });
+
+    rerender(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} />);
+    expect(map.easeTo).toHaveBeenCalledOnce();
+
+    rerender(<BaseMap focus={{ lng: -3.71, lat: 40.41 }} />);
+    expect(map.easeTo).toHaveBeenLastCalledWith({
+      center: [-3.71, 40.41],
+      padding: { bottom: 0 },
+    });
+  });
+
+  it('centers the focus in the area above the bottom padding', () => {
+    render(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} focusPadding={{ bottom: 400 }} />);
+    const map = loadedMap();
+
+    expect(map.easeTo).toHaveBeenCalledExactlyOnceWith({
+      center: [-3.7, 40.4],
+      padding: { bottom: 400 },
+    });
+  });
+
+  it('eases again to the same focus when the padding changes, not on an equal padding', () => {
+    const focus = { lng: -3.7, lat: 40.4 };
+    const { rerender } = render(<BaseMap focus={focus} focusPadding={{ bottom: 400 }} />);
+    const map = loadedMap();
+
+    rerender(<BaseMap focus={focus} focusPadding={{ bottom: 400 }} />);
+    expect(map.easeTo).toHaveBeenCalledOnce();
+
+    rerender(<BaseMap focus={focus} focusPadding={{ bottom: 0 }} />);
+    expect(map.easeTo).toHaveBeenLastCalledWith({ center: [-3.7, 40.4], padding: { bottom: 0 } });
+    expect(map.easeTo).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not move the map on a padding change without a focus', () => {
+    const { rerender } = render(<BaseMap focusPadding={{ bottom: 400 }} />);
+    const map = loadedMap();
+
+    rerender(<BaseMap focusPadding={{ bottom: 0 }} />);
+
+    expect(map.easeTo).not.toHaveBeenCalled();
+  });
+
+  it('jumps to the focus without animation when the user prefers reduced motion', () => {
+    stubMatchMedia(true, true);
+    render(<BaseMap focus={{ lng: -3.7, lat: 40.4 }} focusPadding={{ bottom: 400 }} />);
+    const map = loadedMap();
+
+    expect(map.easeTo).toHaveBeenCalledExactlyOnceWith({
+      center: [-3.7, 40.4],
+      padding: { bottom: 400 },
+      duration: 0,
+    });
   });
 });

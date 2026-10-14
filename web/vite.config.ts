@@ -57,7 +57,10 @@ export default defineConfig({
       ],
       thresholds: {
         'src/shared/**': { lines: MIN_LINE_COVERAGE },
+        'src/entities/**': { lines: MIN_LINE_COVERAGE },
+        'src/features/**': { lines: MIN_LINE_COVERAGE },
         'src/widgets/**': { lines: MIN_LINE_COVERAGE },
+        'src/pages/**': { lines: MIN_LINE_COVERAGE },
       },
     },
   },
