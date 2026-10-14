@@ -63,7 +63,7 @@ T16 verificación manual + cierre
 
 ### Fase 1: Router y dominio
 
-- [ ] **T1: TanStack Router y search params de la página** (M, ~1,5 h)
+- [x] **T1: TanStack Router y search params de la página** (M, ~1,5 h)
   - Descripción: añadir `@tanstack/react-router` 1.170.41. `app/router.tsx`: ruta raíz y ruta `/` en código, `validateSearch: validateMapSearch`, middleware `stripSearchParams({ need: 'bikes' })`, `parseSearch`/`stringifySearch` del prototipo, `declare module '@tanstack/react-router' { interface Register { router: typeof router } }`. `App.tsx`: `QueryProvider` + `RouterProvider`. `pages/map/model/mapSearch.ts` con `validateMapSearch(raw) -> { station?: string; need: Need }` (el tipo `Need` vive aquí hasta T2, que lo mueve a `entities/station`). `test/renderWithRouter.tsx`. Corregir el supuesto 12 de la spec.
   - Aceptación:
     - `validateMapSearch`: sin valores → `{ need: 'bikes' }`; `station` numérica o con letras → string; `need` desconocido → `bikes`.
@@ -229,3 +229,4 @@ Unas 22 h, en 6-8 sesiones: Fase 1 (~3,75 h), Fase 2 (~5,75 h), Fase 3 (~4,25 h)
 
 - 2026-10-14: versión inicial. Prototipo de TanStack Router 1.170.41: parser por defecto convierte `538` en número; se usa `URLSearchParams` para leer y `stringifySearchWith(String)` para escribir; `stripSearchParams` para omitir `need=bikes`.
 - 2026-10-14: plan aprobado.
+- 2026-10-14: T1 hecha. `@tanstack/react-router` 1.170.41; `app/router.tsx` con `createAppRouter({ history })`, ruta `/` en código, search en texto plano y `stripSearchParams`; `validateMapSearch` en `pages/map`; `test/renderWithRouter.tsx` monta el router real con `createMemoryHistory`; el test de `MapPage` pasa a usarlo y `test/setup.ts` simula `window.scrollTo` (jsdom no lo implementa y el router lo llama al navegar). Carga inicial: 104,54 KB gzip (`index` 100,96 + `config` 3,58), +25,98 KB frente a 78,56 KB.

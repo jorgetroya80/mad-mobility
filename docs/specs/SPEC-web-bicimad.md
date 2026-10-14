@@ -47,7 +47,7 @@ Que un usuario sepa en menos de 5 segundos si hay bici, o un anclaje libre, cerc
 9. "Actualizado hace X" se refresca cada 30 s con un hook `useNow` (`shared/lib`), sin pedir datos.
 10. El cliente sigue en `@jorgetroya80/bicimad-client@0.4.0`; el contrato no cambia.
 11. Rutas definidas en código (`createRoute`), sin el plugin de rutas por archivos: con una ruta no compensa una dependencia de build más ni un `routeTree.gen.ts` generado.
-12. Search params como texto plano. Por defecto TanStack Router pasa cada valor por `JSON.parse`, así que `?station=538` llegaría como número y al escribir `'538'` la URL quedaría `?station=%22538%22`. El router se crea con `parseSearchWith` y `stringifySearchWith` que dejan los valores como `string`, para que la URL sea `?station=538&need=docks`. Se comprueba en el plan con la versión elegida.
+12. Search params como texto plano. Por defecto TanStack Router pasa cada valor por `JSON.parse`, así que `?station=538` llegaría como número y al escribir `'538'` la URL quedaría `?station=%22538%22`. `parseSearchWith((v) => v)` no lo evita: el valor sigue llegando como número. El router se crea con `parseSearch: (search) => Object.fromEntries(new URLSearchParams(search))` para leer y `stringifySearch: stringifySearchWith(String, (v) => v)` para escribir, así que los valores son siempre `string` y la URL queda `?station=538&need=docks`. La ruta `/` añade el middleware `stripSearchParams({ need: 'bikes' })` para no escribir el valor por defecto (supuesto 3). Comprobado con 1.170.41 en el plan y en los tests del router.
 
 ## Tech Stack
 
@@ -260,3 +260,4 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: TanStack Router en lugar del hook propio sobre la URL (decisión del usuario): rutas en código, search params validados en `pages/map` y serializados como texto plano. El buscador solo busca por número de estación (decisión del usuario).
 - 2026-10-14: buscador genérico por número (decisión del usuario): `features/search-by-number` trabaja con fuentes (`SearchSource`) y muestra un selector de servicio cuando hay más de una. Hoy solo existe la fuente de BiciMAD (`widgets/transit-search`); el módulo `bus` añadirá la suya sin cambiar el buscador. Nuevo SC14.
 - 2026-10-14: spec aprobada.
+- 2026-10-14: supuesto 12 corregido con lo comprobado en T1: `parseSearchWith` no evita la conversión a número; se lee con `URLSearchParams`, se escribe con `stringifySearchWith(String, …)` y `stripSearchParams` quita `need=bikes`.

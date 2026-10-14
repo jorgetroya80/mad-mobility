@@ -1,10 +1,13 @@
-import { MapPage } from '@/pages/map';
+import { RouterProvider } from '@tanstack/react-router';
 import { QueryProvider } from './providers/QueryProvider';
+import { createAppRouter } from './router';
+
+const router = createAppRouter();
 
 export function App() {
   return (
     <QueryProvider>
-      <MapPage />
+      <RouterProvider router={router} />
     </QueryProvider>
   );
 }
