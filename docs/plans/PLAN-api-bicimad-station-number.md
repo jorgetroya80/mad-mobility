@@ -57,8 +57,8 @@ T1 número único en el mapper
 ### Checkpoint final
 
 - [x] SC1-SC5 comprobados; CI en verde en el PR.
-- [ ] Revisión humana del título del PR (`feat(api)!: …`) antes del squash merge.
-- [ ] SC6 se confirma en la release 0.3.0.
+- [x] Revisión humana del título del PR (`feat(api)!: …`) antes del squash merge.
+- [x] SC6 se confirma en la release 0.3.0.
 
 ## Riesgos y mitigaciones
 
