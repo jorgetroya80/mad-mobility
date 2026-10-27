@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.5.0...api-v0.6.0) (2026-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** generate the bicimad client with hey-api ([#51](https://github.com/jorgetroya80/mad-mobility/issues/51))
+
+### Features
+
+* **api:** generate the bicimad client with hey-api ([#51](https://github.com/jorgetroya80/mad-mobility/issues/51)) ([4adc7b6](https://github.com/jorgetroya80/mad-mobility/commit/4adc7b60d8b5511def4f0e7d3c407c12c60295eb))
+
 ## [0.5.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.4.0...api-v0.5.0) (2026-10-13)
 
 
