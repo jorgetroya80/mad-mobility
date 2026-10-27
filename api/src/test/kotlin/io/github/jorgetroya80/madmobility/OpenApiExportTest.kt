@@ -85,6 +85,19 @@ class OpenApiExportTest(
         assertThat(parameter.at("/schema/example")).isEqualTo(StringNode.valueOf("538"))
     }
 
+    // The client exposes one function per operationId, so renaming one is a breaking change
+    @Test
+    fun `keeps the operation ids the client functions are named after`() {
+        val operationIds =
+            apiDocument()
+                .path("paths")
+                .values()
+                .flatMap { it.values() }
+                .map { it.path("operationId").asString() }
+
+        assertThat(operationIds).containsExactlyInAnyOrder("listStations", "getStation")
+    }
+
     @Test
     fun `documents every error with the problem body the API returns`() {
         val document = apiDocument()

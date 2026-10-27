@@ -52,7 +52,7 @@ T1 y T2 son independientes entre sí.
   - Archivos: `api/client/package.json`, `api/client/openapi-ts.config.ts`, `api/client/.gitignore`, `api/client/src/index.ts`, `pnpm-lock.yaml` (quizá `api/client/tsconfig.json`).
   - Dependencias: ninguna.
 
-- [ ] **T2: `operationId` estables** (XS, ~15 min)
+- [x] **T2: `operationId` estables** (XS, ~15 min)
   - Descripción: `OpenApiExportTest` comprueba que los `operationId` del documento son exactamente `listStations` y `getStation`. Con hey-api son nombres de funciones públicas del cliente.
   - Aceptación:
     - SC5: renombrar `getStation` en `StationsController` hace fallar el test (comprobado a mano y revertido).
@@ -120,3 +120,4 @@ Unos 140 min de trabajo en dos sesiones, más la espera de la release entre ella
 - 2026-10-27: versión inicial.
 - 2026-10-27: plan aprobado.
 - 2026-10-27: T1 implementada. hey-api 0.99.0 no detecta `NodeNext` por sí solo: genera imports sin extensión, así que `openapi-ts.config.ts` fija `output.module.extension: '.js'`. Supuestos de la spec comprobados con el paquete empaquetado (`pnpm pack`) desde un consumidor `NodeNext`: `createConfig` acepta `fetch` (tipo `typeof fetch`), `listStations` y `getStation` devuelven `{ data, error, response }` sin lanzar (un 404 llega como `error` con el `Problem`), los tipos conservan sus nombres y el código generado no importa ningún paquete externo. `Station` es el único alias que queda en `src/index.ts`; `StationsResponse`, `StationDetailResponse` y `Problem` salen tal cual del código generado. Generate + build dos veces dan un `dist/` idéntico (34 ficheros). Para T4: `response` es opcional en el tipo del resultado, así que `requestFailed` en `fetchStations.ts` no puede leer `response.url` sin comprobarlo; y el `fetch` que pasa web debe aceptar `(input, init)`, no solo un `Request`.
+- 2026-10-27: T2 implementada. `OpenApiExportTest` comprueba que los `operationId` son exactamente `listStations` y `getStation`. Comprobado a mano: con `getStation` renombrado a `findStation`, `generateOpenApi` falla en ese test; revertido. `./gradlew build generateOpenApi` en verde.
