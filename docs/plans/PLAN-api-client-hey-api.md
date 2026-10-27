@@ -1,7 +1,7 @@
 # Plan: api-bicimad — cliente generado con hey-api
 
 - Created: 2026-10-27
-- Status: **approved** (2026-10-27)
+- Status: **implemented** (2026-10-28)
 - Spec: [SPEC-api-client-hey-api.md](../specs/SPEC-api-client-hey-api.md)
 
 ## Overview
@@ -71,13 +71,13 @@ T1 y T2 son independientes entre sí.
 
 ### Checkpoint: PR 1
 
-- [ ] SC1-SC5 comprobados; CI en verde.
-- [ ] Revisión humana del título (`feat(api)!: …`) y del cuerpo antes del squash merge.
-- [ ] El PR de release-please propone `api 0.6.0`; tras fusionarlo, `publish-api-client` publica `@jorgetroya80/bicimad-client@0.6.0` (SC6).
+- [x] SC1-SC5 comprobados; CI en verde.
+- [x] Revisión humana del título (`feat(api)!: …`) y del cuerpo antes del squash merge.
+- [x] El PR de release-please propone `api 0.6.0`; tras fusionarlo, `publish-api-client` publica `@jorgetroya80/bicimad-client@0.6.0` (SC6).
 
 ### Fase 2: web con el cliente nuevo (PR 2, `web/`)
 
-- [ ] **T4: Web usa `listStations` y `getStation`** (M, ~40 min)
+- [x] **T4: Web usa `listStations` y `getStation`** (M, ~40 min)
   - Descripción: web sube a `@jorgetroya80/bicimad-client@0.6.0`. `shared/api/client.ts` crea el cliente con `createClient(createConfig({ baseUrl, fetch }))`, conservando el `fetch` que busca `globalThis.fetch` en cada petición (MSW). `fetchStations.ts` llama a `listStations` y `getStation` pasando ese cliente, y mantiene `requestFailed` y `StationNotFoundError`. `client.test.ts` usa `listStations` en vez de `apiClient.GET`.
   - Aceptación:
     - Ningún fichero de web usa `.GET(` ni rutas `/v1/bicimad/…` fuera de los mocks de MSW.
@@ -87,7 +87,7 @@ T1 y T2 son independientes entre sí.
   - Archivos: `web/package.json`, `pnpm-lock.yaml`, `web/src/shared/api/client.ts`, `web/src/shared/api/client.test.ts`, `web/src/entities/station/api/fetchStations.ts`.
   - Dependencias: checkpoint del PR 1 (cliente 0.6.0 publicado).
 
-- [ ] **T5: Uso real y cierre** (S, ~20 min, **requiere `api/.env.local`**)
+- [x] **T5: Uso real y cierre** (S, ~20 min, **requiere `api/.env.local`**)
   - Descripción: con el API en local (`bootRun`) y `pnpm --filter web run dev`, comprobar la lista y el detalle de la 538. Spec y plan a **implemented**. Push y PR `refactor(web): use the hey-api bicimad client`.
   - Aceptación:
     - SC7: la lista de estaciones y el detalle de la 538 se ven como antes.
@@ -98,7 +98,7 @@ T1 y T2 son independientes entre sí.
 
 ### Checkpoint final
 
-- [ ] SC1-SC7 comprobados.
+- [x] SC1-SC7 comprobados.
 - [ ] PR 2 fusionado sin crear release de web (es `refactor`).
 
 ## Riesgos y mitigaciones
@@ -122,3 +122,6 @@ Unos 140 min de trabajo en dos sesiones, más la espera de la release entre ella
 - 2026-10-27: T1 implementada. hey-api 0.99.0 no detecta `NodeNext` por sí solo: genera imports sin extensión, así que `openapi-ts.config.ts` fija `output.module.extension: '.js'`. Supuestos de la spec comprobados con el paquete empaquetado (`pnpm pack`) desde un consumidor `NodeNext`: `createConfig` acepta `fetch` (tipo `typeof fetch`), `listStations` y `getStation` devuelven `{ data, error, response }` sin lanzar (un 404 llega como `error` con el `Problem`), los tipos conservan sus nombres y el código generado no importa ningún paquete externo. `Station` es el único alias que queda en `src/index.ts`; `StationsResponse`, `StationDetailResponse` y `Problem` salen tal cual del código generado. Generate + build dos veces dan un `dist/` idéntico (34 ficheros). Para T4: `response` es opcional en el tipo del resultado, así que `requestFailed` en `fetchStations.ts` no puede leer `response.url` sin comprobarlo; y el `fetch` que pasa web debe aceptar `(input, init)`, no solo un `Request`.
 - 2026-10-27: T2 implementada. `OpenApiExportTest` comprueba que los `operationId` son exactamente `listStations` y `getStation`. Comprobado a mano: con `getStation` renombrado a `findStation`, `generateOpenApi` falla en ese test; revertido. `./gradlew build generateOpenApi` en verde.
 - 2026-10-27: T3 implementada. `CAPABILITY-MAP.md` indica que el cliente lo genera hey-api desde la 0.6.0. El `README.md` raíz se actualiza en T5, porque describe lo que usa web y web sigue con el cliente 0.4.0 hasta el PR 2. `docs/ideas/bicimad-now.md` no se toca: es la idea original y ya estaba superada en este punto desde 2026-10-05.
+- 2026-10-28: checkpoint del PR 1 superado. #51 y la release #52 fusionados; `publish-api-client` publicó `@jorgetroya80/bicimad-client@0.6.0` (SC6).
+- 2026-10-28: T4 implementada. hey-api captura los errores de red y los devuelve como `error` con `request` y `response` opcionales, en vez de lanzarlos como hacía openapi-fetch. `requestFailed` recibe el resultado entero y solo añade el estado si hay respuesta; un test nuevo comprueba que un fallo de red da `GET <url> failed`. El `fetch` propio pasa `(input, init)`. Web: `lint`, `typecheck`, `build` y 358 tests en verde. El aviso de peers de `pnpm` (`msw` 3 frente a `@vitest/mocker`) ya existía antes.
+- 2026-10-28: T5 implementada. Con `bootRun` contra la EMT real y `pnpm --filter web run dev`, Chrome sin interfaz (`--dump-dom`, WebGL por software) muestra la lista cerca de la Puerta del Sol y el detalle de `?station=538` ("Haendel - Silvano", 2 bicis, 24 anclajes libres). El `README.md` raíz ya dice que el cliente lo genera hey-api. Plan implementado.

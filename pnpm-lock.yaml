@@ -191,8 +191,8 @@ importers:
   web:
     dependencies:
       '@jorgetroya80/bicimad-client':
-        specifier: 0.4.0
-        version: 0.4.0
+        specifier: 0.6.0
+        version: 0.6.0
       '@tanstack/react-query':
         specifier: 5.104.1
         version: 5.104.1(react@19.3.0)
@@ -500,8 +500,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@jorgetroya80/bicimad-client@0.4.0':
-    resolution: {integrity: sha512-PODTflyIYjPOpJzyB0GEWfynK9XrQnxXRpBm9XDeyNthtqIfNwFQA6Ea8kZC75nvmHnadxiQAgIqfEy6pt1lng==, tarball: https://npm.pkg.github.com/download/@jorgetroya80/bicimad-client/0.4.0/d8f2b14fd95f6ffdac859b257d039595af705299}
+  '@jorgetroya80/bicimad-client@0.6.0':
+    resolution: {integrity: sha512-Sv1Tp7Dp5XPodjjZhz82Qom6ZK+7dcHsZMDxut9dUGI4wNXJykoXAedgJ9vyS9XEUplNWCb6+ZfP8ecMjfg6JQ==, tarball: https://npm.pkg.github.com/download/@jorgetroya80/bicimad-client/0.6.0/44c0bd7c2eac94f7e5f4441ccaf98b00eac2ca03}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1910,12 +1910,6 @@ packages:
     resolution: {integrity: sha512-smsWv2LzFjP03xmvFoJ331ss6h+jixfA4UUV/Bsiyuu4YJPfN+FIQGOIiv4w9/+MoHkfkJ22UIaQWRVFRfH6Vw==}
     engines: {node: '>=20'}
 
-  openapi-fetch@0.17.0:
-    resolution: {integrity: sha512-PsbZR1wAPcG91eEthKhN+Zn92FMHxv+/faECIwjXdxfTODGSGegYv0sc1Olz+HYPvKOuoXfp+0pA2XVt2cI0Ig==}
-
-  openapi-typescript-helpers@0.1.0:
-    resolution: {integrity: sha512-OKTGPthhivLw/fHz6c3OPtg72vi86qaMlqbJuVJ23qOvQ+53uw1n7HdmkJFibloF7QEjDrDkzJiOJuockM/ljw==}
-
   outvariant@1.4.3:
     resolution: {integrity: sha512-+Sl2UErvtsoajRDKCE5/dBz4DIvHXQQnAxtQTF04OJxY0+DyZXSo5P5Bb7XYWOh81syohlYL24hbDwxedPUJCA==}
 
@@ -2628,9 +2622,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 26.6.2
 
-  '@jorgetroya80/bicimad-client@0.4.0':
-    dependencies:
-      openapi-fetch: 0.17.0
+  '@jorgetroya80/bicimad-client@0.6.0': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -3676,12 +3668,6 @@ snapshots:
       is-inside-container: 1.0.0
       powershell-utils: 0.1.0
       wsl-utils: 0.3.1
-
-  openapi-fetch@0.17.0:
-    dependencies:
-      openapi-typescript-helpers: 0.1.0
-
-  openapi-typescript-helpers@0.1.0: {}
 
   outvariant@1.4.3: {}
 

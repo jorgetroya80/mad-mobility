@@ -1,13 +1,13 @@
-import type { StationsResponse } from '@jorgetroya80/bicimad-client';
+import { listStations, type StationsResponse } from '@jorgetroya80/bicimad-client';
 import { env } from '@/shared/config';
 import { stationsFixture } from './mocks/fixtures';
 import { apiClient } from './client';
 
 describe('apiClient', () => {
   it('lists the stations from the configured base URL', async () => {
-    const { data, error, response } = await apiClient.GET('/v1/bicimad/stations');
+    const { data, error, response } = await listStations({ client: apiClient });
 
-    expect(response.url).toBe(new URL('/api/v1/bicimad/stations', location.href).href);
+    expect(response?.url).toBe(new URL('/api/v1/bicimad/stations', location.href).href);
     expect(error).toBeUndefined();
     expect(data).toEqual(stationsFixture);
     expectTypeOf(data).toEqualTypeOf<StationsResponse | undefined>();
