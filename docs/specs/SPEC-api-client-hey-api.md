@@ -119,3 +119,4 @@ Los mocks de MSW (`web/src/shared/api/mocks/`) no cambian: interceptan por URL y
 - 2026-10-27: versión inicial.
 - 2026-10-27: preguntas abiertas resueltas; pasa a in review.
 - 2026-10-27: spec aprobada.
+- 2026-10-27: implementación del PR 1 (T1-T3): cliente generado con hey-api y `operationId` protegidos por test.

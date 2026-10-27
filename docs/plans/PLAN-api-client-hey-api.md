@@ -60,7 +60,7 @@ T1 y T2 son independientes entre sí.
   - Archivos: `api/src/test/kotlin/io/github/jorgetroya80/madmobility/OpenApiExportTest.kt`.
   - Dependencias: ninguna.
 
-- [ ] **T3: Documentación y PR 1** (S, ~20 min)
+- [x] **T3: Documentación y PR 1** (S, ~20 min)
   - Descripción: fila de `api-bicimad` en `CAPABILITY-MAP.md` (cliente generado con hey-api) y su párrafo sobre el enfoque de contrato; changelog de la spec y de este plan. Push y PR `feat(api)!: generate the bicimad client with hey-api` con `BREAKING CHANGE:` en el cuerpo, en prosa.
   - Aceptación:
     - CI en verde en el PR (`API (Gradle)`, `pr-title`, `release-scope`, `ci-ok`).
@@ -121,3 +121,4 @@ Unos 140 min de trabajo en dos sesiones, más la espera de la release entre ella
 - 2026-10-27: plan aprobado.
 - 2026-10-27: T1 implementada. hey-api 0.99.0 no detecta `NodeNext` por sí solo: genera imports sin extensión, así que `openapi-ts.config.ts` fija `output.module.extension: '.js'`. Supuestos de la spec comprobados con el paquete empaquetado (`pnpm pack`) desde un consumidor `NodeNext`: `createConfig` acepta `fetch` (tipo `typeof fetch`), `listStations` y `getStation` devuelven `{ data, error, response }` sin lanzar (un 404 llega como `error` con el `Problem`), los tipos conservan sus nombres y el código generado no importa ningún paquete externo. `Station` es el único alias que queda en `src/index.ts`; `StationsResponse`, `StationDetailResponse` y `Problem` salen tal cual del código generado. Generate + build dos veces dan un `dist/` idéntico (34 ficheros). Para T4: `response` es opcional en el tipo del resultado, así que `requestFailed` en `fetchStations.ts` no puede leer `response.url` sin comprobarlo; y el `fetch` que pasa web debe aceptar `(input, init)`, no solo un `Request`.
 - 2026-10-27: T2 implementada. `OpenApiExportTest` comprueba que los `operationId` son exactamente `listStations` y `getStation`. Comprobado a mano: con `getStation` renombrado a `findStation`, `generateOpenApi` falla en ese test; revertido. `./gradlew build generateOpenApi` en verde.
+- 2026-10-27: T3 implementada. `CAPABILITY-MAP.md` indica que el cliente lo genera hey-api desde la 0.6.0. El `README.md` raíz se actualiza en T5, porque describe lo que usa web y web sigue con el cliente 0.4.0 hasta el PR 2. `docs/ideas/bicimad-now.md` no se toca: es la idea original y ya estaba superada en este punto desde 2026-10-05.
