@@ -31,7 +31,7 @@ Coming next: a web map showing live station availability.
 - React, Vite and TypeScript on Node 24, with pnpm
 - MapLibre for the map, Tailwind for styling
 - TanStack Query for data fetching
-- `@jorgetroya80/bicimad-client` (openapi-typescript + openapi-fetch) for typed API calls
+- `@jorgetroya80/bicimad-client` (generated with hey-api) for typed API calls
 
 ## Architecture
 

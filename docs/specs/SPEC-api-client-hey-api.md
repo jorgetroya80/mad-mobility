@@ -1,7 +1,7 @@
 # Spec: api-bicimad — cliente generado con hey-api
 
 - Created: 2026-10-27
-- Status: **approved** (2026-10-27)
+- Status: **implemented** (2026-10-28)
 - Plan: [PLAN-api-client-hey-api.md](../plans/PLAN-api-client-hey-api.md)
 
 Cambio del módulo `api-bicimad` del [Capability Map](CAPABILITY-MAP.md). Sustituye el generador del paquete `@jorgetroya80/bicimad-client` (openapi-typescript + openapi-fetch) por [hey-api](https://heyapi.dev) (`@hey-api/openapi-ts`), el mismo que usa el proyecto donations-api. El contrato HTTP del API no cambia.
@@ -120,3 +120,4 @@ Los mocks de MSW (`web/src/shared/api/mocks/`) no cambian: interceptan por URL y
 - 2026-10-27: preguntas abiertas resueltas; pasa a in review.
 - 2026-10-27: spec aprobada.
 - 2026-10-27: implementación del PR 1 (T1-T3): cliente generado con hey-api y `operationId` protegidos por test.
+- 2026-10-28: spec implementada. SC1-SC7 comprobados; web usa el cliente 0.6.0 (PR 2).
