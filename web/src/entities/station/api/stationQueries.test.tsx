@@ -189,4 +189,15 @@ describe('useStation', () => {
     expect(result.current.error).not.toBeInstanceOf(StationNotFoundError);
     expect(urls).toHaveLength(2);
   });
+
+  it('names the request when the network fails', async () => {
+    server.use(http.get(`${STATIONS_URL}/:number`, () => HttpResponse.error()));
+
+    const { result } = renderHook(() => useStation('1a'), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe(
+      `GET ${new URL(`${STATIONS_URL}/1a`, location.href).href} failed`,
+    );
+  });
 });
