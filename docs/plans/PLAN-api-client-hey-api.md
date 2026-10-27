@@ -1,7 +1,7 @@
 # Plan: api-bicimad — cliente generado con hey-api
 
 - Created: 2026-10-27
-- Status: **in review** (2026-10-27)
+- Status: **approved** (2026-10-27)
 - Spec: [SPEC-api-client-hey-api.md](../specs/SPEC-api-client-hey-api.md)
 
 ## Overview
@@ -36,7 +36,7 @@ T1 y T2 son independientes entre sí.
 
 ### Fase 1: cliente con hey-api (PR 1, `api/`)
 
-- [ ] **T1: Generar el cliente con hey-api** (M, ~45 min)
+- [x] **T1: Generar el cliente con hey-api** (M, ~45 min)
   - Descripción: en `api/client`, quitar `openapi-typescript` y `openapi-fetch` y añadir `@hey-api/openapi-ts` 0.99.0 (versión exacta). Nuevo `openapi-ts.config.ts` con `input: 'openapi.json'`, salida en `src/generated` y los tres plugins. El script `generate` copia `../build/openapi/bicimad.json` y ejecuta `openapi-ts`; `build` pasa a ser solo `tsc`. `.gitignore` cambia `src/schema.d.ts` por `src/generated/`. `src/index.ts` reexporta el SDK y los tipos generados, `createClient`, `createConfig`, `Client`, `Config` y `CreateClientConfig`, y mantiene los alias `Station`, `StationsResponse`, `StationDetailResponse` y `Problem`. Elimina `createBicimadClient`.
   - Comprobar al generar (supuestos de la spec) y anotar en el changelog del plan:
     - El cliente acepta `fetch` en `createConfig` (supuesto 3).
@@ -118,3 +118,5 @@ Unos 140 min de trabajo en dos sesiones, más la espera de la release entre ella
 ## Changelog
 
 - 2026-10-27: versión inicial.
+- 2026-10-27: plan aprobado.
+- 2026-10-27: T1 implementada. hey-api 0.99.0 no detecta `NodeNext` por sí solo: genera imports sin extensión, así que `openapi-ts.config.ts` fija `output.module.extension: '.js'`. Supuestos de la spec comprobados con el paquete empaquetado (`pnpm pack`) desde un consumidor `NodeNext`: `createConfig` acepta `fetch` (tipo `typeof fetch`), `listStations` y `getStation` devuelven `{ data, error, response }` sin lanzar (un 404 llega como `error` con el `Problem`), los tipos conservan sus nombres y el código generado no importa ningún paquete externo. `Station` es el único alias que queda en `src/index.ts`; `StationsResponse`, `StationDetailResponse` y `Problem` salen tal cual del código generado. Generate + build dos veces dan un `dist/` idéntico (34 ficheros). Para T4: `response` es opcional en el tipo del resultado, así que `requestFailed` en `fetchStations.ts` no puede leer `response.url` sin comprobarlo; y el `fetch` que pasa web debe aceptar `(input, init)`, no solo un `Request`.
