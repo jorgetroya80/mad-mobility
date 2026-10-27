@@ -109,7 +109,7 @@ T11 cierre (tras T10)
 
 - [x] `lint`, `typecheck`, `test` y `build` en verde en local.
 - [x] Rama empujada y PR en borrador: jobs `api`, `web` y `tooling` en verde (SC11).
-- [ ] Revisión con el usuario antes de seguir.
+- [x] Revisión con el usuario antes de seguir.
 
 ### Fase 2: Datos
 

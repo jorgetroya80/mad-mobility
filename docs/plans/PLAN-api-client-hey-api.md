@@ -99,7 +99,7 @@ T1 y T2 son independientes entre sí.
 ### Checkpoint final
 
 - [x] SC1-SC7 comprobados.
-- [ ] PR 2 fusionado sin crear release de web (es `refactor`).
+- [x] PR 2 fusionado sin crear release de web (es `refactor`).
 
 ## Riesgos y mitigaciones
 
@@ -125,3 +125,4 @@ Unos 140 min de trabajo en dos sesiones, más la espera de la release entre ella
 - 2026-10-28: checkpoint del PR 1 superado. #51 y la release #52 fusionados; `publish-api-client` publicó `@jorgetroya80/bicimad-client@0.6.0` (SC6).
 - 2026-10-28: T4 implementada. hey-api captura los errores de red y los devuelve como `error` con `request` y `response` opcionales, en vez de lanzarlos como hacía openapi-fetch. `requestFailed` recibe el resultado entero y solo añade el estado si hay respuesta; un test nuevo comprueba que un fallo de red da `GET <url> failed`. El `fetch` propio pasa `(input, init)`. Web: `lint`, `typecheck`, `build` y 358 tests en verde. El aviso de peers de `pnpm` (`msw` 3 frente a `@vitest/mocker`) ya existía antes.
 - 2026-10-28: T5 implementada. Con `bootRun` contra la EMT real y `pnpm --filter web run dev`, Chrome sin interfaz (`--dump-dom`, WebGL por software) muestra la lista cerca de la Puerta del Sol y el detalle de `?station=538` ("Haendel - Silvano", 2 bicis, 24 anclajes libres). El `README.md` raíz ya dice que el cliente lo genera hey-api. Plan implementado.
+- 2026-10-28: checkpoint final. #53 fusionado; release-please no abrió PR de release de web.
