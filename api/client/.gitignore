@@ -1,4 +1,4 @@
 node_modules/
 dist/
-src/schema.d.ts
+src/generated/
 openapi.json

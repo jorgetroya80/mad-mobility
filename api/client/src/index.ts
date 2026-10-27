@@ -1,18 +1,13 @@
-import createClient, { type Client, type ClientOptions } from 'openapi-fetch';
-import type { components, paths } from './schema.js';
+import type { StationResponse } from './generated/index.js';
 
-export type { components, paths } from './schema.js';
+// SDK functions (listStations, getStation) and every schema type (StationsResponse, Problem, ...)
+export * from './generated/index.js';
+export {
+  createClient,
+  createConfig,
+  type Client,
+  type Config,
+  type CreateClientConfig,
+} from './generated/client/index.js';
 
-export type Station = components['schemas']['StationResponse'];
-export type StationsResponse = components['schemas']['StationsResponse'];
-export type StationDetailResponse = components['schemas']['StationDetailResponse'];
-export type Problem = components['schemas']['Problem'];
-
-export type BicimadClientOptions = Pick<ClientOptions, 'fetch'>;
-
-export function createBicimadClient(
-  baseUrl: string,
-  options: BicimadClientOptions = {},
-): Client<paths> {
-  return createClient<paths>({ baseUrl, ...options });
-}
+export type Station = StationResponse;
