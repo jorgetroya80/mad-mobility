@@ -13,7 +13,7 @@ Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene
 | `api-bicimad` | Módulo `bicimad`: dominio, casos de uso, endpoints `/v1/bicimad/*`; OpenAPI con springdoc y cliente `@jorgetroya80/bicimad-client` (hey-api) publicado en cada release                                 | api-core                | [SPEC-api-bicimad.md](SPEC-api-bicimad.md) | implemented           |
 | `web-shell`   | Proyecto Vite + React + Tailwind + TanStack Query con arquitectura FSD, oxlint, oxfmt y versiones fijadas; cliente API tipado (paquete `@jorgetroya80/bicimad-client`), mapa base, layout responsive | api-bicimad, foundation | [SPEC-web-shell.md](SPEC-web-shell.md)     | implemented           |
 | `web-bicimad` | Mapa, lista, detalle, filtros y favoritos de estaciones                                                                                                                                              | web-shell, api-bicimad  | [SPEC-web-bicimad.md](SPEC-web-bicimad.md) | implemented           |
-| `deploy`      | Despliegue en la plataforma elegida (por definir)                                                                                                                                                    | foundation              | —                                          | on hold               |
+| `deploy`      | Despliegue en Render (plan gratuito, Blueprint `render.yaml`): API desde la imagen de ghcr.io y web desde `web-dist.tar.gz`, con deploy hooks en `release.yml`                                        | foundation              | [SPEC-deploy.md](SPEC-deploy.md)           | approved              |
 
 ## Orden de construcción
 
