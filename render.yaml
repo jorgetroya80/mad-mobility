@@ -1,0 +1,50 @@
+# Render Blueprint: the API runs the image published by publish-api, the web serves the
+# web-dist.tar.gz attached by publish-web. Render never builds either one.
+# Deploys are triggered by deploy hooks from release.yml (deploy-api, deploy-web).
+services:
+  - type: web
+    name: mad-mobility-api
+    runtime: image
+    image:
+      # deploy-api replaces the tag with each release through the hook's imgURL
+      url: ghcr.io/jorgetroya80/mad-mobility-api:0.6.0
+    plan: free
+    # Closest region to Madrid; it cannot be changed after the service is created
+    region: frankfurt
+    healthCheckPath: /health/ready
+    envVars:
+      # Registered MobilityLabs app (preferred), or the account email and password until it is
+      # approved. Filled once in the Render dashboard, never here.
+      - key: EMT_CLIENT_ID
+        sync: false
+      - key: EMT_PASS_KEY
+        sync: false
+      - key: EMT_EMAIL
+        sync: false
+      - key: EMT_PASSWORD
+        sync: false
+
+  - type: web
+    name: mad-mobility-web
+    runtime: static
+    buildCommand: ./scripts/render-web-build.sh
+    staticPublishPath: ./dist
+    # Only deploy-web deploys: a commit to main does not change the web release
+    autoDeployTrigger: 'off'
+    routes:
+      # Same origin for the API, like the Vite proxy in development (rules apply in order)
+      - type: rewrite
+        source: /api/*
+        destination: https://mad-mobility-api.onrender.com/*
+      # Single-page app: any other path that is not a file serves index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # Vite puts a content hash in every asset name
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
