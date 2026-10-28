@@ -38,7 +38,7 @@ T5 y T6 son independientes entre sí.
 
 ### Fase 1: Render con lo ya publicado (PR `ci`, rama `ci/render-deploy`)
 
-- [ ] **T1: Alta de la app en MobilityLabs** (XS, ~15 min, **manual, usuario**)
+- [x] **T1: Alta de la app en MobilityLabs** (XS, ~15 min, **manual, usuario**)
   - Descripción: registrar la app en MobilityLabs y obtener `X-ClientId` y `passKey`. Probarlos en local con `EMT_CLIENT_ID` y `EMT_PASS_KEY` en `api/.env.local` (sin email ni contraseña).
   - Aceptación:
     - `./api/gradlew -p api bootRun` arranca y `GET /v1/bicimad/stations` devuelve 200 con las credenciales de la app.
@@ -147,3 +147,5 @@ Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
 - 2026-10-28: creado a partir de la spec aprobada.
 - 2026-10-28: aprobado por el usuario.
 - 2026-10-28: T1 en curso. App "Mad Mobility" registrada en MobilityLabs, pendiente de aprobación. Mientras tanto, T2 usa `EMT_EMAIL` y `EMT_PASSWORD` en Render (riesgo previsto); al aprobarse, se cambian por `EMT_CLIENT_ID` y `EMT_PASS_KEY` y se cierra T1.
+- 2026-10-28: T1 hecha. App "Mad Mobility" aprobada. Con solo `EMT_CLIENT_ID` y `EMT_PASS_KEY`, `bootRun` en local y el API en Render hacen login y `/v1/bicimad/stations` devuelve 200. En Render el email y la contraseña quedan vacíos. Si falta una de las dos claves de la app, el API no arranca (`EMT_PASS_KEY is missing (EMT_CLIENT_ID is set)`) y Render mantiene la versión anterior.
+- 2026-10-28: T2 en curso. Render ejecuta `pnpm install` antes del build command de un static site, y GitHub Packages responde 401 sin token; se desactiva con `SKIP_INSTALL_DEPS=true`. `/` necesita su propia cabecera `no-cache` (el navegador no pide `/index.html`). Assumption 1 comprobado: el rewrite `/api/*` pasa ruta completa y query string, el cliente recibe `ETag` y 304, y los assets se sirven antes que el rewrite `/*`. Con la regla temporal `/echo/*`: `If-None-Match` no llega al destino (el 304 lo resuelve el CDN de Render); `X-Forwarded-For` llega con la IP del cliente a la izquierda, pero un cliente puede anteponer otra; `True-Client-Ip` y `Cf-Connecting-Ip` llevan la IP real y Cloudflare sobrescribe los valores que manda el cliente. Arranque del API en Render: unos 2 min desde "Starting service" hasta el puerto (JVM ~65 s, contexto ~35 s).
