@@ -69,7 +69,7 @@ T5 y T6 son independientes entre sí.
 
 ### Fase 2: despliegue automático (mismo PR `ci`)
 
-- [ ] **T3: Jobs `deploy-api` y `deploy-web`** (S, ~30 min)
+- [x] **T3: Jobs `deploy-api` y `deploy-web`** (S, ~30 min)
   - Descripción: `deploy-api` llama a `RENDER_DEPLOY_HOOK_API` con `imgURL=ghcr.io/jorgetroya80/mad-mobility-api:<api-version>` (paso de Code Style de la spec); `deploy-web` llama a `RENDER_DEPLOY_HOOK_WEB` (o a la API REST de Render, según el Assumption 3). `timeout-minutes` en los dos y `permissions: {}`. No cambian los `if` ni los `needs`. Secretos creados en GitHub con `gh secret set`.
   - Aceptación:
     - SC10: con `DEPLOY_ENABLED` sin definir, los jobs aparecen como omitidos.
@@ -153,3 +153,4 @@ Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
 - 2026-10-28: T2, Assumption 3 comprobado: el static site tiene Deploy Hook. Assumption 2 falla en la primera prueba: tras 18 min dormido, la primera respuesta tarda unos 7 min porque el API arranca dos veces. El primer intento muere sin log tras el contexto de Spring (14:25:31); el segundo arranca a las 14:29:11 y da "Started in 63.9 seconds". Sin "Out of memory" en los logs (falta mirar Events). Causas posibles: memoria (heap al 75 % de 512 MB) o el health check, que reinicia el API antes de que abra el puerto. Arreglo en `render.yaml` sin tocar la imagen: `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:TieredStopAtLevel=1 -Xss512k`. Pendiente: Manual Sync y deploy, línea "Started" nueva y repetir el arranque en frío.
 - 2026-10-28: T2, Assumption 2 y 5 comprobados con el ajuste de la JVM: Spring arranca en 31 s (antes 64-72 s). Con el API dormido desde las 15:50:38 UTC, la primera petición por `/api` responde 200 en 162 s, sin doble arranque (SC4 < 3 min, con poco margen). Una pestaña de la web abierta mantiene el API despierto (consulta cada 60 s).
 - 2026-10-28: T2 hecha y checkpoint del spike superado. El usuario revisa la web en móvil y a 1280 px: estaciones, panel lateral y atribución de OpenFreeMap y OpenStreetMap (SC1, SC7 parcial). SC2, SC8 y SC9 comprobados con `curl`.
+- 2026-10-28: T3 hecha con el agente `devops-engineer` y las reglas de `github-actions-creator`. `deploy-api` llama al hook con `imgURL` (versión exacta) y `deploy-web` hace `POST` al hook del static site; `permissions: {}`, `timeout-minutes: 5`, sin `${{ }}` en `run:`. `render.yaml` pasa la imagen a `:latest`: con un tag fijo, un Sync del Blueprint volvería a esa versión. Secretos `RENDER_DEPLOY_HOOK_API` y `RENDER_DEPLOY_HOOK_WEB` creados por el usuario. `actionlint` sin errores. La primera ejecución real se comprueba en T5 y T6.
