@@ -12,7 +12,7 @@ Desplegar el API (imagen de ghcr.io) y la web (`web-dist.tar.gz` de la release) 
 
 - **Tres ramas y tres PRs**, porque un PR que publica solo puede tocar `api/` o `web/` (`release-scope`):
   - `ci/render-deploy` → PR `ci: deploy api and web to render` (T2-T4). No publica: puede tocar los READMEs de `api/` y `web/`.
-  - `fix/api-forwarded-headers` → PR `fix(api): use forwarded headers behind the render proxy` (T5).
+  - `fix/api-client-ip` → PR `fix(api): rate limit by the real client ip behind render` (T5).
   - `fix/web-emt-attribution` → PR `fix(web): credit emt as powered by emt de madrid` (T6).
 - **Un commit por tarea.** Cuerpos de los squash en prosa, sin bloques de código (release-please).
 - **Primero lo arriesgado (T2):** el Blueprint se crea en Render desde la rama `ci/render-deploy` con lo que ya está publicado (`api` 0.6.0, `web` 0.3.0). Así se comprueban los Assumptions 1, 3, 4, 5 y 7 antes de escribir los jobs. Si el rewrite falla (Assumption 1), se para, se cambia la spec al plan B (URL absoluta + CORS) y se replanifica.
@@ -27,7 +27,7 @@ T1 alta de la app en MobilityLabs (manual)
  └── T2 Blueprint + build de la web, creado desde la rama (spike)
        └── T3 jobs deploy-* con deploy hooks
              └── T4 READMEs, PR de ci, merge y DEPLOY_ENABLED=true
-                   ├── T5 fix(api) forwarded headers → release api 0.6.1 → deploy-api
+                   ├── T5 fix(api) IP del cliente      → release api 0.6.1 → deploy-api
                    └── T6 fix(web) atribución EMT   → release web 0.3.1 → deploy-web
                          └── T7 SC1-SC10 en producción y cierre
 ```
@@ -94,14 +94,14 @@ T5 y T6 son independientes entre sí.
 
 ### Fase 3: cambios de código, cada uno con su release
 
-- [ ] **T5: Cabeceras de proxy en el API** (S, ~30 min)
-  - Descripción: `server.forward-headers-strategy: framework` en `application.yml`. Test en `RateLimitFilterMvcTest`: con capacidad baja, dos `X-Forwarded-For` distintos tienen cubos independientes y sin la cabecera se usa `remoteAddr`. PR `fix(api): …`; al mergear el PR de release `api` 0.6.1, `deploy-api` despliega esa imagen.
+- [ ] **T5: IP del cliente detrás de Render** (S, ~30 min)
+  - Descripción: `RateLimitFilter` usa `True-Client-Ip` como clave del cubo y, si no está o viene vacía, `remoteAddr`. Tests (TDD) en `RateLimitFilterMvcTest`: con capacidad baja, dos `True-Client-Ip` distintos tienen cubos independientes; sin la cabecera se usa `remoteAddr`; un `X-Forwarded-For` distinto no da un cubo nuevo. PR `fix(api): …`; al mergear el PR de release `api` 0.6.1, `deploy-api` despliega esa imagen.
   - Aceptación:
     - El test falla sin el cambio de configuración y pasa con él.
     - SC3 en producción: el `429` de una IP no afecta a otra (móvil con datos y portátil).
     - SC5: `/info` devuelve `build.version` 0.6.1.
   - Verificación: `./api/gradlew -p api test --tests '*RateLimitFilterMvcTest'`; `./api/gradlew -p api build`; `curl -s https://<api>.onrender.com/info`.
-  - Archivos: `api/src/main/resources/application.yml`, `api/src/test/kotlin/io/github/jorgetroya80/madmobility/shared/web/RateLimitFilterMvcTest.kt`.
+  - Archivos: `api/src/main/kotlin/io/github/jorgetroya80/madmobility/shared/web/RateLimitFilter.kt`, `api/src/test/kotlin/io/github/jorgetroya80/madmobility/shared/web/RateLimitFilterMvcTest.kt`.
   - Dependencias: checkpoint del pipeline.
 
 - [ ] **T6: Atribución "Powered by EMT de Madrid"** (XS, ~15 min)
@@ -149,3 +149,4 @@ Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
 - 2026-10-28: T1 en curso. App "Mad Mobility" registrada en MobilityLabs, pendiente de aprobación. Mientras tanto, T2 usa `EMT_EMAIL` y `EMT_PASSWORD` en Render (riesgo previsto); al aprobarse, se cambian por `EMT_CLIENT_ID` y `EMT_PASS_KEY` y se cierra T1.
 - 2026-10-28: T1 hecha. App "Mad Mobility" aprobada. Con solo `EMT_CLIENT_ID` y `EMT_PASS_KEY`, `bootRun` en local y el API en Render hacen login y `/v1/bicimad/stations` devuelve 200. En Render el email y la contraseña quedan vacíos. Si falta una de las dos claves de la app, el API no arranca (`EMT_PASS_KEY is missing (EMT_CLIENT_ID is set)`) y Render mantiene la versión anterior.
 - 2026-10-28: T2 en curso. Render ejecuta `pnpm install` antes del build command de un static site, y GitHub Packages responde 401 sin token; se desactiva con `SKIP_INSTALL_DEPS=true`. `/` necesita su propia cabecera `no-cache` (el navegador no pide `/index.html`). Assumption 1 comprobado: el rewrite `/api/*` pasa ruta completa y query string, el cliente recibe `ETag` y 304, y los assets se sirven antes que el rewrite `/*`. Con la regla temporal `/echo/*`: `If-None-Match` no llega al destino (el 304 lo resuelve el CDN de Render); `X-Forwarded-For` llega con la IP del cliente a la izquierda, pero un cliente puede anteponer otra; `True-Client-Ip` y `Cf-Connecting-Ip` llevan la IP real y Cloudflare sobrescribe los valores que manda el cliente. Arranque del API en Render: unos 2 min desde "Starting service" hasta el puerto (JVM ~65 s, contexto ~35 s).
+- 2026-10-28: T5 cambia a `True-Client-Ip` (opción A del usuario; ver changelog de la spec).

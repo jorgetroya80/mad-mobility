@@ -43,7 +43,7 @@ Por comprobar en la fase de plan:
 - Imagen: `ghcr.io/jorgetroya80/mad-mobility-api` (Java 25 JRE, ya publicada por `publish-api`).
 - Web: `web-dist.tar.gz` de la GitHub Release `web-v<versión>` (ya adjuntado por `publish-web`).
 - GitHub Actions: `curl` a los deploy hooks; sin acciones nuevas de terceros.
-- Spring Boot 4.1.1: `server.forward-headers-strategy`.
+- Spring Boot 4.1.1: `RateLimitFilter` lee `True-Client-Ip`.
 
 ## Commands
 
@@ -75,8 +75,8 @@ curl -s "https://<web>.onrender.com/api/v1/bicimad/stations?near=40.4168,-3.7038
 render.yaml                         Blueprint: API (image) y web (static)
 scripts/render-web-build.sh         build command del static site: descarga web-dist.tar.gz
 .github/workflows/release.yml       deploy-api y deploy-web con deploy hooks
-api/src/main/resources/application.yml   server.forward-headers-strategy
-api/src/test/kotlin/.../shared/web/RateLimitFilterMvcTest.kt   cubos por X-Forwarded-For
+api/src/main/kotlin/.../shared/web/RateLimitFilter.kt   IP del cliente desde True-Client-Ip
+api/src/test/kotlin/.../shared/web/RateLimitFilterMvcTest.kt   cubos por True-Client-Ip
 web/src/shared/ui/data-attribution/      texto "Powered by EMT de Madrid" y su test
 README.md, api/README.md, web/README.md  URL pública y despliegue
 ```
@@ -142,7 +142,7 @@ Los jobs de despliegue no imprimen la URL del hook:
 
 | Qué | Cómo | Dónde |
 | --- | --- | --- |
-| Rate limit detrás del proxy | `MockMvc` con dos `X-Forwarded-For` distintos: el `429` de uno no afecta al otro; sin cabecera se sigue usando `remoteAddr` | `RateLimitFilterMvcTest` |
+| Rate limit detrás del proxy | `MockMvc` con dos `True-Client-Ip` distintos: el `429` de uno no afecta al otro; sin cabecera (o vacía) se sigue usando `remoteAddr`; `X-Forwarded-For` se ignora | `RateLimitFilterMvcTest` |
 | Atribución | Testing Library: texto "Powered by EMT de Madrid" y enlace a `https://www.emtmadrid.es` | `DataAttribution.test.tsx` |
 | Build del static site | Ejecutar `scripts/render-web-build.sh` en local y comparar `dist/index.html` con el del tarball | Manual, en el PR de `ci` |
 | Workflows y Blueprint | `actionlint` (ya en CI) y validación del Blueprint (Assumption 7) | CI y local |
@@ -154,8 +154,9 @@ Sin tests end-to-end, como en el resto del proyecto. La cobertura de JaCoCo y Vi
 
 ### API (`fix(api)`, sale en una release de `api`)
 
-- `server.forward-headers-strategy: framework`. Sin esto, `RateLimitFilter` usa `request.remoteAddr`, que detrás del proxy de Render es siempre la IP del proxy: todos los usuarios compartirían un único cubo de 60 peticiones.
-- Límite conocido: la IP sale de `X-Forwarded-For` y un cliente puede falsearla. Se acepta en un proyecto de portfolio, porque el límite protege el cupo de la EMT y la caché de 60 s ya lo cubre.
+- `RateLimitFilter` toma la IP del cliente de la cabecera `True-Client-Ip` y, si no está o viene vacía, de `request.remoteAddr`. Sin esto, detrás del proxy de Render `remoteAddr` es siempre la IP del proxy: todos los usuarios compartirían un único cubo de 60 peticiones.
+- Por qué `True-Client-Ip` y no `X-Forwarded-For` (decisión del usuario, 2026-10-28, tras la prueba de T2): Cloudflare, delante de Render, escribe en `True-Client-Ip` la IP real y sobrescribe el valor que mande el cliente; en `X-Forwarded-For` conserva lo que mande el cliente a la izquierda, así que se puede falsear. Las peticiones directas a `<api>.onrender.com` también pasan por Cloudflare.
+- Límite conocido: la cabecera es propia de Render/Cloudflare. En otra plataforma sin ella, el filtro vuelve a `remoteAddr` (un cubo compartido), sin romper nada. En local, un cliente puede mandar la cabecera; da igual, porque no hay proxy.
 
 ### Web (`fix(web)`, sale en una release de `web`)
 
@@ -205,4 +206,5 @@ Cada PR de release toca solo `api/` o solo `web/` (ver la regla de `ci.yml`):
 
 - 2026-10-28: creada. Plataforma elegida: Render para el API y la web (decisión del usuario). Incluye la revisión de las condiciones de uso de MobilityLabs y OpenFreeMap.
 - 2026-10-28: revisión con la skill `spec-driven-development`: añadidas Tech Stack, Commands, Project Structure, Code Style y Testing Strategy; build command en `scripts/render-web-build.sh`; `autoDeployTrigger: off` en el static site; orden de los rewrites y Assumption 7 (validar el Blueprint).
+- 2026-10-28: rate limit por `True-Client-Ip` en vez de `server.forward-headers-strategy` + `X-Forwarded-For` (decisión del usuario, opción A), tras comprobar en T2 que `X-Forwarded-For` se puede falsear detrás de Render.
 - 2026-10-28: aprobada por el usuario; plan en [PLAN-deploy.md](../plans/PLAN-deploy.md).
