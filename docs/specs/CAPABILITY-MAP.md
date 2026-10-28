@@ -1,7 +1,7 @@
 # Capability Map: BiciMAD Now
 
 - Created: 2026-10-03
-- Status: **draft** (2026-10-03)
+- Status: **approved** (2026-10-28)
 
 Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene su propia especificación en esta carpeta (`SPEC-<id>.md`). Los ids son estables y no se renombran.
 
