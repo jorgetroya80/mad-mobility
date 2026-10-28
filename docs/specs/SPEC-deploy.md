@@ -1,7 +1,7 @@
 # Spec: deploy
 
 - Created: 2026-10-28
-- Status: **approved** (2026-10-28)
+- Status: **implemented** (2026-10-28)
 - Plan: [PLAN-deploy.md](../plans/PLAN-deploy.md)
 
 Módulo `deploy` del [Capability Map](CAPABILITY-MAP.md). Publica el API y la web en [Render](https://render.com), en el plan gratuito, y completa los jobs `deploy-api` y `deploy-web` de `release.yml`, que hoy son placeholders.
@@ -213,3 +213,4 @@ Cada PR de release toca solo `api/` o solo `web/` (ver la regla de `ci.yml`):
 - 2026-10-28: aprobada por el usuario; plan en [PLAN-deploy.md](../plans/PLAN-deploy.md).
 - 2026-10-28: implementación de T1-T4 en la rama `ci/render-deploy`. Cambios sobre lo escrito: `SKIP_INSTALL_DEPS=true` en el static site (Render ejecuta `pnpm install` por defecto y GitHub Packages responde 401), cabecera `no-cache` también en `/`, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:TieredStopAtLevel=1 -Xss512k` en el API (arranque en frío de ~7 min a 162 s) e imagen `:latest` en el Blueprint (el hook fija la versión). Detalle en el changelog del plan.
 - 2026-10-28: la web llama al API directamente con CORS (plan B; decisión del usuario, opción 1) en lugar del rewrite `/api/*`, porque con el rewrite todos los usuarios compartían el cubo del rate limit (ver Decisiones). Cambian Decisiones, Code Style, Infraestructura y SC2.
+- 2026-10-28: implementada. SC1-SC10 comprobados en producción (detalle en el changelog del plan). Se quita el rewrite `/api/*` de `render.yaml`; un sync del Blueprint no borra reglas, así que también se quita en el panel de Render.
