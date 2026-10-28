@@ -196,7 +196,7 @@ Unas 8 h, en 3 sesiones: Fase 1 (~3,5 h), Fase 2 (~1,5 h), Fase 3 (~2,75 h), Fas
 - T1-T10 en la rama `feat/api-bicimad`, un commit por tarea, en el PR #36 (squash merge).
 - SC1-SC11 y SC13 verificados: `./gradlew build` (182 tests, JaCoCo ≥ 80 % en `shared` y en `modules/bicimad`, este al 99 %), `generateOpenApi` + `redocly lint` sin avisos, `dockerImageTest`, `bootRun` contra la EMT real y `./gradlew smokeTest` (678 estaciones válidas, 0 descartadas).
 - SC12 confirmado en la release `api-v0.2.0` (2026-10-05): `publish-api-client` publicó `@jorgetroya80/bicimad-client@0.2.0` en GitHub Packages sin configuración manual, junto con la imagen 0.2.0.
-- Pendiente: el README y la licencia del paquete del cliente (decisión del usuario).
+- README y licencia (MIT) del paquete del cliente en `api/client/` (2026-10-28).
 
 ## Changelog
 
