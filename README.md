@@ -7,14 +7,17 @@
 
 Madrid mobility data, starting with BiciMAD, built on the EMT Madrid MobilityLabs API.
 
+**Live:** [mad-mobility-web.onrender.com](https://mad-mobility-web.onrender.com) (free hosting: after 15 minutes without visits the API sleeps, and the first visit takes up to 3 minutes).
+
 ## Overview
 
 What works today:
 
 - **BiciMAD stations API**: list all stations and look one up by its number (`/v1/bicimad/stations`, `/v1/bicimad/stations/{number}`).
 - **Typed client**: every API release publishes `@jorgetroya80/bicimad-client` to GitHub Packages, generated from the OpenAPI contract.
+- **Web map**: nearby BiciMAD stations with live bikes and free docks, station search and favorites.
 
-Coming next: a web map showing live station availability.
+Coming next: EMT buses.
 
 ## Tech stack
 
@@ -64,7 +67,7 @@ See each app's README for its internal architecture.
 
 You need JDK 25 and EMT MobilityLabs credentials for the API, and Node 24 plus a GitHub token with `read:packages` for the web app (see [web/README.md](web/README.md)).
 
-1. Copy the env template and fill in your credentials (`EMT_EMAIL` and `EMT_PASSWORD`):
+1. Copy the env template and fill in your credentials (`EMT_EMAIL` and `EMT_PASSWORD`, or a registered app's `EMT_CLIENT_ID` and `EMT_PASS_KEY`):
 
    ```bash
    cp api/.env.example api/.env.local
@@ -93,6 +96,18 @@ You need JDK 25 and EMT MobilityLabs credentials for the API, and Node 24 plus a
    Without the API, `pnpm --filter web dev:mock` serves fake data from the browser.
 
 Swagger UI is at `localhost:8080/swagger-ui.html` while `bootRun` is running. Run the tests with `./gradlew test` (no credentials needed).
+
+## Deployment
+
+Both apps run on [Render](https://render.com)'s free plan, described in [`render.yaml`](render.yaml) (a Render Blueprint). Render never builds anything: it runs what each release already published.
+
+- **API** (`mad-mobility-api`): a web service that runs the Docker image `ghcr.io/jorgetroya80/mad-mobility-api`. On an `api` release, the `deploy-api` job calls the service's deploy hook with that release's image tag.
+- **Web** (`mad-mobility-web`): a static site. Its build ([`scripts/render-web-build.sh`](scripts/render-web-build.sh)) downloads the `web-dist.tar.gz` of the current `web` release. On a `web` release, the `deploy-web` job calls its deploy hook.
+- **Same origin**: the static site rewrites `/api/*` to the API, like the Vite proxy in development, so there is no CORS.
+
+The `deploy-*` jobs in `release.yml` only run when the repository variable `DEPLOY_ENABLED` is `true`. They need the secrets `RENDER_DEPLOY_HOOK_API` and `RENDER_DEPLOY_HOOK_WEB`. The EMT credentials (`EMT_CLIENT_ID` and `EMT_PASS_KEY`) live only in Render.
+
+To recreate it: in Render, **New > Blueprint** on this repo (branch `main`), fill in the EMT credentials, then copy each service's deploy hook into the GitHub secrets above. Details in [SPEC-deploy.md](docs/specs/SPEC-deploy.md).
 
 ## License
 

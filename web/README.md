@@ -12,6 +12,8 @@ Shows BiciMAD stations on a map of Madrid, with how many bikes and free docks ea
 - Search by station number; favorites stored in the browser (`localStorage`).
 - Responsive: bottom sheet on mobile, side panel from tablet up.
 
+Live at [mad-mobility-web.onrender.com](https://mad-mobility-web.onrender.com). Each release attaches `web-dist.tar.gz` (built with the default `VITE_API_BASE_URL=/api`) and deploys it to Render, which serves it as is and rewrites `/api/*` to the API; see [Deployment](../README.md#deployment).
+
 ## Requirements
 
 - Node 24 and pnpm (via `corepack enable`).
