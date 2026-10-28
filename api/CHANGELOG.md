@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.6.0...api-v0.6.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **api:** rate limit by the real client ip behind render ([#58](https://github.com/jorgetroya80/mad-mobility/issues/58)) ([71fdc23](https://github.com/jorgetroya80/mad-mobility/commit/71fdc23293b827d949d5e1d90ed440d4a595493c))
+
 ## [0.6.0](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.5.0...api-v0.6.0) (2026-10-27)
 
 
