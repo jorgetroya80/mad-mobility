@@ -12,7 +12,7 @@ Shows BiciMAD stations on a map of Madrid, with how many bikes and free docks ea
 - Search by station number; favorites stored in the browser (`localStorage`).
 - Responsive: bottom sheet on mobile, side panel from tablet up.
 
-Live at [mad-mobility-web.onrender.com](https://mad-mobility-web.onrender.com). Each release attaches `web-dist.tar.gz` (built with the default `VITE_API_BASE_URL=/api`) and deploys it to Render, which serves it as is and rewrites `/api/*` to the API; see [Deployment](../README.md#deployment).
+Live at [mad-mobility-web.onrender.com](https://mad-mobility-web.onrender.com). Each release attaches `web-dist.tar.gz` and deploys it to Render, which serves it as is. In that build the browser calls the API directly at `https://mad-mobility-api.onrender.com`, which allows the web's origin through CORS; see [Deployment](../README.md#deployment).
 
 ## Requirements
 
@@ -44,7 +44,7 @@ pnpm --filter web build      # type-check and build to web/dist
 pnpm --filter web preview    # serve web/dist
 ```
 
-`VITE_API_BASE_URL` sets the API base at build time: a path or an `http(s)` URL, `/api` by default.
+`VITE_API_BASE_URL` sets the API base at build time: a path or an `http(s)` URL, `/api` by default. [`.env.production`](.env.production) sets it to the deployed API for `build`, so `preview` calls that API too (CORS only allows the deployed web, so the requests fail from localhost); `dev` and `dev:mock` keep `/api`.
 
 ## Architecture
 
