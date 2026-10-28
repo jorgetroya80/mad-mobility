@@ -78,7 +78,7 @@ T5 y T6 son independientes entre sí.
   - Archivos: `.github/workflows/release.yml`.
   - Dependencias: T2.
 
-- [ ] **T4: Documentación y PR de `ci`** (S, ~30 min)
+- [x] **T4: Documentación y PR de `ci`** (S, ~30 min)
   - Descripción: URL pública y sección de despliegue en `README.md`, `api/README.md` y `web/README.md` (cómo recrear el Blueprint, qué secretos hay, plan B si Render cambia). Fila `deploy` de `CAPABILITY-MAP.md` con su spec. Changelog de spec y plan. PR `ci: deploy api and web to render`. Tras el merge: cambiar la rama del Blueprint a `main` y `gh variable set DEPLOY_ENABLED --body true`.
   - Aceptación:
     - CI en verde (`pr-title`, `release-scope`, `ci-ok`).
@@ -89,8 +89,8 @@ T5 y T6 son independientes entre sí.
 
 ### Checkpoint: pipeline
 
-- [ ] PR de `ci` mergeado, `DEPLOY_ENABLED=true` y Blueprint en `main`.
-- [ ] Revisión del usuario antes de los fixes.
+- [x] PR de `ci` mergeado, `DEPLOY_ENABLED=true` y Blueprint en `main`.
+- [x] Revisión del usuario antes de los fixes.
 
 ### Fase 3: cambios de código, cada uno con su release
 
@@ -155,3 +155,4 @@ Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
 - 2026-10-28: T2 hecha y checkpoint del spike superado. El usuario revisa la web en móvil y a 1280 px: estaciones, panel lateral y atribución de OpenFreeMap y OpenStreetMap (SC1, SC7 parcial). SC2, SC8 y SC9 comprobados con `curl`.
 - 2026-10-28: T3 hecha con el agente `devops-engineer` y las reglas de `github-actions-creator`. `deploy-api` llama al hook con `imgURL` (versión exacta) y `deploy-web` hace `POST` al hook del static site; `permissions: {}`, `timeout-minutes: 5`, sin `${{ }}` en `run:`. `render.yaml` pasa la imagen a `:latest`: con un tag fijo, un Sync del Blueprint volvería a esa versión. Secretos `RENDER_DEPLOY_HOOK_API` y `RENDER_DEPLOY_HOOK_WEB` creados por el usuario. `actionlint` sin errores. La primera ejecución real se comprueba en T5 y T6.
 - 2026-10-28: T4: READMEs (raíz, `api`, `web`) con la URL pública y la sección Deployment; fila `deploy` de `CAPABILITY-MAP.md` con su spec, en approved. PR `ci: deploy api and web to render`.
+- 2026-10-28: T4 hecha. PR #57 mergeado (`e011ddb`); el Blueprint de Render sigue a `main` y `DEPLOY_ENABLED=true`. La ejecución de Release del merge deja `deploy-*` omitidos (sin release).
