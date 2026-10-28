@@ -152,9 +152,7 @@ describe('MapPage', () => {
         expect(
           await within(region).findByRole('region', { name: 'Cerca de ti' }),
         ).toBeInTheDocument();
-        expect(
-          within(region).getByRole('link', { name: 'EMT Madrid MobilityLabs' }),
-        ).toBeInTheDocument();
+        expect(within(region).getByRole('link', { name: 'EMT de Madrid' })).toBeInTheDocument();
       },
     );
   });

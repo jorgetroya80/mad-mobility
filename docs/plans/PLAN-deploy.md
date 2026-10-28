@@ -94,7 +94,7 @@ T5 y T6 son independientes entre sí.
 
 ### Fase 3: cambios de código, cada uno con su release
 
-- [ ] **T5: IP del cliente detrás de Render** (S, ~30 min)
+- [x] **T5: IP del cliente detrás de Render** (S, ~30 min)
   - Descripción: `RateLimitFilter` usa `True-Client-Ip` como clave del cubo y, si no está o viene vacía, `remoteAddr`. Tests (TDD) en `RateLimitFilterMvcTest`: con capacidad baja, dos `True-Client-Ip` distintos tienen cubos independientes; sin la cabecera se usa `remoteAddr`; un `X-Forwarded-For` distinto no da un cubo nuevo. PR `fix(api): …`; al mergear el PR de release `api` 0.6.1, `deploy-api` despliega esa imagen.
   - Aceptación:
     - El test falla sin el cambio de configuración y pasa con él.
@@ -156,3 +156,4 @@ Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
 - 2026-10-28: T3 hecha con el agente `devops-engineer` y las reglas de `github-actions-creator`. `deploy-api` llama al hook con `imgURL` (versión exacta) y `deploy-web` hace `POST` al hook del static site; `permissions: {}`, `timeout-minutes: 5`, sin `${{ }}` en `run:`. `render.yaml` pasa la imagen a `:latest`: con un tag fijo, un Sync del Blueprint volvería a esa versión. Secretos `RENDER_DEPLOY_HOOK_API` y `RENDER_DEPLOY_HOOK_WEB` creados por el usuario. `actionlint` sin errores. La primera ejecución real se comprueba en T5 y T6.
 - 2026-10-28: T4: READMEs (raíz, `api`, `web`) con la URL pública y la sección Deployment; fila `deploy` de `CAPABILITY-MAP.md` con su spec, en approved. PR `ci: deploy api and web to render`.
 - 2026-10-28: T4 hecha. PR #57 mergeado (`e011ddb`); el Blueprint de Render sigue a `main` y `DEPLOY_ENABLED=true`. La ejecución de Release del merge deja `deploy-*` omitidos (sin release).
+- 2026-10-28: T5 hecha. PR #58 (TDD: dos de los tres tests nuevos fallaban antes del cambio) y release `api` 0.6.1 (PR #59). Primera ejecución real de `deploy-api`: llama al hook con `imgURL=...:0.6.1`, el log muestra `HOOK: ***`, y `/info` devuelve 0.6.1 unos 90 s después (SC5). En producción, 120 peticiones a la vez desde una IP: 90 sin cabecera dan 37 × 429 y 30 con `X-Forwarded-For` distintos dan 21 × 429, así que cambiar esa cabecera ya no salta el límite. Falta ver dos IPs reales con cubos separados (SC3), en T7.
