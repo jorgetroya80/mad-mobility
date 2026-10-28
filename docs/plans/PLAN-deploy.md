@@ -1,7 +1,7 @@
 # Plan: deploy
 
 - Created: 2026-10-28
-- Status: **approved** (2026-10-28)
+- Status: **implemented** (2026-10-28)
 - Spec: [SPEC-deploy.md](../specs/SPEC-deploy.md)
 
 ## Overview
@@ -124,7 +124,7 @@ T5 y T6 son independientes entre sí.
   - Archivos: `render.yaml`, `docs/specs/SPEC-deploy.md`, este plan.
   - Dependencias: T6.
 
-- [ ] **T8: La web llama al API directamente** (XS, ~20 min)
+- [x] **T8: La web llama al API directamente** (XS, ~20 min)
   - Descripción: `web/.env.production` con `VITE_API_BASE_URL=https://mad-mobility-api.onrender.com`; `web/README.md` lo explica. PR `fix(web): call the api directly in production`; al mergear el PR de release `web` 0.3.2, `deploy-web` la despliega.
   - Aceptación:
     - El bundle de `pnpm --filter web run build` contiene la URL del API; `dev` y los tests siguen usando `/api`.
@@ -133,7 +133,7 @@ T5 y T6 son independientes entre sí.
   - Archivos: `web/.env.production`, `web/README.md`.
   - Dependencias: T7.
 
-- [ ] **T9: Quitar el rewrite `/api`, comprobación final y cierre** (S, ~30 min)
+- [x] **T9: Quitar el rewrite `/api`, comprobación final y cierre** (S, ~30 min)
   - Descripción: quitar la regla `/api/*` de `render.yaml` y la mención del mismo origen en los READMEs; recorrer SC1-SC10 en producción; spec y plan a **implemented**; fila `deploy` de `CAPABILITY-MAP.md` a implemented; sección Deployment de `docs/ideas/bicimad-now.md` con Render. PR `ci: …`.
   - Aceptación:
     - `/api/...` en la web ya no llega al API (sirve `index.html`).
@@ -144,8 +144,8 @@ T5 y T6 son independientes entre sí.
 
 ### Checkpoint final
 
-- [ ] SC1-SC10 de la spec comprobados.
-- [ ] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
+- [x] SC1-SC10 de la spec comprobados.
+- [x] Spec y plan pasan a **implemented**; `CAPABILITY-MAP.md` actualizado.
 
 ## Riesgos
 
@@ -180,3 +180,5 @@ Un solo desarrollador: orden T1 → T9. T5 y T6 son independientes entre sí.
 - 2026-10-28: T6 hecha. PR #60 (TDD: el test de `DataAttribution` falló antes del cambio) y release `web` 0.3.1 (PR #61). Primera ejecución real de `deploy-web`: `POST` al hook, el log muestra `HOOK: ***`, y a los 37 s el `index.html` servido es idéntico al del tarball de `web-v0.3.1` (SC6). El bundle servido contiene "Powered by" y ningún `EMT_` (SC7, SC9).
 - 2026-10-28: T7 original parada. SC3 falla: con la misma IP, `/api` por el rewrite da 429 y la llamada directa al API, 200; durante 3 min de ráfaga desde una IP, el móvil con datos (otra IP) no carga. El rewrite hace una segunda petición desde Render que vuelve a pasar por Cloudflare y le pone a `True-Client-Ip` la IP de Render. El usuario elige el plan B (llamada directa con CORS): T7 pasa a ser CORS en el API, T8 la URL directa en la web y T9 el cierre, que también quita el rewrite. SC1, SC2 (con el rewrite), SC4-SC10 ya comprobados.
 - 2026-10-28: T7 hecha. PR #62. El sync del Blueprint falla con "not found: render.yaml": un Blueprint de Render no puede cambiar de rama y el suyo seguía en `ci/render-deploy`, borrada al mergear el PR #57. Por eso el cambio de rama de T4 no llegó a aplicarse. `CORS_ALLOWED_ORIGINS` se añade a mano en el servicio, con el mismo valor que `render.yaml`. Comprobado: con `Origin` de la web, `GET` y preflight devuelven `Access-Control-Allow-Origin` y `Access-Control-Expose-Headers: ETag, X-Request-Id`; con otro `Origin`, Spring responde 403. Pendiente para T9: recrear el Blueprint desde `main`.
+- 2026-10-28: T8 hecha. PR #63 y release `web` 0.3.2 (PR #64); `deploy-web` la publica y la URL del API va en el chunk `config-*.js` servido. El Blueprint vuelve a sincronizar desde `main` (el usuario cambia su rama en Blueprints; Manual Sync sin "not found"). SC3 comprobado: durante 3 min de ráfaga directa al API desde una IP, que recibe 429, el móvil con datos (otra IP) carga las estaciones y su detalle.
+- 2026-10-28: T9 hecha. Rewrite `/api/*` fuera de `render.yaml`, del README y del panel de Render. SC1-SC10 en producción: SC1 web en móvil y escritorio, `?station` directo; SC2 la web llama al API con CORS (`Access-Control-Allow-Origin` para su origen, 403 para otros); SC3 una IP en ráfaga recibe 429 mientras otra carga; SC4 arranque en frío en 162 s; SC5 `deploy-api` despliega 0.6.1; SC6 `index.html` igual al tarball de `web-v0.3.1` y `web-v0.3.2`; SC7 "Powered by EMT de Madrid" y atribución del mapa; SC8 `no-cache` en `/` y `/index.html`, `immutable` en `/assets/*`; SC9 sin secretos en `render.yaml`, bundle ni logs; SC10 `deploy-*` omitidos sin `DEPLOY_ENABLED`. Spec, plan y fila `deploy` de `CAPABILITY-MAP.md` en implemented.

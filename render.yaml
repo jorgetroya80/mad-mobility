@@ -45,10 +45,6 @@ services:
       - key: SKIP_INSTALL_DEPS
         value: 'true'
     routes:
-      # Same origin for the API, like the Vite proxy in development (rules apply in order)
-      - type: rewrite
-        source: /api/*
-        destination: https://mad-mobility-api.onrender.com/*
       # Single-page app: any other path that is not a file serves index.html
       - type: rewrite
         source: /*

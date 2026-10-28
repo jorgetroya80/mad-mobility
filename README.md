@@ -103,11 +103,11 @@ Both apps run on [Render](https://render.com)'s free plan, described in [`render
 
 - **API** (`mad-mobility-api`): a web service that runs the Docker image `ghcr.io/jorgetroya80/mad-mobility-api`. On an `api` release, the `deploy-api` job calls the service's deploy hook with that release's image tag.
 - **Web** (`mad-mobility-web`): a static site. Its build ([`scripts/render-web-build.sh`](scripts/render-web-build.sh)) downloads the `web-dist.tar.gz` of the current `web` release. On a `web` release, the `deploy-web` job calls its deploy hook.
-- **Same origin**: the static site rewrites `/api/*` to the API, like the Vite proxy in development, so there is no CORS.
+- **Direct calls**: the web's production build ([`web/.env.production`](web/.env.production)) calls the API, which allows the web's origin through CORS (`CORS_ALLOWED_ORIGINS` in `render.yaml`). The API rate-limits each client by the `True-Client-Ip` header that Cloudflare, in front of Render, sets to the real IP. A static-site rewrite of `/api/*` was tried first and dropped: its second hop through Cloudflare made every user look like Render's IP.
 
 The `deploy-*` jobs in `release.yml` only run when the repository variable `DEPLOY_ENABLED` is `true`. They need the secrets `RENDER_DEPLOY_HOOK_API` and `RENDER_DEPLOY_HOOK_WEB`. The EMT credentials (`EMT_CLIENT_ID` and `EMT_PASS_KEY`) live only in Render.
 
-To recreate it: in Render, **New > Blueprint** on this repo (branch `main`), fill in the EMT credentials, then copy each service's deploy hook into the GitHub secrets above. Details in [SPEC-deploy.md](docs/specs/SPEC-deploy.md).
+To recreate it: in Render, **New > Blueprint** on this repo (branch `main`), fill in the EMT credentials, then copy each service's deploy hook into the GitHub secrets above. The Blueprint must track `main`: if its branch is deleted, syncs fail with "not found: render.yaml". A sync does not delete redirect/rewrite rules or env vars removed from `render.yaml`; remove those in the dashboard too. Details in [SPEC-deploy.md](docs/specs/SPEC-deploy.md).
 
 ## License
 

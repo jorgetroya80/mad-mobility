@@ -163,8 +163,8 @@ emt-demo/
 
 ## Deployment
 
-- Plataforma: _por definir_ (requisito: gratuita).
-- Credenciales: email/contraseña en local; registrar la app en MobilityLabs (`X-ClientId` + `passKey`) antes de publicar.
+- Plataforma: [Render](https://render.com), plan gratuito (API como web service con la imagen de ghcr.io, web como static site). Detalle en [SPEC-deploy.md](../specs/SPEC-deploy.md).
+- Credenciales: email/contraseña en local, o la app registrada en MobilityLabs ("Mad Mobility", `X-ClientId` + `passKey`), que es la que usa producción.
 
 ## Open Questions
 
