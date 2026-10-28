@@ -13,6 +13,10 @@ services:
     region: frankfurt
     healthCheckPath: /health/ready
     envVars:
+      # Replaces the image's JAVA_TOOL_OPTIONS on the free instance (512 MB, 0.1 CPU): a smaller
+      # heap leaves room for metaspace and threads, and C1 only (tier 1) starts Spring faster
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=60 -XX:TieredStopAtLevel=1 -Xss512k
       # Registered MobilityLabs app (preferred), or the account email and password until it is
       # approved. Filled once in the Render dashboard, never here.
       - key: EMT_CLIENT_ID
