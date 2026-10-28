@@ -33,7 +33,8 @@ data class RateLimitProperties(
 
 /**
  * Per-IP token bucket for the public API under /v1: each request takes a token, tokens come back
- * lazily from the [Clock] and an empty bucket gets a 429 problem with Retry-After.
+ * lazily from the [Clock] and an empty bucket gets a 429 problem with Retry-After. The IP comes from
+ * [CLIENT_IP_HEADER] when present, otherwise from the remote address.
  */
 @Component
 @Order(RateLimitFilter.ORDER)
@@ -59,7 +60,7 @@ class RateLimitFilter(
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
-        val wait = takeToken(request.remoteAddr)
+        val wait = takeToken(clientIp(request))
         if (wait == null) {
             filterChain.doFilter(request, response)
             return
@@ -67,6 +68,10 @@ class RateLimitFilter(
         rejected.increment()
         reject(request, response, wait)
     }
+
+    // Behind Render, remoteAddr is always the proxy; X-Forwarded-For is not used because a client can prepend to it
+    private fun clientIp(request: HttpServletRequest): String =
+        request.getHeader(CLIENT_IP_HEADER)?.takeIf { it.isNotBlank() }?.trim() ?: request.remoteAddr
 
     /** Takes a token from [client]'s bucket: null when taken, otherwise the wait until the next token. */
     private fun takeToken(client: String): Duration? {
@@ -113,6 +118,9 @@ class RateLimitFilter(
     companion object {
         /** Right after RequestIdFilter, so a 429 carries the request id. */
         const val ORDER = Ordered.HIGHEST_PRECEDENCE + 1
+
+        /** Set by Cloudflare in front of Render to the client's IP, overwriting any value the client sends. */
+        const val CLIENT_IP_HEADER = "True-Client-Ip"
 
         private const val API_PREFIX = "/v1/"
         private const val MAX_CLIENTS = 100_000L
