@@ -46,7 +46,7 @@ T5 y T6 son independientes entre sí.
   - Archivos: ninguno del repo (`api/.env.local` está ignorado).
   - Dependencias: ninguna.
 
-- [ ] **T2: Blueprint y build de la web** (M, ~1 h, **requiere cuenta de Render**)
+- [x] **T2: Blueprint y build de la web** (M, ~1 h, **requiere cuenta de Render**)
   - Descripción: `render.yaml` como en la sección Code Style de la spec, con la imagen `:0.6.0` (T3 cambia el tag en cada despliegue). `scripts/render-web-build.sh` (`set -euo pipefail`) lee la versión de `web` del manifest y descarga y extrae `web-dist.tar.gz` en `dist/`. Push de la rama y creación del Blueprint en Render desde `ci/render-deploy`, rellenando `EMT_CLIENT_ID` y `EMT_PASS_KEY`. Comprobar y anotar en el changelog:
     - Assumption 1: con la regla temporal `/echo/*` llegan `X-Forwarded-For` con la IP del cliente, la query string e `If-None-Match`; `/api/v1/bicimad/stations` responde 200 con `ETag`; un segundo `GET` con `If-None-Match` da 304; `/assets/...` sirve el archivo y no `index.html`.
     - Assumption 2: tras 15 min sin tráfico, la web vuelve a cargar las estaciones sin recargar a mano.
@@ -64,8 +64,8 @@ T5 y T6 son independientes entre sí.
 
 ### Checkpoint: spike
 
-- [ ] Assumptions 1-5 y 7 resueltos y anotados. Si el 1 falla: parar, cambiar la spec al plan B y revisar con el usuario.
-- [ ] Revisión del usuario de la web en `onrender.com`.
+- [x] Assumptions 1-5 y 7 resueltos y anotados. Si el 1 falla: parar, cambiar la spec al plan B y revisar con el usuario.
+- [x] Revisión del usuario de la web en `onrender.com`.
 
 ### Fase 2: despliegue automático (mismo PR `ci`)
 
@@ -152,3 +152,4 @@ Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
 - 2026-10-28: T5 cambia a `True-Client-Ip` (opción A del usuario; ver changelog de la spec).
 - 2026-10-28: T2, Assumption 3 comprobado: el static site tiene Deploy Hook. Assumption 2 falla en la primera prueba: tras 18 min dormido, la primera respuesta tarda unos 7 min porque el API arranca dos veces. El primer intento muere sin log tras el contexto de Spring (14:25:31); el segundo arranca a las 14:29:11 y da "Started in 63.9 seconds". Sin "Out of memory" en los logs (falta mirar Events). Causas posibles: memoria (heap al 75 % de 512 MB) o el health check, que reinicia el API antes de que abra el puerto. Arreglo en `render.yaml` sin tocar la imagen: `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:TieredStopAtLevel=1 -Xss512k`. Pendiente: Manual Sync y deploy, línea "Started" nueva y repetir el arranque en frío.
 - 2026-10-28: T2, Assumption 2 y 5 comprobados con el ajuste de la JVM: Spring arranca en 31 s (antes 64-72 s). Con el API dormido desde las 15:50:38 UTC, la primera petición por `/api` responde 200 en 162 s, sin doble arranque (SC4 < 3 min, con poco margen). Una pestaña de la web abierta mantiene el API despierto (consulta cada 60 s).
+- 2026-10-28: T2 hecha y checkpoint del spike superado. El usuario revisa la web en móvil y a 1280 px: estaciones, panel lateral y atribución de OpenFreeMap y OpenStreetMap (SC1, SC7 parcial). SC2, SC8 y SC9 comprobados con `curl`.
