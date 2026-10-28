@@ -6,8 +6,9 @@ services:
     name: mad-mobility-api
     runtime: image
     image:
-      # deploy-api replaces the tag with each release through the hook's imgURL
-      url: ghcr.io/jorgetroya80/mad-mobility-api:0.6.0
+      # deploy-api pins each release through the hook's imgURL; the Blueprint keeps
+      # latest (publish-api pushes it with every release) so a sync never rolls back to an old tag
+      url: ghcr.io/jorgetroya80/mad-mobility-api:latest
     plan: free
     # Closest region to Madrid; it cannot be changed after the service is created
     region: frankfurt

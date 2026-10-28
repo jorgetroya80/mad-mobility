@@ -174,19 +174,31 @@ jobs:
           tar -czf web-dist.tar.gz -C web/dist .
           gh release upload "$TAG" web-dist.tar.gz --clobber
 
-  # Placeholders until the deploy module picks a platform (set repo variable DEPLOY_ENABLED=true)
+  # Trigger the Render deploy hooks (secrets RENDER_DEPLOY_HOOK_API / RENDER_DEPLOY_HOOK_WEB);
+  # they only run when the repo variable DEPLOY_ENABLED is 'true'
   deploy-api:
     name: deploy-api
     needs: [release-please, publish-api]
     if: vars.DEPLOY_ENABLED == 'true' && needs.publish-api.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
     steps:
-      - run: echo "Deploy api ${{ needs.release-please.outputs.api-version }} (platform not defined yet)"
+      - name: Trigger the Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+          IMAGE: ghcr.io/jorgetroya80/mad-mobility-api:${{ needs.release-please.outputs.api-version }}
+        run: curl --fail --silent --show-error --get --data-urlencode "imgURL=$IMAGE" "$HOOK" > /dev/null
 
   deploy-web:
     name: deploy-web
     needs: [release-please, publish-web]
     if: vars.DEPLOY_ENABLED == 'true' && needs.publish-web.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
     steps:
-      - run: echo "Deploy web ${{ needs.release-please.outputs.web-version }} (platform not defined yet)"
+      - name: Trigger the Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}
+        run: curl --fail --silent --show-error -X POST "$HOOK" > /dev/null
