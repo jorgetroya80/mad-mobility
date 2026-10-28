@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/jorgetroya80/mad-mobility/compare/web-v0.3.1...web-v0.3.2) (2026-10-28)
+
+
+### Bug Fixes
+
+* **web:** call the api directly in production ([#63](https://github.com/jorgetroya80/mad-mobility/issues/63)) ([7560ace](https://github.com/jorgetroya80/mad-mobility/commit/7560aced73a1ac42431d335f89edfb678d0e83b8))
+
 ## [0.3.1](https://github.com/jorgetroya80/mad-mobility/compare/web-v0.3.0...web-v0.3.1) (2026-10-28)
 
 
