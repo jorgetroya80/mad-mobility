@@ -31,6 +31,11 @@ services:
     staticPublishPath: ./dist
     # Only deploy-web deploys: a commit to main does not change the web release
     autoDeployTrigger: 'off'
+    envVars:
+      # Render runs pnpm install by default, which needs a GitHub Packages token (401 without it);
+      # the build command only downloads the release, so it installs nothing
+      - key: SKIP_INSTALL_DEPS
+        value: 'true'
     routes:
       # Same origin for the API, like the Vite proxy in development (rules apply in order)
       - type: rewrite
