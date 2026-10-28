@@ -28,6 +28,9 @@ services:
         sync: false
       - key: EMT_PASSWORD
         sync: false
+      # The web calls the API directly from its own origin
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://mad-mobility-web.onrender.com
 
   - type: web
     name: mad-mobility-web

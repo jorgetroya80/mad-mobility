@@ -29,7 +29,9 @@ T1 alta de la app en MobilityLabs (manual)
              └── T4 READMEs, PR de ci, merge y DEPLOY_ENABLED=true
                    ├── T5 fix(api) IP del cliente      → release api 0.6.1 → deploy-api
                    └── T6 fix(web) atribución EMT   → release web 0.3.1 → deploy-web
-                         └── T7 SC1-SC10 en producción y cierre
+                         └── T7 CORS en el API (render.yaml)
+                               └── T8 fix(web) URL directa del API → release web 0.3.2 → deploy-web
+                                     └── T9 quitar el rewrite /api, SC1-SC10 y cierre
 ```
 
 T5 y T6 son independientes entre sí.
@@ -104,7 +106,7 @@ T5 y T6 son independientes entre sí.
   - Archivos: `api/src/main/kotlin/io/github/jorgetroya80/madmobility/shared/web/RateLimitFilter.kt`, `api/src/test/kotlin/io/github/jorgetroya80/madmobility/shared/web/RateLimitFilterMvcTest.kt`.
   - Dependencias: checkpoint del pipeline.
 
-- [ ] **T6: Atribución "Powered by EMT de Madrid"** (XS, ~15 min)
+- [x] **T6: Atribución "Powered by EMT de Madrid"** (XS, ~15 min)
   - Descripción: `DataAttribution` muestra "Powered by EMT de Madrid" con enlace a `https://www.emtmadrid.es`; el test lo comprueba. PR `fix(web): …`; al mergear el PR de release `web` 0.3.1, `deploy-web` publica su tarball.
   - Aceptación:
     - SC7 completo en producción.
@@ -114,13 +116,31 @@ T5 y T6 son independientes entre sí.
   - Archivos: `web/src/shared/ui/data-attribution/DataAttribution.tsx`, `web/src/shared/ui/data-attribution/DataAttribution.test.tsx`.
   - Dependencias: checkpoint del pipeline (independiente de T5).
 
-- [ ] **T7: Comprobación final y cierre** (S, ~30 min)
-  - Descripción: recorrer SC1-SC10 en producción; spec y plan a **implemented**; fila `deploy` de `CAPABILITY-MAP.md` a implemented; sección Deployment de `docs/ideas/bicimad-now.md` con la plataforma elegida. PR `docs: …`.
+- [ ] **T7: CORS en el API** (XS, ~20 min)
+  - Descripción: `CORS_ALLOWED_ORIGINS=https://mad-mobility-web.onrender.com` en el servicio del API de `render.yaml`. Va en el PR `ci` con el cambio de spec y plan (rama `docs/deploy-direct-api`). Al mergear, el Blueprint sincroniza y el API se redespliega con CORS; la web 0.3.1 sigue usando el rewrite mientras tanto.
   - Aceptación:
+    - Un `GET` al API con `Origin: https://mad-mobility-web.onrender.com` devuelve `Access-Control-Allow-Origin` con ese origen; con otro `Origin`, no.
+  - Verificación: `curl -sI -H 'Origin: https://mad-mobility-web.onrender.com' https://mad-mobility-api.onrender.com/v1/bicimad/stations/25a`; lo mismo con `Origin: https://example.com`; validación del esquema de `render.yaml`.
+  - Archivos: `render.yaml`, `docs/specs/SPEC-deploy.md`, este plan.
+  - Dependencias: T6.
+
+- [ ] **T8: La web llama al API directamente** (XS, ~20 min)
+  - Descripción: `web/.env.production` con `VITE_API_BASE_URL=https://mad-mobility-api.onrender.com`; `web/README.md` lo explica. PR `fix(web): call the api directly in production`; al mergear el PR de release `web` 0.3.2, `deploy-web` la despliega.
+  - Aceptación:
+    - El bundle de `pnpm --filter web run build` contiene la URL del API; `dev` y los tests siguen usando `/api`.
+    - SC2 y SC3 en producción: el móvil con datos carga las estaciones mientras una ráfaga desde otra IP recibe 429.
+  - Verificación: `pnpm --filter web run lint`; `typecheck`; `test`; `build`; `grep -o 'mad-mobility-api.onrender.com' web/dist/assets/*.js`; consola del navegador sin errores de CORS.
+  - Archivos: `web/.env.production`, `web/README.md`.
+  - Dependencias: T7.
+
+- [ ] **T9: Quitar el rewrite `/api`, comprobación final y cierre** (S, ~30 min)
+  - Descripción: quitar la regla `/api/*` de `render.yaml` y la mención del mismo origen en los READMEs; recorrer SC1-SC10 en producción; spec y plan a **implemented**; fila `deploy` de `CAPABILITY-MAP.md` a implemented; sección Deployment de `docs/ideas/bicimad-now.md` con Render. PR `ci: …`.
+  - Aceptación:
+    - `/api/...` en la web ya no llega al API (sirve `index.html`).
     - SC1-SC10 anotados en el changelog del plan.
-  - Verificación: `gh pr checks`.
-  - Archivos: `docs/specs/SPEC-deploy.md`, este plan, `docs/specs/CAPABILITY-MAP.md`, `docs/ideas/bicimad-now.md`.
-  - Dependencias: T5, T6.
+  - Verificación: `gh pr checks`; `curl` de SC1-SC10.
+  - Archivos: `render.yaml`, `README.md`, `web/README.md`, `docs/specs/SPEC-deploy.md`, este plan, `docs/specs/CAPABILITY-MAP.md`, `docs/ideas/bicimad-now.md`.
+  - Dependencias: T8.
 
 ### Checkpoint final
 
@@ -140,7 +160,7 @@ T5 y T6 son independientes entre sí.
 
 ## Paralelización
 
-Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
+Un solo desarrollador: orden T1 → T9. T5 y T6 son independientes entre sí.
 
 ## Changelog
 
@@ -157,3 +177,5 @@ Un solo desarrollador: orden T1 → T7. T5 y T6 son independientes entre sí.
 - 2026-10-28: T4: READMEs (raíz, `api`, `web`) con la URL pública y la sección Deployment; fila `deploy` de `CAPABILITY-MAP.md` con su spec, en approved. PR `ci: deploy api and web to render`.
 - 2026-10-28: T4 hecha. PR #57 mergeado (`e011ddb`); el Blueprint de Render sigue a `main` y `DEPLOY_ENABLED=true`. La ejecución de Release del merge deja `deploy-*` omitidos (sin release).
 - 2026-10-28: T5 hecha. PR #58 (TDD: dos de los tres tests nuevos fallaban antes del cambio) y release `api` 0.6.1 (PR #59). Primera ejecución real de `deploy-api`: llama al hook con `imgURL=...:0.6.1`, el log muestra `HOOK: ***`, y `/info` devuelve 0.6.1 unos 90 s después (SC5). En producción, 120 peticiones a la vez desde una IP: 90 sin cabecera dan 37 × 429 y 30 con `X-Forwarded-For` distintos dan 21 × 429, así que cambiar esa cabecera ya no salta el límite. Falta ver dos IPs reales con cubos separados (SC3), en T7.
+- 2026-10-28: T6 hecha. PR #60 (TDD: el test de `DataAttribution` falló antes del cambio) y release `web` 0.3.1 (PR #61). Primera ejecución real de `deploy-web`: `POST` al hook, el log muestra `HOOK: ***`, y a los 37 s el `index.html` servido es idéntico al del tarball de `web-v0.3.1` (SC6). El bundle servido contiene "Powered by" y ningún `EMT_` (SC7, SC9).
+- 2026-10-28: T7 original parada. SC3 falla: con la misma IP, `/api` por el rewrite da 429 y la llamada directa al API, 200; durante 3 min de ráfaga desde una IP, el móvil con datos (otra IP) no carga. El rewrite hace una segunda petición desde Render que vuelve a pasar por Cloudflare y le pone a `True-Client-Ip` la IP de Render. El usuario elige el plan B (llamada directa con CORS): T7 pasa a ser CORS en el API, T8 la URL directa en la web y T9 el cierre, que también quita el rewrite. SC1, SC2 (con el rewrite), SC4-SC10 ya comprobados.
