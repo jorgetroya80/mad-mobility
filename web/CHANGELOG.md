@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/jorgetroya80/mad-mobility/compare/web-v0.3.0...web-v0.3.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **web:** credit emt as powered by emt de madrid ([#60](https://github.com/jorgetroya80/mad-mobility/issues/60)) ([a0a0feb](https://github.com/jorgetroya80/mad-mobility/commit/a0a0feba66ecb96219d8ac59a6e16179df0d8d82))
+
 ## [0.3.0](https://github.com/jorgetroya80/mad-mobility/compare/web-v0.2.0...web-v0.3.0) (2026-10-14)
 
 
