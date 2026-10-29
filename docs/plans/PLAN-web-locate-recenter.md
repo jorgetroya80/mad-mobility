@@ -1,7 +1,7 @@
 # Plan: web — "Mi ubicación" vuelve a centrar el mapa
 
 - Created: 2026-10-29
-- Status: **approved** (2026-10-29)
+- Status: **implemented** (2026-10-29)
 - Spec: [SPEC-web-bicimad.md](../specs/SPEC-web-bicimad.md) (regla 1 y SC2; este plan la corrige, no crea una spec nueva)
 
 ## Overview
@@ -71,11 +71,11 @@ T2 y T3 no dependen entre sí, pero las dos tocan `MapPage.test.tsx`, así que s
 
 ### Checkpoint: T1-T3
 
-- [ ] `pnpm --filter web test` (cobertura ≥ 80 %), `typecheck`, `lint` y `oxfmt --check` en verde.
-- [ ] `pnpm --filter web dev:mock` en el escritorio: arrastrar el mapa y pulsar "Mi ubicación" lo devuelve; con una estación abierta, lo centra en el usuario sin cerrar el detalle; con el permiso bloqueado en el navegador, se ve el aviso nuevo.
-- [ ] Revisión humana antes de T4.
+- [x] `pnpm --filter web test` (cobertura ≥ 80 %), `typecheck`, `lint` y `oxfmt --check` en verde.
+- [x] `pnpm --filter web dev:mock` en el escritorio (comprobado en el iPhone contra Render, en T4): arrastrar el mapa y pulsar "Mi ubicación" lo devuelve; con una estación abierta, lo centra en el usuario sin cerrar el detalle; con el permiso bloqueado en el navegador, se ve el aviso nuevo.
+- [x] Revisión humana antes de T4.
 
-- [ ] **T4: Spec, prueba en iPhone y cierre** (S, ~30 min)
+- [x] **T4: Spec, prueba en iPhone y cierre** (S, ~30 min)
   - Descripción: corregir la regla 1 y SC2 de `SPEC-web-bicimad.md` (el botón vuelve a centrar el mapa aunque la posición no cambie, también con una estación abierta; el texto del aviso con el permiso denegado) y añadir una entrada a su changelog. Commit `docs`, en el mismo PR. Después del merge y del despliegue en Render, probar en un iPhone real con Safari y con Chrome. Plan a **implemented** en un PR `docs` posterior.
   - Aceptación:
     - En el iPhone, arrastrar el mapa y pulsar "Mi ubicación" lo devuelve a la posición del usuario, en Safari y en Chrome.
@@ -87,8 +87,8 @@ T2 y T3 no dependen entre sí, pero las dos tocan `MapPage.test.tsx`, así que s
 
 ### Checkpoint final
 
-- [ ] Aceptación de T1-T4 comprobada; CI en verde.
-- [ ] Revisión humana del título del PR (`fix(web): …`) antes del squash merge.
+- [x] Aceptación de T1-T4 comprobada; CI en verde.
+- [x] Revisión humana del título del PR (`fix(web): …`) antes del squash merge.
 
 ## Riesgos y mitigaciones
 
@@ -121,3 +121,4 @@ Unas 2 h en una sesión: T1 (~15 min), T2 (~45 min), T3 (~30 min), T4 (~30 min) 
 - 2026-10-29: T3 implementada. `useMapLocation` expone `isLocationDenied`, sacado de la última respuesta y no del estado en curso, así que el aviso no cambia mientras se reintenta. `StationList` recibe `isLocationDenied` (opcional) y elige entre los dos textos. El stub de `MapPage.test.tsx` acepta ahora `unavailable` (`POSITION_UNAVAILABLE`) para probar el texto "Sin ubicación". Los tests de `MapPage` con el permiso denegado esperan el texto nuevo.
 - 2026-10-29: T4, parte del PR: regla 1, SC2 y changelog de `SPEC-web-bicimad.md` actualizados. Queda la prueba en el iPhone contra Render después del merge; con ella, T4 y el plan pasan a **implemented** en un PR `docs`.
 - 2026-10-29: revisión de código. Tocar en el mapa la estación ya abierta, después de "Mi ubicación", vuelve a centrarla: `StationsMap` avisa de cada toque con `onSelect` (la URL no cambia, así que `useUserFocus` no se enteraba) y `useUserFocus` expone `focusSelection`. Buscar esa misma estación en el buscador sigue sin centrarla: TanStack Router ignora la navegación a la misma URL, y arreglarlo obligaría a cambiar `features/select-station`. Se acepta como limitación. El test "focuses the next station chosen" comprueba ahora las coordenadas de 1b.
+- 2026-10-29: PR #72 fusionado y publicado en la release del PR #74; la web desplegada en Render ya incluye el aviso nuevo. Prueba en un iPhone con Safari y con Chrome, todo correcto: el mapa vuelve al usuario tras arrastrarlo, con una estación abierta se centra en el usuario sin cerrar el detalle (y tocar la estación lo devuelve a ella), y sin permiso aparece "No has dado permiso de ubicación…". T4 implementada; plan implementado.
