@@ -51,7 +51,7 @@ Medidos el 2026-10-29 en `main` (`ca07422`). Cada comprobación se compara con e
 | --- | --- | --- | --- |
 | Cobertura de líneas de web | 99.1 % | must not fall (tolerancia 0.5 %) | `pnpm --filter web test:coverage` (resumen "All files") |
 | Vulnerabilidades altas en dependencias de desarrollo | 8 (`js-yaml` vía `@hey-api/openapi-ts`; `vite` y `undici` vía `vitest`) | must not grow | `pnpm audit --audit-level high` |
-| Alertas altas abiertas de Dependabot | npm: 1 (`vite`, desarrollo), medida el 2026-10-29. Gradle: se mide tras el primer envío del grafo (`dependency-submission.yml`) | must not grow | `gh api repos/jorgetroya80/mad-transit/dependabot/alerts` (abiertas, severidad `high` o `critical`) |
+| Alertas altas abiertas de Dependabot | npm: 1 (`vite`, desarrollo). Gradle: 0, tras el PR #78 (quedan 2 medias: `commons-lang3` y `kotlin-gradle-plugin`). Medido el 2026-10-29 | must not grow | `gh api repos/jorgetroya80/mad-transit/dependabot/alerts` (abiertas, severidad `high` o `critical`) |
 | Hallazgos de Semgrep por debajo de alta | 6: 5 de configuración (Dependabot, `.npmrc` y `pnpm-workspace.yaml`) y 1 `detect-non-literal-regexp` en `MapPage.test.tsx` | must not grow | `check:semgrep` sin `--severity ERROR` (cuenta todo; los altos son 0) |
 
 ## Sin cubrir
