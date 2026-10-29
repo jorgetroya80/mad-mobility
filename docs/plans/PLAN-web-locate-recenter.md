@@ -49,7 +49,7 @@ T2 y T3 no dependen entre sí, pero las dos tocan `MapPage.test.tsx`, así que s
   - Archivos: `pages/map/model/useMapLocation.ts`, `pages/map/ui/MapPage.tsx`, `pages/map/ui/MapPage.test.tsx`.
   - Dependencias: ninguna.
 
-- [ ] **T2: "Mi ubicación" con una estación abierta** (M, ~45 min)
+- [x] **T2: "Mi ubicación" con una estación abierta** (M, ~45 min)
   - Descripción: pulsar el botón con el detalle abierto centra el mapa en el usuario y deja el detalle abierto. `MapPage` guarda el número de la estación abierta al pulsar. Mientras esa estación siga abierta, `StationsMap` enfoca el centro y no la estación (prop nueva, p. ej. `focusSelected: boolean`); la estación sigue marcada como seleccionada en el mapa.
   - Aceptación:
     - Con `?station=1a`, pulsar "Mi ubicación" deja `?station=1a` y el detalle abiertos, y el foco del mapa termina en `USER`, con `selectedId` `1a`.
@@ -117,3 +117,4 @@ Unas 2 h en una sesión: T1 (~15 min), T2 (~45 min), T3 (~30 min), T4 (~30 min) 
 - 2026-10-29: versión inicial, a partir de la investigación del fallo en iOS.
 - 2026-10-29: Q1-Q4 resueltas; plan aprobado. T2 mantiene el detalle abierto y centra el mapa en el usuario.
 - 2026-10-29: T1 implementada. `useMapLocation` expone `mapCenter`, que queda `undefined` mientras se pide la ubicación, y `MapPage` se lo pasa al mapa. Tests nuevos para el usuario (misma posición) y para Sol (denegada otra vez); sin el cambio fallan, igual que el test existente de "while Mi ubicación asks again".
+- 2026-10-29: T2 implementada. El hook `useUserFocus` (en `pages/map/model`) recuerda que se pulsó "Mi ubicación" con la estación abierta y lo olvida cuando cambia `?station`. `StationsMap` recibe `focusSelected`: la estación sigue marcada, pero el mapa se centra en el usuario. `MapPanel` no cambia: `MapPage` le pasa un `locate` que primero llama a `focusUser`. Tests: el detalle sigue abierto y el foco va al usuario; elegir otra estación devuelve el foco; al plegar el sheet el foco sigue en el usuario.

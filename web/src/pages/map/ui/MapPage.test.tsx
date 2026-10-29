@@ -197,6 +197,32 @@ describe('MapPage', () => {
       );
     });
 
+    it('centers the map on the user with "Mi ubicación" and keeps the station open', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+
+      await waitFor(() => expect(lastMapProps()).toMatchObject({ selectedId: '1a', focus: USER }));
+      expect(
+        screen.getByRole('heading', { level: 2, name: '1a · Puerta del Sol A' }),
+      ).toBeVisible();
+    });
+
+    it('focuses the next station chosen after "Mi ubicación"', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+      await waitFor(() => expect(lastMapProps().focus).toEqual(USER));
+
+      await act(async () => lastMapProps().onSelectPoint?.('1b'));
+
+      await waitFor(() => expect(lastMapProps()).toMatchObject({ selectedId: '1b' }));
+      expect(lastMapProps().focus).not.toEqual(USER);
+    });
+
     it('asks for free docks with "Anclajes" without going back to loading (SC3)', async () => {
       const requests = recordNearbyRequests();
       const docks = holdDocksResponse();
@@ -369,6 +395,18 @@ describe('MapPage', () => {
 
       await user.click(sheetHandle());
       expect(lastMapProps().focusPadding).toEqual({ bottom: 0 });
+    });
+
+    it('keeps the map on the user after "Mi ubicación" when the sheet collapses', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+      await waitFor(() => expect(lastMapProps().focus).toEqual(USER));
+
+      await user.click(sheetHandle());
+
+      expect(lastMapProps()).toMatchObject({ focus: USER, focusPadding: { bottom: 0 } });
     });
 
     // jsdom ignores `inert`, so the row of the collapsed sheet can be clicked.
