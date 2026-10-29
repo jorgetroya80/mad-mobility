@@ -9,7 +9,12 @@
   },
   "scripts": {
     "prepare": "husky",
-    "typecheck:changed": "./scripts/typecheck-changed.sh"
+    "typecheck:changed": "./scripts/typecheck-changed.sh",
+    "check:fast": "pnpm typecheck:changed && pnpm --filter web lint && pnpm check:secrets && node scripts/floor-guard.mjs",
+    "check:task": "pnpm check:fast && pnpm --filter web test && ./api/gradlew -p api test jacocoTestReport -q && node scripts/changed-coverage.mjs && pnpm --filter web depcruise",
+    "check:full": "pnpm check:task && pnpm check:semgrep && pnpm audit --prod --audit-level high",
+    "check:secrets": "docker run --rm -v \"$PWD:/repo\" -w /repo ghcr.io/gitleaks/gitleaks:v8.28.0@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854 git --redact --no-banner --log-opts=origin/main..HEAD .",
+    "check:semgrep": "docker run --rm -v \"$PWD:/src\" -w /src semgrep/semgrep:1.140.0@sha256:4372a1de903521f9f10f877b6caf15d150d17e1ca592582682c8d02b77cbd4f6 semgrep scan --config p/default --config p/owasp-top-ten --severity ERROR --error --metrics=off --quiet --exclude node_modules --exclude api/build --exclude dist ."
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
