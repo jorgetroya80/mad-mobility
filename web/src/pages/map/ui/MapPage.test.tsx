@@ -33,9 +33,10 @@ const USER = { lat: 40.4169, lng: -3.7033 };
 // Station 1a in the fixtures.
 const PUERTA_DEL_SOL_A = { lat: 40.4170224, lng: -3.7024255 };
 const PERMISSION_DENIED = 1;
+const POSITION_UNAVAILABLE = 2;
 
 // 'pending' never answers, like a browser still asking for the position.
-type GeoAnswer = 'granted' | 'denied' | 'pending';
+type GeoAnswer = 'granted' | 'denied' | 'unavailable' | 'pending';
 
 // jsdom has no geolocation: every request is answered at once with the current answer.
 function stubGeolocation(initialAnswer: GeoAnswer) {
@@ -46,7 +47,8 @@ function stubGeolocation(initialAnswer: GeoAnswer) {
       onSuccess({ coords: { latitude: USER.lat, longitude: USER.lng } } as GeolocationPosition);
       return;
     }
-    onError?.({ code: PERMISSION_DENIED, PERMISSION_DENIED } as GeolocationPositionError);
+    const code = answer === 'denied' ? PERMISSION_DENIED : POSITION_UNAVAILABLE;
+    onError?.({ code, PERMISSION_DENIED } as GeolocationPositionError);
   });
   Object.defineProperty(navigator, 'geolocation', {
     value: { getCurrentPosition },
@@ -297,7 +299,9 @@ describe('MapPage', () => {
 
       expect(await rowIn('Cerca de la Puerta del Sol', '1a')).toBeInTheDocument();
       expect(
-        screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
+        screen.getByText(
+          'No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol',
+        ),
       ).toBeInTheDocument();
       expect(requests[0]?.searchParams.get('near')).toBe('40.4168,-3.7038');
       expect(lastMapProps()).toMatchObject({ focus: MADRID_CENTER, userLocation: undefined });
@@ -331,6 +335,19 @@ describe('MapPage', () => {
     });
   });
 
+  describe('with the location unavailable', () => {
+    it('lists the stations near Puerta del Sol with the notice without location', async () => {
+      stubGeolocation('unavailable');
+
+      await renderPage();
+
+      expect(await rowIn('Cerca de la Puerta del Sol', '1a')).toBeInTheDocument();
+      expect(
+        screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('while "Mi ubicación" asks again', () => {
     it('keeps describing the list it shows: still near Puerta del Sol', async () => {
       const geolocation = stubGeolocation('denied');
@@ -346,7 +363,9 @@ describe('MapPage', () => {
         screen.getByRole('heading', { level: 2, name: 'Cerca de la Puerta del Sol' }),
       ).toBeInTheDocument();
       expect(
-        screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
+        screen.getByText(
+          'No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol',
+        ),
       ).toBeInTheDocument();
       // Without a focus the map stays where it is until the answer arrives.
       expect(lastMapProps().focus).toBeUndefined();

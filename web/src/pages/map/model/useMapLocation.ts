@@ -11,6 +11,8 @@ export type MapLocation = {
   userLocation: Coordinates | undefined;
   // The center is Puerta del Sol because the position was denied or is unavailable.
   isApproximateLocation: boolean;
+  // The approximate location is because the user did not give the permission.
+  isLocationDenied: boolean;
   status: GeolocationStatus;
   locate: () => void;
 };
@@ -44,6 +46,7 @@ export function useMapLocation(): MapLocation {
     mapCenter: status === 'pending' ? undefined : center,
     userLocation: settled?.position,
     isApproximateLocation,
+    isLocationDenied: settled?.status === 'denied',
     status,
     locate: retry,
   };

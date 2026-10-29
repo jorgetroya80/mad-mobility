@@ -59,7 +59,7 @@ T2 y T3 no dependen entre sí, pero las dos tocan `MapPage.test.tsx`, así que s
   - Archivos: `pages/map/ui/MapPage.tsx`, `pages/map/ui/MapPanel.tsx` (si el botón necesita avisar a la página), `widgets/stations-map/ui/StationsMap.tsx` (+ test), `MapPage.test.tsx`.
   - Dependencias: T1.
 
-- [ ] **T3: Aviso con el permiso denegado** (S, ~30 min)
+- [x] **T3: Aviso con el permiso denegado** (S, ~30 min)
   - Descripción: con `denied`, el aviso dice que no se ha dado permiso. Con `unavailable` (timeout o sin señal), mantiene el texto actual. Hace falta que `useMapLocation` diga por qué se usa Sol (`denied` o `unavailable`), no solo `isApproximateLocation`.
   - Aceptación:
     - Denegada: el aviso dice "No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol".
@@ -118,3 +118,4 @@ Unas 2 h en una sesión: T1 (~15 min), T2 (~45 min), T3 (~30 min), T4 (~30 min) 
 - 2026-10-29: Q1-Q4 resueltas; plan aprobado. T2 mantiene el detalle abierto y centra el mapa en el usuario.
 - 2026-10-29: T1 implementada. `useMapLocation` expone `mapCenter`, que queda `undefined` mientras se pide la ubicación, y `MapPage` se lo pasa al mapa. Tests nuevos para el usuario (misma posición) y para Sol (denegada otra vez); sin el cambio fallan, igual que el test existente de "while Mi ubicación asks again".
 - 2026-10-29: T2 implementada. El hook `useUserFocus` (en `pages/map/model`) recuerda que se pulsó "Mi ubicación" con la estación abierta y lo olvida cuando cambia `?station`. `StationsMap` recibe `focusSelected`: la estación sigue marcada, pero el mapa se centra en el usuario. `MapPanel` no cambia: `MapPage` le pasa un `locate` que primero llama a `focusUser`. Tests: el detalle sigue abierto y el foco va al usuario; elegir otra estación devuelve el foco; al plegar el sheet el foco sigue en el usuario.
+- 2026-10-29: T3 implementada. `useMapLocation` expone `isLocationDenied`, sacado de la última respuesta y no del estado en curso, así que el aviso no cambia mientras se reintenta. `StationList` recibe `isLocationDenied` (opcional) y elige entre los dos textos. El stub de `MapPage.test.tsx` acepta ahora `unavailable` (`POSITION_UNAVAILABLE`) para probar el texto "Sin ubicación". Los tests de `MapPage` con el permiso denegado esperan el texto nuevo.
