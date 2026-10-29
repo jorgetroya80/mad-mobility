@@ -163,6 +163,8 @@ val smokeTestTask =
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+    // Read by scripts/changed-coverage.mjs (CONSTRAINTS.md)
+    reports.xml.required = true
 }
 
 // Coverage gates (spec: at least 80 % of lines in `shared` and in each domain module)

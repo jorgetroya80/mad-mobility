@@ -68,7 +68,8 @@ pnpm --filter web dev:mock       # sin backend: fixtures de MSW
 pnpm --filter web dev            # contra ./gradlew bootRun
 pnpm --filter web lint
 pnpm --filter web typecheck
-pnpm --filter web test           # vitest run --coverage
+pnpm --filter web test           # vitest run
+pnpm --filter web test:coverage  # vitest run --coverage
 pnpm --filter web build
 ```
 
@@ -269,4 +270,5 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: tras la revisión del usuario, bajo el título de "Favoritas" y "Cerca de…" se indica "Bicis disponibles" o "Anclajes libres" según el filtro (también como descripción accesible de la sección).
 - 2026-10-14: revisión de código. Al elegir en el buscador el foco ya no vuelve al campo (abría un instante el teclado en móvil antes de que el detalle tomara el foco). Mientras "Mi ubicación" reintenta, la página conserva la última respuesta (centro, título y aviso) en lugar de pasar a "Cerca de ti" sin ubicación.
 - 2026-10-29: arreglo de "Mi ubicación" ([PLAN-web-locate-recenter.md](../plans/PLAN-web-locate-recenter.md)). El mapa vuelve a centrarse en el usuario aunque la posición no cambie, también con una estación abierta (sin cerrar el detalle). El aviso distingue entre el permiso denegado y la ubicación no disponible.
+- 2026-10-29: `test` ejecuta solo los tests (`vitest run`); la cobertura y sus umbrales pasan a `test:coverage` (`vitest run --coverage`), que es lo que ejecutan CI y `check:task`.
 - 2026-10-29: arreglo de "Mi ubicación" comprobado en un iPhone (Safari y Chrome) contra la web desplegada en Render.

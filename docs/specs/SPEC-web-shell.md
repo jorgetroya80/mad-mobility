@@ -78,7 +78,8 @@ pnpm --filter web dev:mock       # vite --mode mock: MSW en el navegador, sin ba
 pnpm --filter web lint           # oxlint
 pnpm --filter web format         # oxfmt (escribe)
 pnpm --filter web typecheck      # tsc --noEmit
-pnpm --filter web test           # vitest run --coverage
+pnpm --filter web test           # vitest run
+pnpm --filter web test:coverage  # vitest run --coverage
 pnpm --filter web build          # tsc --noEmit && vite build -> web/dist
 pnpm --filter web preview        # sirve web/dist
 ```
@@ -249,7 +250,7 @@ Además, las categorías `correctness` y `suspicious` de oxlint activas, y los p
 - MapLibre en `shared/ui/base-map`:
   - `BaseMap.tsx` es el componente real. Llama a `setWorkerUrl` con la URL que da Vite (`maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url`), porque MapLibre 6 calcula la de su worker a partir de su propio `import.meta.url` y Vite no la conserva ni en dev ni en el build (sin esto: "Worker failed to load" y sin teselas). Aprobado por el usuario.
   - El `BaseMap` público (`index.ts`) es `LazyBaseMap`: `lazy()` + `Suspense`, con un hueco del mismo tamaño mientras carga. Así MapLibre (≈ 275 KB gzip) sale de la carga inicial sin que los consumidores lo sepan.
-- Cobertura v8 ≥ 80 % de líneas en `src/shared` y `src/widgets`; `src/app/main.tsx` y `shared/api/mocks/browser.ts` excluidos. El umbral va en `test.coverage.thresholds` de `vite.config.ts` (por carpeta), así que `pnpm --filter web test` falla en local y en CI si baja.
+- Cobertura v8 ≥ 80 % de líneas en `src/shared` y `src/widgets`; `src/app/main.tsx` y `shared/api/mocks/browser.ts` excluidos. El umbral va en `test.coverage.thresholds` de `vite.config.ts` (por carpeta), así que `pnpm --filter web test:coverage` falla en local y en CI si baja.
 - Sin tests end-to-end (como en la idea).
 
 ## Boundaries
@@ -304,3 +305,4 @@ Ninguna. Los tres puntos de la revisión del PR #43 están resueltos (ver Layout
 - 2026-10-13: revisión del PR #43. Arreglos menores: el proxy de Vite solo captura `/api/` (`^/api/`); `VITE_API_BASE_URL` rechaza URLs relativas al protocolo (`//host`); en modo mock, si MSW no arranca se informa con `reportError` y la app se pinta igual; el plugin del worker lee el archivo una vez. Tres puntos abiertos (Open Questions) a resolver antes del merge.
 - 2026-10-13: puntos abiertos de la revisión del PR #43, resueltos. Landmarks: `main` envuelve `<h1>`, panel y mapa; `SidePanel` pasa de `aside` a `section` con nombre; `AppLayout` recibe `title`. Panel montado una sola vez: hook `useMediaQuery(MD_MEDIA_QUERY)` en `shared/lib`. Fechas inválidas: sin cambio de código; regla para `web-bicimad` (validar `updatedAt` al convertirlo, en la frontera).
 - 2026-10-13: SC12 verificado: la release `web-v0.2.0` (PR #46) adjunta `web-dist.tar.gz`. Todos los criterios de éxito (SC1-SC13) cumplidos.
+- 2026-10-29: `test` ejecuta solo los tests (`vitest run`); la cobertura y sus umbrales pasan a `test:coverage` (`vitest run --coverage`), que es lo que ejecutan CI y `check:task`.
