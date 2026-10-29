@@ -171,6 +171,22 @@ describe('MapPage', () => {
       expect(lastMapProps()).toMatchObject({ focus: USER, userLocation: USER });
     });
 
+    // The user may have moved the map away: an equal position must still bring it back.
+    it('brings the map back to the user with "Mi ubicación", though the position is the same', async () => {
+      const user = userEvent.setup();
+      await renderPage();
+      await rowIn('Cerca de ti', '1a');
+      mapRenders.length = 0;
+
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+
+      // The focus is released while asking, so the same answer is a new focus for the map.
+      await waitFor(() =>
+        expect(lastMapProps()).toMatchObject({ focus: USER, userLocation: USER }),
+      );
+      expect(mapRenders.some((props) => props.focus === undefined)).toBe(true);
+    });
+
     it('opens ?station=1a in place of the list and selects it on the map (SC5)', async () => {
       await renderPage('/?station=1a');
 
@@ -274,6 +290,19 @@ describe('MapPage', () => {
       expect(await rowIn('Cerca de ti', '1a')).toBeInTheDocument();
       expect(lastMapProps()).toMatchObject({ focus: USER, userLocation: USER });
     });
+
+    it('brings the map back to Puerta del Sol when "Mi ubicación" is denied again', async () => {
+      stubGeolocation('denied');
+      const user = userEvent.setup();
+      await renderPage();
+      await rowIn('Cerca de la Puerta del Sol', '1a');
+      mapRenders.length = 0;
+
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+
+      await waitFor(() => expect(lastMapProps().focus).toEqual(MADRID_CENTER));
+      expect(mapRenders.some((props) => props.focus === undefined)).toBe(true);
+    });
   });
 
   describe('while "Mi ubicación" asks again', () => {
@@ -293,7 +322,8 @@ describe('MapPage', () => {
       expect(
         screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
       ).toBeInTheDocument();
-      expect(lastMapProps()).toMatchObject({ focus: MADRID_CENTER });
+      // Without a focus the map stays where it is until the answer arrives.
+      expect(lastMapProps().focus).toBeUndefined();
     });
   });
 

@@ -39,7 +39,7 @@ T2 y T3 no dependen entre sí, pero las dos tocan `MapPage.test.tsx`, así que s
 
 ## Task List
 
-- [ ] **T1: El mapa vuelve al usuario aunque la posición sea la misma** (S, ~15 min; el código ya está en la rama)
+- [x] **T1: El mapa vuelve al usuario aunque la posición sea la misma** (S, ~15 min; el código ya está en la rama)
   - Descripción: `useMapLocation` expone `mapCenter`, que es `undefined` mientras el estado es `pending` e igual a `center` cuando hay respuesta. `MapPage` pasa `mapCenter` a `StationsMap`. Commit `fix(web): bring the map back to the user on "Mi ubicación"`.
   - Aceptación:
     - Con la ubicación concedida, pulsar "Mi ubicación" pasa por un foco `undefined` y termina en `USER` (test nuevo en `MapPage.test.tsx`).
@@ -116,3 +116,4 @@ Unas 2 h en una sesión: T1 (~15 min), T2 (~45 min), T3 (~30 min), T4 (~30 min) 
 
 - 2026-10-29: versión inicial, a partir de la investigación del fallo en iOS.
 - 2026-10-29: Q1-Q4 resueltas; plan aprobado. T2 mantiene el detalle abierto y centra el mapa en el usuario.
+- 2026-10-29: T1 implementada. `useMapLocation` expone `mapCenter`, que queda `undefined` mientras se pide la ubicación, y `MapPage` se lo pasa al mapa. Tests nuevos para el usuario (misma posición) y para Sol (denegada otra vez); sin el cambio fallan, igual que el test existente de "while Mi ubicación asks again".

@@ -19,7 +19,7 @@ export function MapPage() {
       title="Mad Transit"
       map={
         <StationsMap
-          center={location.center}
+          center={location.mapCenter}
           userLocation={location.userLocation}
           focusPadding={focusPadding}
           className="h-full w-full"
