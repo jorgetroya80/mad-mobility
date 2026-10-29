@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/jorgetroya80/mad-transit/compare/api-v0.7.0...api-v0.7.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **api:** update Spring Boot to 4.1.2 for the Tomcat and Jackson fixes ([#78](https://github.com/jorgetroya80/mad-transit/issues/78)) ([6f7b992](https://github.com/jorgetroya80/mad-transit/commit/6f7b992eec22d99b10f4413fb25fdfafc49bcb5f))
+
 ## [0.7.0](https://github.com/jorgetroya80/mad-transit/compare/api-v0.6.1...api-v0.7.0) (2026-10-29)
 
 
