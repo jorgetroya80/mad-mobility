@@ -14,7 +14,7 @@ export function MapPage() {
   const [panelExpanded, setPanelExpanded] = usePanelExpanded(number);
   const panelRef = useListFocusReturn(number);
   const focusPadding = useMapFocusPadding(panelExpanded);
-  const { focusSelected, focusUser } = useUserFocus(number);
+  const { focusSelected, focusUser, focusSelection } = useUserFocus(number);
   const locate = () => {
     focusUser();
     location.locate();
@@ -29,6 +29,7 @@ export function MapPage() {
           userLocation={location.userLocation}
           focusPadding={focusPadding}
           focusSelected={focusSelected}
+          onSelect={focusSelection}
           className="h-full w-full"
         />
       }

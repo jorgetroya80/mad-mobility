@@ -32,6 +32,8 @@ const STATIONS_URL = `${env.apiBaseUrl}/v1/bicimad/stations`;
 const USER = { lat: 40.4169, lng: -3.7033 };
 // Station 1a in the fixtures.
 const PUERTA_DEL_SOL_A = { lat: 40.4170224, lng: -3.7024255 };
+// Station 1b in the fixtures.
+const PUERTA_DEL_SOL_B = { lat: 40.4171037, lng: -3.7025031 };
 const PERMISSION_DENIED = 1;
 const POSITION_UNAVAILABLE = 2;
 
@@ -221,8 +223,21 @@ describe('MapPage', () => {
 
       await act(async () => lastMapProps().onSelectPoint?.('1b'));
 
-      await waitFor(() => expect(lastMapProps()).toMatchObject({ selectedId: '1b' }));
-      expect(lastMapProps().focus).not.toEqual(USER);
+      await waitFor(() =>
+        expect(lastMapProps()).toMatchObject({ selectedId: '1b', focus: PUERTA_DEL_SOL_B }),
+      );
+    });
+
+    it('focuses the open station again when its point is tapped after "Mi ubicación"', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+      await waitFor(() => expect(lastMapProps().focus).toEqual(USER));
+
+      await act(async () => lastMapProps().onSelectPoint?.('1a'));
+
+      expect(lastMapProps()).toMatchObject({ selectedId: '1a', focus: PUERTA_DEL_SOL_A });
     });
 
     it('asks for free docks with "Anclajes" without going back to loading (SC3)', async () => {

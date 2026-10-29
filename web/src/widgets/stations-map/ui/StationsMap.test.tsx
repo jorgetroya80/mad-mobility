@@ -156,6 +156,18 @@ describe('StationsMap', () => {
     );
   });
 
+  it('tells about the tapped point, even the station already selected', async () => {
+    const onSelect = vi.fn<(number: string) => void>();
+    await renderWithRouter(<StationsMap center={SOL} userLocation={USER} onSelect={onSelect} />, {
+      initialEntries: ['/?station=1a'],
+    });
+    await waitForPoints();
+
+    await tapPoint('1a');
+
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('1a');
+  });
+
   it('keeps the same points when only the selection changes', async () => {
     await renderMap();
     await waitForPoints();

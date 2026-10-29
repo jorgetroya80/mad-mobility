@@ -11,6 +11,8 @@ type StationsMapProps = {
   focusPadding?: { bottom: number };
   // False keeps the selected station marked but centers the map on `center` instead.
   focusSelected?: boolean;
+  // Called on every tapped point, also the station already selected, which does not change the URL.
+  onSelect?: (number: string) => void;
   className?: string;
 };
 
@@ -30,6 +32,7 @@ export function StationsMap({
   userLocation,
   focusPadding,
   focusSelected = true,
+  onSelect,
   className,
 }: StationsMapProps) {
   const { data } = useAllStations();
@@ -45,7 +48,10 @@ export function StationsMap({
       className={className}
       points={points}
       selectedId={selected?.number}
-      onSelectPoint={select}
+      onSelectPoint={(id) => {
+        onSelect?.(id);
+        select(id);
+      }}
       focus={selected && focusSelected ? { lng: selected.lon, lat: selected.lat } : center}
       focusPadding={focusPadding}
       userLocation={userLocation}
