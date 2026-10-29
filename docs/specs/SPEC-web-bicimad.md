@@ -30,7 +30,7 @@ Que un usuario sepa en menos de 5 segundos si hay bici, o un anclaje libre, cerc
 
 ## Assumptions
 
-1. La ubicación se pide una sola vez al cargar (`getCurrentPosition`, timeout 10 s, `maximumAge` 60 s). Si se deniega, falla o tarda, el centro es `MADRID_CENTER` (Puerta del Sol) y se avisa en el panel: "Sin ubicación: mostrando estaciones cerca de la Puerta del Sol". No se sigue la posición (`watchPosition`) y hay un botón "Mi ubicación" para volver a pedirla.
+1. La ubicación se pide una sola vez al cargar (`getCurrentPosition`, timeout 10 s, `maximumAge` 60 s). Si se deniega, falla o tarda, el centro es `MADRID_CENTER` (Puerta del Sol) y se avisa en el panel: "No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol" si se denegó, y "Sin ubicación: mostrando estaciones cerca de la Puerta del Sol" si falla o tarda. No se sigue la posición (`watchPosition`) y hay un botón "Mi ubicación" para volver a pedirla. Al responder, el mapa vuelve a centrarse en el usuario (o en Sol) aunque la posición no haya cambiado. Con una estación abierta, el detalle sigue abierto y el mapa se centra en el usuario hasta que se elige otra estación.
 2. La lista se calcula alrededor de la ubicación del usuario (o de Sol), no del centro del mapa: mover el mapa no cambia la lista.
 3. El filtro tiene dos valores, `bikes` (por defecto) y `docks`. `bikes` no se escribe en la URL; `docks` sí (`?need=docks`).
 4. Disponibilidad para la necesidad elegida (`bikes` o `freeDocks`), con color **y** número:
@@ -238,7 +238,7 @@ export function availabilityFor(station: Station, need: Need): Availability {
 ## Success Criteria
 
 1. Con `dev:mock`, al cargar con ubicación concedida, la lista muestra las estaciones de la respuesta de `?near` en el orden del API, cada una con número, nombre, distancia y disponibilidad (color + número).
-2. Con la ubicación denegada, el mapa se centra en la Puerta del Sol, la lista se calcula desde ahí y aparece el aviso "Sin ubicación…"; "Mi ubicación" vuelve a pedir permiso.
+2. Con la ubicación denegada, el mapa se centra en la Puerta del Sol, la lista se calcula desde ahí y aparece el aviso "No has dado permiso de ubicación…"; "Mi ubicación" vuelve a pedir permiso. Tras arrastrar el mapa, "Mi ubicación" lo devuelve al usuario aunque su posición no haya cambiado, también con una estación abierta.
 3. Elegir "Anclajes" cambia la URL a `?need=docks`, pide `need=docks` al API y cambia el número y el color de la lista y del mapa a anclajes libres; "Bicis" quita `need` de la URL.
 4. El mapa pinta todas las estaciones de `GET /v1/bicimad/stations` (677 en la spec; 678 contra `bootRun` el 2026-10-14) con una capa, sin marcadores DOM; tocar una abre su detalle y, por debajo de `md`, despliega el bottom sheet.
 5. Abrir `/?station=1a` muestra el detalle de esa estación y centra el mapa en ella; abrir una estación con número `538` deja la URL como `?station=538` (sin comillas ni `%22`); `/?station=nope` muestra "Estación no encontrada" sin reintentar la petición.
@@ -268,3 +268,4 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: spec implementada (T1-T16, rama `feat/web-bicimad`). SC1-SC14 verificados (ver Resultado del plan); SC11 en CI se confirma en el PR. El API devuelve hoy 678 estaciones.
 - 2026-10-14: tras la revisión del usuario, bajo el título de "Favoritas" y "Cerca de…" se indica "Bicis disponibles" o "Anclajes libres" según el filtro (también como descripción accesible de la sección).
 - 2026-10-14: revisión de código. Al elegir en el buscador el foco ya no vuelve al campo (abría un instante el teclado en móvil antes de que el detalle tomara el foco). Mientras "Mi ubicación" reintenta, la página conserva la última respuesta (centro, título y aviso) en lugar de pasar a "Cerca de ti" sin ubicación.
+- 2026-10-29: arreglo de "Mi ubicación" ([PLAN-web-locate-recenter.md](../plans/PLAN-web-locate-recenter.md)). El mapa vuelve a centrarse en el usuario aunque la posición no cambie, también con una estación abierta (sin cerrar el detalle). El aviso distingue entre el permiso denegado y la ubicación no disponible.

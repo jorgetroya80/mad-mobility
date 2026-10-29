@@ -6,9 +6,13 @@ import { type GeolocationStatus, useGeolocation } from '@/shared/lib';
 export type MapLocation = {
   // Undefined until the first answer: the list waits and the map does not move.
   center: Coordinates | undefined;
+  // Undefined while asking, so the answer moves the map back even when the position is the same.
+  mapCenter: Coordinates | undefined;
   userLocation: Coordinates | undefined;
   // The center is Puerta del Sol because the position was denied or is unavailable.
   isApproximateLocation: boolean;
+  // The approximate location is because the user did not give the permission.
+  isLocationDenied: boolean;
   status: GeolocationStatus;
   locate: () => void;
 };
@@ -35,11 +39,14 @@ export function useMapLocation(): MapLocation {
   const { status, position, retry } = useGeolocation();
   const settled = useLastSettledLocation(status, position);
   const isApproximateLocation = settled?.status === 'denied' || settled?.status === 'unavailable';
+  const center = isApproximateLocation ? MADRID_CENTER : settled?.position;
 
   return {
-    center: isApproximateLocation ? MADRID_CENTER : settled?.position,
+    center,
+    mapCenter: status === 'pending' ? undefined : center,
     userLocation: settled?.position,
     isApproximateLocation,
+    isLocationDenied: settled?.status === 'denied',
     status,
     locate: retry,
   };
