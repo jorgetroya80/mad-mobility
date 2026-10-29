@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/jorgetroya80/mad-transit/compare/web-v0.4.0...web-v0.4.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **web:** bring the map back to the user on "Mi ubicación" ([0bb55e6](https://github.com/jorgetroya80/mad-transit/commit/0bb55e6639c5c3a50ecfc6a176fbc6fa018a098b))
+
 ## [0.4.0](https://github.com/jorgetroya80/mad-transit/compare/web-v0.3.2...web-v0.4.0) (2026-10-29)
 
 
