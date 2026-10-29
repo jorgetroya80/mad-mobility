@@ -11,11 +11,11 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-@ConfigurationProperties("mad-mobility.quota")
+@ConfigurationProperties("mad-transit.quota")
 data class QuotaProperties(
     /** Safety margin below the EMT daily quota of 20,000 calls. */
     val globalDailyLimit: Int = 18_000,
-    /** Optional per-module caps, e.g. mad-mobility.quota.modules.bicimad.daily-limit. */
+    /** Optional per-module caps, e.g. mad-transit.quota.modules.bicimad.daily-limit. */
     val modules: Map<String, ModuleQuota> = emptyMap(),
 ) {
     data class ModuleQuota(

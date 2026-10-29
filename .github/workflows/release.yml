@@ -67,7 +67,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/jorgetroya80/mad-mobility-api
+          images: ghcr.io/jorgetroya80/mad-transit-api
           # Runs on push to main, not on a tag event: version comes from release-please
           tags: |
             type=semver,pattern={{version}},value=${{ needs.release-please.outputs.api-version }}
@@ -82,7 +82,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
       - name: Check the image before publishing
         env:
-          IMAGE: ghcr.io/jorgetroya80/mad-mobility-api:latest
+          IMAGE: ghcr.io/jorgetroya80/mad-transit-api:latest
         run: |
           docker run -d --name api-check -p 8080:8080 \
             -e EMT_EMAIL=release-check@example.com -e EMT_PASSWORD=release-check "$IMAGE"
@@ -95,7 +95,7 @@ jobs:
           curl -fsS localhost:8080/health/ready
           test "$(docker exec api-check id -u)" = 10001
       - name: Publish
-        run: docker push --all-tags ghcr.io/jorgetroya80/mad-mobility-api
+        run: docker push --all-tags ghcr.io/jorgetroya80/mad-transit-api
 
   # Independent of publish-api: a failure here does not block the Docker image, and vice versa
   publish-api-client:
@@ -187,7 +187,7 @@ jobs:
       - name: Trigger the Render deploy
         env:
           HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
-          IMAGE: ghcr.io/jorgetroya80/mad-mobility-api:${{ needs.release-please.outputs.api-version }}
+          IMAGE: ghcr.io/jorgetroya80/mad-transit-api:${{ needs.release-please.outputs.api-version }}
         run: curl --fail --silent --show-error --get --data-urlencode "imgURL=$IMAGE" "$HOOK" > /dev/null
 
   deploy-web:

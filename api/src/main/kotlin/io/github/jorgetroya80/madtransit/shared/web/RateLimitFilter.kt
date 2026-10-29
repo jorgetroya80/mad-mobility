@@ -23,7 +23,7 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.ceil
 
-@ConfigurationProperties("mad-mobility.rate-limit")
+@ConfigurationProperties("mad-transit.rate-limit")
 data class RateLimitProperties(
     /** Requests one IP can make at once. */
     val capacity: Int = 60,
@@ -129,7 +129,7 @@ class RateLimitFilter(
         private val IDLE_EXPIRY = Duration.ofMinutes(10)
         private val RATE_LIMITED =
             Problem(
-                URI.create("urn:mad-mobility:problem:rate-limited"),
+                URI.create("urn:mad-transit:problem:rate-limited"),
                 "Too many requests",
                 "Too many requests from this client; retry later.",
             )

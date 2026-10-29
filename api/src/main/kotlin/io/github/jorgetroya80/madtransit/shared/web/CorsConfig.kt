@@ -7,7 +7,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
-@ConfigurationProperties("mad-mobility.cors")
+@ConfigurationProperties("mad-transit.cors")
 data class CorsProperties(
     val allowedOrigins: List<String> = emptyList(),
 )

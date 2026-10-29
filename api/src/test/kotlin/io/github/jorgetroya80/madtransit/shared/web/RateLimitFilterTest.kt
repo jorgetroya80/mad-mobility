@@ -48,7 +48,7 @@ class RateLimitFilterTest {
         assertThat(rejected.contentType).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
         val json = JsonMapper().readTree(rejected.contentAsString)
         assertThat(json.path("status").asInt()).isEqualTo(429)
-        assertThat(json.path("type").asString()).isEqualTo("urn:mad-mobility:problem:rate-limited")
+        assertThat(json.path("type").asString()).isEqualTo("urn:mad-transit:problem:rate-limited")
         assertThat(json.path("instance").asString()).isEqualTo(PING)
         assertThat(passed).hasValue(60)
     }

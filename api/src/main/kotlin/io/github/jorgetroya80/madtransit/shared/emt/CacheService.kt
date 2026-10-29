@@ -9,7 +9,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 
-@ConfigurationProperties("mad-mobility.cache")
+@ConfigurationProperties("mad-transit.cache")
 data class CacheProperties(
     /** How long a value is served without calling the loader. */
     val ttl: Duration = Duration.ofSeconds(60),

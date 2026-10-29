@@ -19,7 +19,7 @@ private fun MockMvcTester.preflight(origin: String): MvcTestResult =
 
 class CorsConfigTest {
     @Nested
-    @SpringBootTest(properties = ["mad-mobility.cors.allowed-origins=https://allowed.example"])
+    @SpringBootTest(properties = ["mad-transit.cors.allowed-origins=https://allowed.example"])
     @AutoConfigureMockMvc
     inner class WithAllowedOrigins(
         @Autowired private val mvc: MockMvcTester,

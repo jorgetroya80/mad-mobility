@@ -55,7 +55,7 @@ Todo es secuencial: cada paso necesita lo que publica el anterior.
   - Archivos: ninguno.
   - Dependencias: T1.
 
-- [ ] **T3: Mover el paquete Kotlin** (M, ~30 min)
+- [x] **T3: Mover el paquete Kotlin** (M, ~30 min)
   - Descripción: `git mv` de `io/github/jorgetroya80/madmobility` a `.../madtransit` en `main`, `test` y `smokeTest`; `package` e `import` al paquete nuevo; ruta de JaCoCo en `build.gradle.kts`; clase `MadMobilityApplication` a `MadTransitApplication` (con su archivo); referencias de clase en `application.yaml` (`retry-exceptions`). Ningún otro cambio.
   - Aceptación:
     - `./gradlew build` en verde con la misma cobertura (JaCoCo ≥ 80 % por módulo).
@@ -65,7 +65,7 @@ Todo es secuencial: cada paso necesita lo que publica el anterior.
   - Archivos: todo `api/src/**/madmobility/**` (movido), `api/build.gradle.kts`, `api/src/main/resources/application.yaml`.
   - Dependencias: T2.
 
-- [ ] **T4: Nombres, configuración, URNs e imagen** (M, ~45 min)
+- [x] **T4: Nombres, configuración, URNs e imagen** (M, ~45 min)
   - Descripción: `rootProject.name = "mad-transit-api"`; en `application.yaml`, `spring.application.name`, título OpenAPI "Mad Transit API" y prefijo `mad-transit:`; `@ConfigurationProperties("mad-transit.*")` y los tests que fijan propiedades; URNs `urn:mad-transit:problem:*` y sus tests; comentarios y nombre del jar en `Dockerfile`; imagen `ghcr.io/jorgetroya80/mad-transit-api` en `release.yml`; URL del repo en `api/client/package.json` y `api/client/README.md`; `api/README.md`. PR `feat(api)!` con `BREAKING CHANGE:` en el cuerpo, en prosa.
   - Aceptación:
     - `git grep -n -i -E "mad[-_ ]?mobility|madmobility" -- api .github` solo encuentra `api/CHANGELOG.md`.
@@ -153,3 +153,5 @@ Ninguna: un solo desarrollador y cada tarea depende de lo que publica la anterio
 - 2026-10-29: aprobado por el usuario.
 - 2026-10-29: T1 hecha. Repo renombrado a `jorgetroya80/mad-transit` y remote local actualizado. La URL antigua redirige (301) y los assets de las releases siguen bajando por ella. Variables y secretos intactos. En Render, Manual Sync del Blueprint sin errores y Manual Deploy de `mad-mobility-web` en live (Assumption 3 comprobado).
 - 2026-10-29: T2 hecha. `DEPLOY_ENABLED=false` hasta T6.
+- 2026-10-29: T3 hecha (commit `refactor(api): move the kotlin package to madtransit`). `git mv` en `main`, `test` y `smokeTest`, más `MadTransitApplication` y su test. `./gradlew build`, `compileSmokeTestKotlin` y `jacocoTestCoverageVerification` en verde; `git log --follow` llega hasta el primer commit del API.
+- 2026-10-29: T4 hecha. Primero los tests al prefijo `mad-transit.*` y a los URNs nuevos (RED: 21 de 188 fallan), luego el código (GREEN). `./gradlew build`, `dockerImageTest` (jar `mad-transit-api-*.jar`) y `actionlint` en verde; no queda el nombre viejo en `api/` ni en `.github/` salvo `api/CHANGELOG.md`. Pendiente: release 0.7.0 e imagen pública en ghcr.io.

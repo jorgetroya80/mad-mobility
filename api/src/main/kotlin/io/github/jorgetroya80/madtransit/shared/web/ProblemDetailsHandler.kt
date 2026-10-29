@@ -142,17 +142,17 @@ class ProblemDetailsHandler(
     private companion object {
         val log = LoggerFactory.getLogger(ProblemDetailsHandler::class.java)
 
-        val EMT_TIMEOUT = Problem(URI.create("urn:mad-mobility:problem:emt-timeout"), "EMT timeout", "EMT Madrid did not answer in time.")
+        val EMT_TIMEOUT = Problem(URI.create("urn:mad-transit:problem:emt-timeout"), "EMT timeout", "EMT Madrid did not answer in time.")
         val EMT_UNAVAILABLE =
-            Problem(URI.create("urn:mad-mobility:problem:emt-unavailable"), "EMT unavailable", "EMT Madrid is not available right now.")
+            Problem(URI.create("urn:mad-transit:problem:emt-unavailable"), "EMT unavailable", "EMT Madrid is not available right now.")
         val QUOTA_EXHAUSTED =
             Problem(
-                URI.create("urn:mad-mobility:problem:emt-quota-exhausted"),
+                URI.create("urn:mad-transit:problem:emt-quota-exhausted"),
                 "EMT quota exhausted",
                 "The daily EMT Madrid quota is exhausted.",
             )
         val EMT_BAD_RESPONSE =
-            Problem(URI.create("urn:mad-mobility:problem:emt-bad-response"), "EMT error", "EMT Madrid returned an unexpected response.")
-        val INTERNAL_ERROR = Problem(URI.create("urn:mad-mobility:problem:internal"), "Internal error", "An unexpected error occurred.")
+            Problem(URI.create("urn:mad-transit:problem:emt-bad-response"), "EMT error", "EMT Madrid returned an unexpected response.")
+        val INTERNAL_ERROR = Problem(URI.create("urn:mad-transit:problem:internal"), "Internal error", "An unexpected error occurred.")
     }
 }

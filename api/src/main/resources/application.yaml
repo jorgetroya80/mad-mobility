@@ -1,6 +1,6 @@
 spring:
   application:
-    name: mad-mobility-api
+    name: mad-transit-api
   config:
     import:
       # Local secrets (KEY=VALUE), ignored by git; see .env.example
@@ -32,7 +32,7 @@ springdoc:
       enabled: false
   open-api:
     info:
-      title: Mad Mobility API
+      title: Mad Transit API
       version: ${build.version}
       description: >-
         Real-time BiciMAD stations in Madrid, nearest first and ranked by what you need (a bike or a free dock).
@@ -44,7 +44,7 @@ springdoc:
     servers:
       - url: /
 
-mad-mobility:
+mad-transit:
   emt:
     base-url: ${EMT_BASE_URL:https://openapi.emtmadrid.es}
     email: ${EMT_EMAIL:}

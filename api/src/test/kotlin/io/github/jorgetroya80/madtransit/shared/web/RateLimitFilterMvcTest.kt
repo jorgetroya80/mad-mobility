@@ -17,7 +17,7 @@ import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 
 /** SC8 end to end: the filter runs after RequestIdFilter and before MVC, with the application's clock and mapper. */
-@SpringBootTest(properties = ["mad-mobility.rate-limit.capacity=60", "mad-mobility.rate-limit.refill-per-second=1"])
+@SpringBootTest(properties = ["mad-transit.rate-limit.capacity=60", "mad-transit.rate-limit.refill-per-second=1"])
 @AutoConfigureMockMvc
 class RateLimitFilterMvcTest(
     @Autowired private val mvc: MockMvcTester,

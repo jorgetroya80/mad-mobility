@@ -77,6 +77,6 @@ class DockerImageTest {
         )
 
     private companion object {
-        const val IMAGE = "mad-mobility-api:test"
+        const val IMAGE = "mad-transit-api:test"
     }
 }

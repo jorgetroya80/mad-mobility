@@ -104,7 +104,7 @@ class EmtStationProviderTest(
         @JvmStatic
         @DynamicPropertySource
         fun emtBaseUrl(registry: DynamicPropertyRegistry) {
-            registry.add("mad-mobility.emt.base-url") { wireMock.baseUrl() }
+            registry.add("mad-transit.emt.base-url") { wireMock.baseUrl() }
         }
     }
 }

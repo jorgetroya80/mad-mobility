@@ -26,7 +26,7 @@ sealed interface EmtCredentials {
  * unless EMT_EMAIL + EMT_PASSWORD or EMT_CLIENT_ID + EMT_PASS_KEY are set
  * (the client key pair wins when both are present).
  */
-@ConfigurationProperties("mad-mobility.emt")
+@ConfigurationProperties("mad-transit.emt")
 class EmtProperties(
     val baseUrl: URI = URI.create("https://openapi.emtmadrid.es"),
     email: String? = null,

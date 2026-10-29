@@ -18,13 +18,13 @@ class ProblemDetailsHandlerTest(
 ) {
     @ParameterizedTest(name = "{0} -> {1}")
     @CsvSource(
-        "timeout,      504, urn:mad-mobility:problem:emt-timeout,         ''",
-        "server-error, 503, urn:mad-mobility:problem:emt-unavailable,     ''",
-        "connection-failed, 503, urn:mad-mobility:problem:emt-unavailable, ''",
-        "quota,        503, urn:mad-mobility:problem:emt-quota-exhausted, 90",
-        "auth,         502, urn:mad-mobility:problem:emt-bad-response,    ''",
-        "protocol,     502, urn:mad-mobility:problem:emt-bad-response,    ''",
-        "unexpected,   500, urn:mad-mobility:problem:internal,            ''",
+        "timeout,      504, urn:mad-transit:problem:emt-timeout,         ''",
+        "server-error, 503, urn:mad-transit:problem:emt-unavailable,     ''",
+        "connection-failed, 503, urn:mad-transit:problem:emt-unavailable, ''",
+        "quota,        503, urn:mad-transit:problem:emt-quota-exhausted, 90",
+        "auth,         502, urn:mad-transit:problem:emt-bad-response,    ''",
+        "protocol,     502, urn:mad-transit:problem:emt-bad-response,    ''",
+        "unexpected,   500, urn:mad-transit:problem:internal,            ''",
         "not-found,    404, about:blank,                                  ''",
     )
     fun `maps errors to standard HTTP problems`(

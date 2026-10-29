@@ -1,1 +1,1 @@
-rootProject.name = "mad-mobility-api"
+rootProject.name = "mad-transit-api"

@@ -56,8 +56,8 @@ class EmtSecretsLeakTest(
         @JvmStatic
         @DynamicPropertySource
         fun emtProperties(registry: DynamicPropertyRegistry) {
-            registry.add("mad-mobility.emt.base-url") { wireMock.baseUrl() }
-            registry.add("mad-mobility.emt.password") { SECRET_PASSWORD }
+            registry.add("mad-transit.emt.base-url") { wireMock.baseUrl() }
+            registry.add("mad-transit.emt.password") { SECRET_PASSWORD }
         }
     }
 }
