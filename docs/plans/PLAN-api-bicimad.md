@@ -106,7 +106,7 @@ T10 smoke test + cierre (tras T9)
   - Dependencias: T4.
 
 - [x] **T6: Rate limit por IP** (M, ~1 h)
-  - Descripción: `shared/web/RateLimitFilter.kt`: token bucket por IP en Caffeine (`expireAfterAccess` 10 min, máximo 100.000), estado por IP en una sola referencia atómica (sin locks globales), `Clock` inyectado, propiedades `mad-mobility.rate-limit.capacity` (60) y `refill-per-second` (1), solo `/v1/**`, `429` problem+json con `Retry-After` y `requestId`, métrica `http.rate_limit.rejected` sin la IP.
+  - Descripción: `shared/web/RateLimitFilter.kt`: token bucket por IP en Caffeine (`expireAfterAccess` 10 min, máximo 100.000), estado por IP en una sola referencia atómica (sin locks globales), `Clock` inyectado, propiedades `mad-transit.rate-limit.capacity` (60) y `refill-per-second` (1), solo `/v1/**`, `429` problem+json con `Retry-After` y `requestId`, métrica `http.rate_limit.rejected` sin la IP.
   - Aceptación:
     - SC8: la petición 61 de una IP en el mismo instante (reloj fijo) → `429` + `Retry-After`; otra IP → `200`; tras avanzar el reloj 1 s vuelve a haber 1 token; `/health/live` nunca → `429`.
     - 50 hilos con la misma IP consumen exactamente 50 tokens (sin carreras).

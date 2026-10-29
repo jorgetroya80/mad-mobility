@@ -1,4 +1,4 @@
-# BiciMAD Now
+# Mad Transit
 
 ## Problem Statement
 
@@ -164,7 +164,7 @@ emt-demo/
 ## Deployment
 
 - Plataforma: [Render](https://render.com), plan gratuito (API como web service con la imagen de ghcr.io, web como static site). Detalle en [SPEC-deploy.md](../specs/SPEC-deploy.md).
-- Credenciales: email/contraseña en local, o la app registrada en MobilityLabs ("Mad Mobility", `X-ClientId` + `passKey`), que es la que usa producción.
+- Credenciales: email/contraseña en local, o la app registrada en MobilityLabs ("Mad Transit", `X-ClientId` + `passKey`), que es la que usa producción.
 
 ## Open Questions
 

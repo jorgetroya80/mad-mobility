@@ -129,12 +129,12 @@ Los errores de la EMT sin caché siguen la tabla de `ProblemDetailsHandler`.
 ### Caché y cupo
 
 - Una sola entrada `CacheService` (`module = "bicimad"`, `key = "stations"`) con el TTL por defecto de 60 s. Detalle y cercanía se calculan sobre ella; nunca se llama a `arroundxy` ni al detalle de la EMT.
-- Cupo propio: `mad-mobility.quota.modules.bicimad.daily-limit: 3000` (≈ 1.440 llamadas/día esperadas, margen ×2).
+- Cupo propio: `mad-transit.quota.modules.bicimad.daily-limit: 3000` (≈ 1.440 llamadas/día esperadas, margen ×2).
 
 ### Rate limit (`shared/web/RateLimitFilter`)
 
 - Token bucket por IP en memoria (Caffeine, `expireAfterAccess` 10 min, máximo 100.000 IPs), sin dependencias nuevas.
-- Solo `/v1/**`. Por defecto: capacidad 60, recarga 1 token/s (`mad-mobility.rate-limit.capacity`, `refill-per-second`).
+- Solo `/v1/**`. Por defecto: capacidad 60, recarga 1 token/s (`mad-transit.rate-limit.capacity`, `refill-per-second`).
 - Sin tokens: `429` problem+json con `Retry-After` (segundos hasta el siguiente token).
 - Coste O(1) por petición: una lectura de Caffeine y una operación atómica, sin bloqueos globales.
 - Métrica `http.rate_limit.rejected`. Nunca registra la IP completa en métricas (cardinalidad).
@@ -172,7 +172,7 @@ pnpm --filter @jorgetroya80/bicimad-client run build      # tsc
 
 ```
 api/
-  src/main/kotlin/io/github/jorgetroya80/madmobility/
+  src/main/kotlin/io/github/jorgetroya80/madtransit/
     shared/web/
       RateLimitFilter.kt           nuevo
       HttpCacheConfig.kt           nuevo: ShallowEtagHeaderFilter + Cache-Control en /v1/**

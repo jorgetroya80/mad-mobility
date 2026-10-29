@@ -1,7 +1,7 @@
 # Plan: renombrar el producto a Mad Transit
 
 - Created: 2026-10-29
-- Status: **approved** (2026-10-29)
+- Status: **implemented** (2026-10-29)
 - Spec: [SPEC-rename-mad-transit.md](../specs/SPEC-rename-mad-transit.md)
 
 ## Overview
@@ -94,7 +94,7 @@ Todo es secuencial: cada paso necesita lo que publica el anterior.
 
 ### Fase 3: web (PR `feat(web)`)
 
-- [ ] **T6: La web pasa a Mad Transit** (S, ~30 min)
+- [x] **T6: La web pasa a Mad Transit** (S, ~30 min)
   - Descripción: título "Mad Transit" en `web/index.html` y `MapPage.tsx`, y en `MapPage.test.tsx` y `AppLayout.test.tsx` (primero los tests: RED); `web/.env.production` con `https://mad-transit-api.onrender.com`; `web/README.md`. Antes de mergear el PR de release, `gh variable set DEPLOY_ENABLED --body true`. La release web 0.4.0 se despliega en `mad-transit-web`.
   - Aceptación:
     - SC1: https://mad-transit-web.onrender.com muestra "Mad Transit" y carga estaciones sin errores de CORS.
@@ -105,12 +105,12 @@ Todo es secuencial: cada paso necesita lo que publica el anterior.
 
 ### Checkpoint: producto nuevo en marcha
 
-- [ ] La web y el API nuevos funcionan y se despliegan solos.
-- [ ] Revisión del usuario en móvil y escritorio.
+- [x] La web y el API nuevos funcionan y se despliegan solos.
+- [x] Revisión del usuario en móvil y escritorio.
 
 ### Fase 4: cierre
 
-- [ ] **T7: Servicios viejos y MobilityLabs** (S, ~20 min, **manual, usuario**)
+- [x] **T7: Servicios viejos y MobilityLabs** (S, ~20 min, **manual, usuario**)
   - Descripción: en `mad-mobility-web`, regla Redirect (301) `/*` → `https://mad-transit-web.onrender.com/*`; borrar el servicio `mad-mobility-api` (se confirma antes); en MobilityLabs, nombre "Mad Transit" y URL de la web nueva. La imagen vieja de ghcr.io se borra solo si el usuario lo pide.
   - Aceptación:
     - `curl -sI https://mad-mobility-web.onrender.com/?station=25A` devuelve 301 a `https://mad-transit-web.onrender.com/?station=25A`.
@@ -118,7 +118,7 @@ Todo es secuencial: cada paso necesita lo que publica el anterior.
   - Archivos: ninguno.
   - Dependencias: checkpoint del producto nuevo.
 
-- [ ] **T8: Documentación, comprobación final y cierre** (M, ~45 min)
+- [x] **T8: Documentación, comprobación final y cierre** (M, ~45 min)
   - Descripción: nombre nuevo, URLs y badges en `README.md`; `CAPABILITY-MAP.md`, `docs/ideas/bicimad-now.md` y las specs y planes vigentes (no sus entradas de changelog cerradas); memoria del proyecto. Recorrer SC1-SC6; spec y plan a **implemented**. PR `docs`.
   - Aceptación:
     - SC4: el `git grep` de la spec solo encuentra `CHANGELOG.md`, entradas de changelog cerradas y la columna "Antes" de la spec.
@@ -129,8 +129,8 @@ Todo es secuencial: cada paso necesita lo que publica el anterior.
 
 ### Checkpoint final
 
-- [ ] SC1-SC6 de la spec comprobados.
-- [ ] Spec y plan pasan a **implemented**.
+- [x] SC1-SC6 de la spec comprobados.
+- [x] Spec y plan pasan a **implemented**.
 
 ## Riesgos
 
@@ -159,3 +159,8 @@ Ninguna: un solo desarrollador y cada tarea depende de lo que publica la anterio
 - 2026-10-29: T5, parte de código: `render.yaml` con `mad-transit-api` (imagen `mad-transit-api:latest`, CORS para `https://mad-transit-web.onrender.com`) y `mad-transit-web`; URL nueva del repo en `scripts/render-web-build.sh` (descarga `web-v0.3.2` desde `jorgetroya80/mad-transit`); `"name": "mad-transit"` en el `package.json` raíz. Esquema de Render, `shellcheck` y `pnpm install --frozen-lockfile` sin errores. Falta el sync en Render.
 - 2026-10-29: T5 hecha. PR #68. El sync del Blueprint crea `mad-transit-api` y `mad-transit-web` y conserva los viejos (Assumption 2 comprobado); hooks nuevos guardados en GitHub. `https://mad-transit-api.onrender.com/info` devuelve `mad-transit-api` 0.7.0, `/v1/bicimad/stations/25a` responde 200, CORS devuelve `Access-Control-Allow-Origin: https://mad-transit-web.onrender.com` y un 429 lleva `type` `urn:mad-transit:problem:rate-limited`. La web y el API viejos siguen en marcha (200, API 0.6.1).
 - 2026-10-29: T6, parte de código: tests al título "Mad Transit" (RED: falla el de `MapPage`), luego `index.html` y `MapPage.tsx` (GREEN); `web/.env.production` con `https://mad-transit-api.onrender.com`; `web/README.md`. Web lint, typecheck, test (358) y build en verde; el bundle lleva la URL del API nuevo y el `<title>` es Mad Transit. Falta `DEPLOY_ENABLED=true` y la release 0.4.0.
+- 2026-10-29: T6 hecha. PR #69 y release web 0.4.0 (PR #70), con `DEPLOY_ENABLED=true` desde las 13:34 UTC. `deploy-web` publica en `mad-transit-web`: a las 13:36:56 el `index.html` servido es idéntico al de `web-v0.4.0`, el `<title>` es Mad Transit, el chunk con la URL de `mad-transit-api` se sirve y el API nuevo devuelve `Access-Control-Allow-Origin` para la web nueva (SC1 por `curl`, SC3).
+- 2026-10-29: T7, redirección: Render sirve los archivos existentes antes que las reglas, así que `mad-mobility-web` pasa a publicar solo `robots.txt` (Build Command `mkdir -p dist && printf 'User-agent: *\nDisallow: /\n' > dist/robots.txt`; con `dist` vacío el deploy falla) y la regla Redirect `/*` → `https://mad-transit-web.onrender.com/*` lo redirige todo con 301, conservando la query (`/?station=25A&need=docks`).
+- 2026-10-29: T7, MobilityLabs: la app pasa a "Mad Transit" con la URL de la web nueva (usuario). El usuario borra `mad-mobility-api` en Render.
+- 2026-10-29: T7 hecha: `mad-mobility-api` borrado (404 `no-server`); la web y el API nuevos siguen en 200.
+- 2026-10-29: T8 hecha. Nombre nuevo en READMEs, `package.json` raíz, descripción del cliente, `CAPABILITY-MAP.md`, documento de idea y specs y planes vigentes; sus entradas de changelog cerradas no cambian. SC1: la web nueva muestra Mad Transit y carga estaciones (usuario, móvil y escritorio). SC2: `/info` devuelve `mad-transit-api` 0.7.0 y un 429 lleva `urn:mad-transit:problem:rate-limited`. SC3: `deploy-web` despliega web 0.4.0 en `mad-transit-web`; `deploy-api` contra `mad-transit-api` se verá en la próxima release de `api` (la 0.7.0 salió con `DEPLOY_ENABLED=false`). SC4: el `git grep` de la spec solo encuentra `CHANGELOG.md`, entradas de changelog cerradas y la spec y el plan del renombrado. SC5: repo `jorgetroya80/mad-transit` y app "Mad Transit" en MobilityLabs. SC6: suites del API y de la web en verde en los PRs #66 y #69.

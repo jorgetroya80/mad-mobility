@@ -1,7 +1,7 @@
 {
   "name": "mad-transit",
   "private": true,
-  "description": "BiciMAD Now: Madrid mobility monorepo (Spring Boot API + React web)",
+  "description": "Mad Transit: Madrid mobility monorepo (Spring Boot API + React web)",
   "license": "MIT",
   "packageManager": "pnpm@12.8.1",
   "engines": {

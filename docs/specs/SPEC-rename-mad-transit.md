@@ -1,7 +1,7 @@
 # Spec: renombrar el producto a Mad Transit
 
 - Created: 2026-10-29
-- Status: **approved** (2026-10-29)
+- Status: **implemented** (2026-10-29)
 - Plan: [PLAN-rename-mad-transit.md](../plans/PLAN-rename-mad-transit.md)
 
 Cambio transversal: afecta a `api-core`, `api-bicimad`, `web-shell`, `web-bicimad` y `deploy` del [Capability Map](CAPABILITY-MAP.md). Los ids de módulo no cambian.
@@ -143,3 +143,4 @@ Ninguna. Resueltas por el usuario (2026-10-29):
 
 - 2026-10-29: creada.
 - 2026-10-29: aprobada con las recomendaciones (URNs cambian; el static site viejo redirige). La sección Problema describe solo el cambio de nombre.
+- 2026-10-29: implementada (detalle en el changelog del plan). Para que el static site viejo redirija todo, publica solo `robots.txt`: Render sirve los archivos existentes antes que las reglas. Pendiente: ver `deploy-api` contra el servicio nuevo en la próxima release de `api`.

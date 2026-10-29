@@ -6,7 +6,7 @@
 
 ## Overview
 
-Montar el repositorio `jorgetroya80/mad-mobility` con validaciones locales (Husky, commitlint, lint-staged, pre-push de tipos), CI filtrado por ruta, validación del título del PR, release-please en modo manifest con publicación de artefactos y Dependabot para npm. No hay código de aplicación: todo debe funcionar con `api/` y `web/` como placeholders y omitir con éxito lo que todavía no existe.
+Montar el repositorio `jorgetroya80/mad-transit` con validaciones locales (Husky, commitlint, lint-staged, pre-push de tipos), CI filtrado por ruta, validación del título del PR, release-please en modo manifest con publicación de artefactos y Dependabot para npm. No hay código de aplicación: todo debe funcionar con `api/` y `web/` como placeholders y omitir con éxito lo que todavía no existe.
 
 ## Decisiones de implementación
 
@@ -88,7 +88,7 @@ T1 raíz del repo
     - `main` en GitHub contiene solo el commit raíz vacío hasta que se mergea el PR.
     - `git push origin main` directo se rechaza.
     - El PR `build(repo): add monorepo root and git hooks` existe y solo permite squash merge.
-    - `gh api repos/jorgetroya80/mad-mobility/actions/permissions/workflow` muestra `default_workflow_permissions: read` y `can_approve_pull_request_reviews: true`.
+    - `gh api repos/jorgetroya80/mad-transit/actions/permissions/workflow` muestra `default_workflow_permissions: read` y `can_approve_pull_request_reviews: true`.
   - Verificación: los comandos `gh api` de rulesets y permisos; intento de push directo rechazado.
   - Archivos: ninguno (configuración remota).
   - Dependencias: T4.
@@ -149,7 +149,7 @@ T1 raíz del repo
   - Descripción: añadir al ruleset de `main` (creado en T5) los checks requeridos `ci-ok` y `pr-title`.
   - Aceptación:
     - Un PR con `ci-ok` en rojo no se puede mergear.
-  - Verificación: intento de push directo con un commit vacío; `gh api repos/jorgetroya80/mad-mobility/rulesets`.
+  - Verificación: intento de push directo con un commit vacío; `gh api repos/jorgetroya80/mad-transit/rulesets`.
   - Archivos: ninguno (configuración remota).
   - Dependencias: T6, T7.
 

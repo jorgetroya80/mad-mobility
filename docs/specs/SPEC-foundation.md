@@ -4,7 +4,7 @@
 - Status: **implemented** (2026-10-03)
 - Plan: [PLAN-foundation.md](../plans/PLAN-foundation.md)
 
-Módulo `foundation` del [Capability Map](CAPABILITY-MAP.md). Repositorio: [jorgetroya80/mad-mobility](https://github.com/jorgetroya80/mad-mobility) (público, vacío, rama por defecto `main`). Define el repositorio, las validaciones locales (Husky), la integración continua, el versionado y la publicación de artefactos **antes de escribir código de aplicación**.
+Módulo `foundation` del [Capability Map](CAPABILITY-MAP.md). Repositorio: [jorgetroya80/mad-transit](https://github.com/jorgetroya80/mad-transit) (público, vacío, rama por defecto `main`). Define el repositorio, las validaciones locales (Husky), la integración continua, el versionado y la publicación de artefactos **antes de escribir código de aplicación**.
 
 ## Objective
 
@@ -58,7 +58,7 @@ actionlint
 ## Project Structure
 
 ```
-mad-mobility/
+mad-transit/
   .github/
     workflows/
       ci.yml                 PR y push a main: jobs filtrados por ruta + job agregador ci-ok
@@ -166,7 +166,7 @@ if $check_api && [ -f api/build.gradle.kts ]; then ./api/gradlew -p api compileK
 
 - Disparador: `push` a `main`.
 - Job `release-please`: `googleapis/release-please-action@v5` con `release-please-config.json` y `.release-please-manifest.json`. Expone `api--release_created`, `api--tag_name`, `web--release_created`, `web--tag_name`.
-- Job `publish-api` (si `api--release_created` y existe `api/Dockerfile`): construye y publica `ghcr.io/jorgetroya80/mad-mobility-api:<versión>` y `:latest`. Permiso `packages: write`.
+- Job `publish-api` (si `api--release_created` y existe `api/Dockerfile`): construye y publica `ghcr.io/jorgetroya80/mad-transit-api:<versión>` y `:latest`. Permiso `packages: write`.
 - Job `publish-web` (si `web--release_created`): `pnpm --filter web build` y adjunta `web-dist.tar.gz` a la release.
 - Jobs `deploy-api` y `deploy-web`: placeholders que solo se ejecutan si la variable de repositorio `DEPLOY_ENABLED == 'true'`. Se completan en el módulo `deploy`.
 - Publicación y despliegue van en el mismo workflow porque las releases creadas con `GITHUB_TOKEN` no disparan otros workflows.

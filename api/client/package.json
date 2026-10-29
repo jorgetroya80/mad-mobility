@@ -1,7 +1,7 @@
 {
   "name": "@jorgetroya80/bicimad-client",
   "version": "0.0.0",
-  "description": "Typed client for the BiciMAD Now public API",
+  "description": "Typed client for the Mad Transit public API",
   "license": "MIT",
   "type": "module",
   "repository": {

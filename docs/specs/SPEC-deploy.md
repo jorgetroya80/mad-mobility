@@ -18,12 +18,12 @@ Módulo `deploy` del [Capability Map](CAPABILITY-MAP.md). Publica el API y la we
 ## Decisiones
 
 - **Render para las dos partes, plan gratuito** (decisión del usuario, 2026-10-28). Alternativas descartadas: Google Cloud Run (pide tarjeta), Koyeb (pide tarjeta con retención de 29 $), Fly.io (sin plan gratuito para cuentas nuevas), GitHub Pages para la web (se prefiere todo en un sitio).
-- **API: web service con imagen prebuilt** (`runtime: image`) desde `ghcr.io/jorgetroya80/mad-mobility-api`, que es pública. Render no compila: despliega la imagen que `publish-api` ya probó con `dockerImageTest` y la comprobación de arranque. Región Frankfurt, la más cercana a Madrid.
+- **API: web service con imagen prebuilt** (`runtime: image`) desde `ghcr.io/jorgetroya80/mad-transit-api`, que es pública. Render no compila: despliega la imagen que `publish-api` ya probó con `dockerImageTest` y la comprobación de arranque. Región Frankfurt, la más cercana a Madrid.
 - **Web: static site que descarga el artefacto de la release.** El build command de Render no ejecuta `pnpm install`: lee la versión de `web` en `.release-please-manifest.json` y descarga `web-dist.tar.gz` de la GitHub Release `web-v<versión>`. Así se evita el token de GitHub Packages en Render, y lo publicado es exactamente lo que adjuntó `publish-web`.
-- **La web llama al API directamente, con CORS** (plan B, decisión del usuario del 2026-10-28). `web/.env.production` fija `VITE_API_BASE_URL=https://mad-mobility-api.onrender.com`, así que el build de producción, y por tanto `web-dist.tar.gz`, lleva esa URL. El API permite ese origen con `CORS_ALLOWED_ORIGINS=https://mad-mobility-web.onrender.com` en `render.yaml`. En desarrollo no cambia nada: `dev` y `dev:mock` siguen usando `/api` y el proxy de Vite.
+- **La web llama al API directamente, con CORS** (plan B, decisión del usuario del 2026-10-28). `web/.env.production` fija `VITE_API_BASE_URL=https://mad-transit-api.onrender.com`, así que el build de producción, y por tanto `web-dist.tar.gz`, lleva esa URL. El API permite ese origen con `CORS_ALLOWED_ORIGINS=https://mad-transit-web.onrender.com` en `render.yaml`. En desarrollo no cambia nada: `dev` y `dev:mock` siguen usando `/api` y el proxy de Vite.
   - Por qué se descartó el rewrite `/api/*` del static site, la idea inicial: funciona como proxy, pero hace una segunda petición desde Render al API que vuelve a pasar por Cloudflare, y ese segundo Cloudflare escribe en `True-Client-Ip` la IP de Render. Todos los usuarios de la web compartían así unos pocos cubos de rate limit, y un solo cliente podía bloquear a todos. Comprobado en T7: con la misma IP, `/api` por el rewrite daba 429 y la llamada directa al API, 200. La prueba de cabeceras de T2 no lo detectó porque su destino de eco (`httpbin.org`) estaba fuera de Render.
   - Coste aceptado: el artefacto de la web queda atado a la URL del API, y la web y el API ya no comparten origen.
-- **Despliegue por deploy hooks, sin auto-deploy.** `deploy-api` llama al hook del API con `imgURL=ghcr.io/jorgetroya80/mad-mobility-api:<versión>`; `deploy-web` llama al hook del static site. Las URLs de los hooks son secretos del repo. Se activa con `DEPLOY_ENABLED=true`, como ya prevé `foundation`.
+- **Despliegue por deploy hooks, sin auto-deploy.** `deploy-api` llama al hook del API con `imgURL=ghcr.io/jorgetroya80/mad-transit-api:<versión>`; `deploy-web` llama al hook del static site. Las URLs de los hooks son secretos del repo. Se activa con `DEPLOY_ENABLED=true`, como ya prevé `foundation`.
 - **Blueprint en `render.yaml`** en la raíz del repo. Los secretos van con `sync: false` y se rellenan una vez en el panel de Render.
 - **Credenciales de app registrada.** Antes de publicar se registra la app en MobilityLabs y el API usa `EMT_CLIENT_ID` + `EMT_PASS_KEY`, no el email y la contraseña personales.
 
@@ -42,7 +42,7 @@ Por comprobar en la fase de plan:
 ## Tech Stack
 
 - Render: web service `runtime: image`, plan `free`, región `frankfurt`; static site `runtime: static`; Blueprint `render.yaml`.
-- Imagen: `ghcr.io/jorgetroya80/mad-mobility-api` (Java 25 JRE, ya publicada por `publish-api`).
+- Imagen: `ghcr.io/jorgetroya80/mad-transit-api` (Java 25 JRE, ya publicada por `publish-api`).
 - Web: `web-dist.tar.gz` de la GitHub Release `web-v<versión>` (ya adjuntado por `publish-web`).
 - GitHub Actions: `curl` a los deploy hooks; sin acciones nuevas de terceros.
 - Spring Boot 4.1.1: `RateLimitFilter` lee `True-Client-Ip`.
@@ -59,7 +59,7 @@ actionlint
 # Build command del static site (lo ejecuta Render)
 VERSION=$(sed -n 's/.*"web": *"\([^"]*\)".*/\1/p' .release-please-manifest.json) \
   && mkdir -p dist \
-  && curl -fsSL "https://github.com/jorgetroya80/mad-mobility/releases/download/web-v${VERSION}/web-dist.tar.gz" | tar -xz -C dist
+  && curl -fsSL "https://github.com/jorgetroya80/mad-transit/releases/download/web-v${VERSION}/web-dist.tar.gz" | tar -xz -C dist
 
 # Tests de los cambios de código
 ./api/gradlew -p api test --tests '*RateLimitFilterMvcTest'
@@ -90,10 +90,10 @@ README.md, api/README.md, web/README.md  URL pública y despliegue
 ```yaml
 services:
   - type: web
-    name: mad-mobility-api
+    name: mad-transit-api
     runtime: image
     image:
-      url: ghcr.io/jorgetroya80/mad-mobility-api:latest
+      url: ghcr.io/jorgetroya80/mad-transit-api:latest
     plan: free
     region: frankfurt
     healthCheckPath: /health/ready
@@ -105,10 +105,10 @@ services:
         sync: false
       # The web calls the API from its own origin
       - key: CORS_ALLOWED_ORIGINS
-        value: https://mad-mobility-web.onrender.com
+        value: https://mad-transit-web.onrender.com
 
   - type: web
-    name: mad-mobility-web
+    name: mad-transit-web
     runtime: static
     # Deploys the web-dist.tar.gz of the current web release, never rebuilds it
     buildCommand: ./scripts/render-web-build.sh
@@ -135,7 +135,7 @@ Los jobs de despliegue no imprimen la URL del hook:
 - name: Trigger the Render deploy
   env:
     HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
-    IMAGE: ghcr.io/jorgetroya80/mad-mobility-api:${{ needs.release-please.outputs.api-version }}
+    IMAGE: ghcr.io/jorgetroya80/mad-transit-api:${{ needs.release-please.outputs.api-version }}
   run: curl --fail --silent --show-error --get --data-urlencode "imgURL=$IMAGE" "$HOOK" > /dev/null
 ```
 
@@ -161,14 +161,14 @@ Sin tests end-to-end, como en el resto del proyecto. La cobertura de JaCoCo y Vi
 
 ### Web (`fix(web)`, sale en una release de `web`)
 
-- `web/.env.production` con `VITE_API_BASE_URL=https://mad-mobility-api.onrender.com` (ver Decisiones).
+- `web/.env.production` con `VITE_API_BASE_URL=https://mad-transit-api.onrender.com` (ver Decisiones).
 
 - `DataAttribution` dice "Powered by EMT de Madrid", con enlace a `https://www.emtmadrid.es`. Las condiciones de MobilityLabs exigen ese texto; hoy pone "Datos: EMT Madrid MobilityLabs".
 - La atribución del mapa ("OpenFreeMap © OpenMapTiles Data from OpenStreetMap") la añade MapLibre desde el estilo. No cambia.
 
 ### Infraestructura (`ci`)
 
-- `render.yaml`: servicio `mad-mobility-api` (image, `free`, `frankfurt`, `healthCheckPath: /health/ready`, variables `EMT_CLIENT_ID` y `EMT_PASS_KEY` con `sync: false`, `CORS_ALLOWED_ORIGINS` con el origen de la web) y static site `mad-mobility-web` (`scripts/render-web-build.sh`, `staticPublishPath: ./dist`, `autoDeployTrigger: off`, rewrite `/*` a `/index.html`, cabeceras de caché). El rewrite `/api/*` se quita cuando la web ya llama al API directamente. Ver Code Style.
+- `render.yaml`: servicio `mad-transit-api` (image, `free`, `frankfurt`, `healthCheckPath: /health/ready`, variables `EMT_CLIENT_ID` y `EMT_PASS_KEY` con `sync: false`, `CORS_ALLOWED_ORIGINS` con el origen de la web) y static site `mad-transit-web` (`scripts/render-web-build.sh`, `staticPublishPath: ./dist`, `autoDeployTrigger: off`, rewrite `/*` a `/index.html`, cabeceras de caché). El rewrite `/api/*` se quita cuando la web ya llama al API directamente. Ver Code Style.
 - Cabeceras del static site: `/assets/*` con `Cache-Control: public, max-age=31536000, immutable` (nombres con hash de Vite); `/index.html` con `Cache-Control: no-cache`.
 - `release.yml`: `deploy-api` y `deploy-web` llaman a su deploy hook con `curl --fail` y los secretos `RENDER_DEPLOY_HOOK_API` y `RENDER_DEPLOY_HOOK_WEB`. Las condiciones `if` y los `needs` actuales no cambian.
 - READMEs: URL pública, cómo se despliega y cómo recrear el Blueprint.
@@ -191,7 +191,7 @@ Cada PR de release toca solo `api/` o solo `web/` (ver la regla de `ci.yml`):
 ## Success Criteria
 
 1. `https://<web>.onrender.com` carga el mapa con las estaciones; `?station=<número>` abre el detalle al entrar directamente o al recargar.
-2. La web pide las estaciones a `https://mad-mobility-api.onrender.com/v1/bicimad/...` y recibe 200 con `Access-Control-Allow-Origin: https://mad-mobility-web.onrender.com`, sin errores de CORS en la consola. Otro origen no recibe esa cabecera.
+2. La web pide las estaciones a `https://mad-transit-api.onrender.com/v1/bicimad/...` y recibe 200 con `Access-Control-Allow-Origin: https://mad-transit-web.onrender.com`, sin errores de CORS en la consola. Otro origen no recibe esa cabecera.
 3. Dos IPs distintas tienen cubos de rate limit independientes en producción: el `429` de una no afecta a la otra.
 4. Con el API dormido, la primera visita muestra las estaciones en menos de 3 min sin recargar a mano.
 5. Una release de `api` despliega la imagen de esa versión: `/info` devuelve `build.version` igual a la etiqueta `api-v<versión>`.

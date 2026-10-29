@@ -58,8 +58,8 @@ cd api
 ./gradlew smokeTest               # llama a la EMT real; requiere credenciales en .env.local (manual)
 ./gradlew bootRun                 # arranca en :8080, lee .env.local si existe
 
-docker build -t mad-mobility-api .
-docker run --rm -p 8080:8080 --env-file .env.local mad-mobility-api
+docker build -t mad-transit-api .
+docker run --rm -p 8080:8080 --env-file .env.local mad-transit-api
 
 curl -s localhost:8080/health/live
 curl -s localhost:8080/health/ready
@@ -89,8 +89,8 @@ api/
   Dockerfile                     multi-stage; activa el job publish-api existente
   .dockerignore
   .env.example
-  src/main/kotlin/io/github/jorgetroya80/madmobility/
-    MadMobilityApplication.kt
+  src/main/kotlin/io/github/jorgetroya80/madtransit/
+    MadTransitApplication.kt
     shared/
       emt/
         EmtProperties.kt         credenciales, base URL, timeouts, umbrales (validado al arrancar)
@@ -147,7 +147,7 @@ data class Cached<T>(val value: T, val updatedAt: Instant, val stale: Boolean)
 fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 ```
 
-- TTL y antigüedad máxima por módulo en configuración (`mad-mobility.cache.ttl` / `max-stale` por defecto, `mad-mobility.cache.modules.<module>.ttl` / `max-stale` por módulo). Por defecto: TTL 60 s, `max-stale` 24 h.
+- TTL y antigüedad máxima por módulo en configuración (`mad-transit.cache.ttl` / `max-stale` por defecto, `mad-transit.cache.modules.<module>.ttl` / `max-stale` por módulo). Por defecto: TTL 60 s, `max-stale` 24 h.
 - Dentro del TTL devuelve el valor sin llamar a `loader`.
 - Fuera del TTL llama a `loader` una sola vez aunque haya peticiones concurrentes (single-flight).
 - Si `loader` lanza `EmtException` y hay un valor anterior más reciente que `max-stale`, devuelve ese valor con `stale = true` y su `updatedAt` original. Si no lo hay, propaga la excepción.
@@ -155,7 +155,7 @@ fun <T : Any> get(module: String, key: String, loader: () -> T): Cached<T>
 
 ### `QuotaTracker`
 
-- `tryAcquire(module): Boolean`. Límites en configuración: `mad-mobility.quota.global-daily-limit` (por defecto 18.000, margen sobre 20.000) y `mad-mobility.quota.modules.<module>.daily-limit`.
+- `tryAcquire(module): Boolean`. Límites en configuración: `mad-transit.quota.global-daily-limit` (por defecto 18.000, margen sobre 20.000) y `mad-transit.quota.modules.<module>.daily-limit`.
 - Devuelve `false` si se alcanza el límite del módulo o el global.
 - Los contadores se reinician a las 00:00 Europe/Madrid (ver Open Questions).
 - Si la respuesta de login de la EMT informa del consumo (`apiCounter` o similar), se publica como métrica aparte para compararla con el contador local.
@@ -225,7 +225,7 @@ class CacheService(
 - Configuración con `@ConfigurationProperties` + `@Validated` en data classes inmutables.
 - Todo lo que depende de la hora recibe un `Clock` inyectado (tests con reloj fijo).
 - Sin `!!`. Errores esperados como excepciones de la jerarquía sellada `EmtException`, no `null`.
-- Nombres: clases en `PascalCase`, funciones y propiedades en `camelCase`, claves de configuración en `kebab-case` bajo el prefijo `mad-mobility`.
+- Nombres: clases en `PascalCase`, funciones y propiedades en `camelCase`, claves de configuración en `kebab-case` bajo el prefijo `mad-transit`.
 - Formato: lo que diga Spotless con ktlint; no se discute a mano.
 
 ## Testing Strategy
