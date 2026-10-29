@@ -86,7 +86,7 @@ function apiLines(relative) {
 const webFiles =
   part === 'api' ? [] : [...changed.keys()].filter((f) => WEB_SOURCE.test(f) && !isWebTest(f));
 const apiFiles = part === 'web' ? [] : [...changed.keys()].filter((f) => API_SOURCE.test(f));
-if (webFiles.length && !existsSync(WEB_REPORT)) bail(`${WEB_REPORT} missing: run the web tests`);
+if (webFiles.length && !existsSync(WEB_REPORT)) bail(`${WEB_REPORT} missing: run pnpm --filter web test:coverage`);
 if (apiFiles.length && !existsSync(API_REPORT)) bail(`${API_REPORT} missing: run the api tests`);
 const webReport = webFiles.length ? JSON.parse(readFileSync(WEB_REPORT, 'utf8')) : {};
 const apiReport = apiFiles.length ? readFileSync(API_REPORT, 'utf8') : '';

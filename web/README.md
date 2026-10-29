@@ -34,14 +34,15 @@ Each release attaches `web-dist.tar.gz` and deploys it to Render, which serves i
 Run from the repo root after `pnpm install`:
 
 ```bash
-pnpm --filter web dev        # Vite on :5173, proxies /api to localhost:8080 (needs the API running)
-pnpm --filter web dev:mock   # MSW in the browser, no backend needed
-pnpm --filter web lint       # oxlint
-pnpm --filter web format     # oxfmt (writes)
-pnpm --filter web typecheck  # tsc --noEmit
-pnpm --filter web test       # Vitest with coverage (>= 80% lines per layer)
-pnpm --filter web build      # type-check and build to web/dist
-pnpm --filter web preview    # serve web/dist
+pnpm --filter web dev            # Vite on :5173, proxies /api to localhost:8080 (needs the API running)
+pnpm --filter web dev:mock       # MSW in the browser, no backend needed
+pnpm --filter web lint           # oxlint
+pnpm --filter web format         # oxfmt (writes)
+pnpm --filter web typecheck      # tsc --noEmit
+pnpm --filter web test           # Vitest, unit tests only
+pnpm --filter web test:coverage  # Vitest with coverage (>= 80% lines per layer)
+pnpm --filter web build          # type-check and build to web/dist
+pnpm --filter web preview        # serve web/dist
 ```
 
 `VITE_API_BASE_URL` sets the API base at build time: a path or an `http(s)` URL, `/api` by default. [`.env.production`](.env.production) sets it to the deployed API for `build`, so `preview` calls that API too (CORS only allows the deployed web, so the requests fail from localhost); `dev` and `dev:mock` keep `/api`.

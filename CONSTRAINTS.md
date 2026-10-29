@@ -23,7 +23,7 @@ Lo comprueba `node scripts/floor-guard.mjs` contra el merge base con `origin/mai
 | --- | --- | --- | --- | --- |
 | Tipos | 0 errores | `pnpm --filter web typecheck`; `./api/gradlew -p api compileKotlin compileTestKotlin` | cada edición (pre-push), CI (bloquea) | Ya estaba |
 | Lint y formato | 0 errores | `pnpm --filter web lint`; `oxfmt` (lint-staged); `./api/gradlew -p api spotlessCheck` | cada commit, CI (bloquea) | Ya estaba |
-| Cobertura web por capa | ≥ 80 % de líneas en cada capa | `pnpm --filter web test` (umbrales en `web/vite.config.ts`) | final de tarea, CI (bloquea) | Ya estaba |
+| Cobertura web por capa | ≥ 80 % de líneas en cada capa | `pnpm --filter web test:coverage` (umbrales en `web/vite.config.ts`) | final de tarea, CI (bloquea) | Ya estaba |
 | Cobertura api | ≥ 80 % de líneas en `shared` y en cada módulo | `./api/gradlew -p api build` (JaCoCo) | final de tarea, CI (bloquea) | Ya estaba |
 | Cobertura de líneas cambiadas | ≥ 80 % de las líneas nuevas o cambiadas | `node scripts/changed-coverage.mjs` (lee `web/coverage/coverage-final.json` y el XML de JaCoCo; no repite los tests) | final de tarea, CI (avisa) | El mismo 80 % que ya usan Vitest y JaCoCo; obliga a escribir un test sin pedirlo para cada línea de configuración |
 | Secretos | 0 hallazgos | `pnpm check:secrets` (gitleaks 8.28.0 en Docker, `--redact`, commits de la rama) | cada edición, CI (avisa) | Un secreto filtrado no se puede deshacer; `--redact` evita que el valor acabe en un log |
@@ -49,7 +49,7 @@ Medidos el 2026-10-29 en `main` (`ca07422`). Cada comprobación se compara con e
 
 | Métrica | Hoy | Dirección | Comando |
 | --- | --- | --- | --- |
-| Cobertura de líneas de web | 99.1 % | must not fall (tolerancia 0.5 %) | `pnpm --filter web test` (resumen "All files") |
+| Cobertura de líneas de web | 99.1 % | must not fall (tolerancia 0.5 %) | `pnpm --filter web test:coverage` (resumen "All files") |
 | Vulnerabilidades altas en dependencias de desarrollo | 8 (`js-yaml` vía `@hey-api/openapi-ts`; `vite` y `undici` vía `vitest`) | must not grow | `pnpm audit --audit-level high` |
 | Hallazgos de Semgrep por debajo de alta | 6: 5 de configuración (Dependabot, `.npmrc` y `pnpm-workspace.yaml`) y 1 `detect-non-literal-regexp` en `MapPage.test.tsx` | must not grow | `check:semgrep` sin `--severity ERROR` (cuenta todo; los altos son 0) |
 

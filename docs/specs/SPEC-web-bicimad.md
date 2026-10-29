@@ -68,7 +68,8 @@ pnpm --filter web dev:mock       # sin backend: fixtures de MSW
 pnpm --filter web dev            # contra ./gradlew bootRun
 pnpm --filter web lint
 pnpm --filter web typecheck
-pnpm --filter web test           # vitest run --coverage
+pnpm --filter web test           # vitest run
+pnpm --filter web test:coverage  # vitest run --coverage
 pnpm --filter web build
 ```
 
@@ -268,3 +269,4 @@ Ninguna. Las supuestas en [Assumptions](#assumptions) (ubicación al cargar, umb
 - 2026-10-14: spec implementada (T1-T16, rama `feat/web-bicimad`). SC1-SC14 verificados (ver Resultado del plan); SC11 en CI se confirma en el PR. El API devuelve hoy 678 estaciones.
 - 2026-10-14: tras la revisión del usuario, bajo el título de "Favoritas" y "Cerca de…" se indica "Bicis disponibles" o "Anclajes libres" según el filtro (también como descripción accesible de la sección).
 - 2026-10-14: revisión de código. Al elegir en el buscador el foco ya no vuelve al campo (abría un instante el teclado en móvil antes de que el detalle tomara el foco). Mientras "Mi ubicación" reintenta, la página conserva la última respuesta (centro, título y aviso) en lugar de pasar a "Cerca de ti" sin ubicación.
+- 2026-10-29: `test` ejecuta solo los tests (`vitest run`); la cobertura y sus umbrales pasan a `test:coverage` (`vitest run --coverage`), que es lo que ejecutan CI y `check:task`.

@@ -13,7 +13,8 @@
     "lint": "oxlint",
     "depcruise": "depcruise src",
     "format": "oxfmt",
-    "test": "vitest run --coverage"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@jorgetroya80/bicimad-client": "0.6.0",

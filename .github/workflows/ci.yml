@@ -135,7 +135,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: pnpm --filter web run lint
       - run: pnpm --filter web run typecheck
-      - run: pnpm --filter web run test
+      - run: pnpm --filter web run test:coverage
       # Warn only (CONSTRAINTS.md): reports the coverage of the changed lines, never fails the job
       - name: Changed-line coverage
         if: github.event_name == 'pull_request'
