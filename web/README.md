@@ -1,6 +1,6 @@
 # web
 
-React frontend (Vite + TypeScript) for Mad Mobility.
+React frontend (Vite + TypeScript) for Mad Transit.
 
 ## What it does
 
@@ -12,7 +12,7 @@ Shows BiciMAD stations on a map of Madrid, with how many bikes and free docks ea
 - Search by station number; favorites stored in the browser (`localStorage`).
 - Responsive: bottom sheet on mobile, side panel from tablet up.
 
-Live at [mad-mobility-web.onrender.com](https://mad-mobility-web.onrender.com). Each release attaches `web-dist.tar.gz` and deploys it to Render, which serves it as is. In that build the browser calls the API directly at `https://mad-mobility-api.onrender.com`, which allows the web's origin through CORS; see [Deployment](../README.md#deployment).
+Live at [mad-transit-web.onrender.com](https://mad-transit-web.onrender.com). Each release attaches `web-dist.tar.gz` and deploys it to Render, which serves it as is. In that build the browser calls the API directly at `https://mad-transit-api.onrender.com`, which allows the web's origin through CORS; see [Deployment](../README.md#deployment).
 
 ## Requirements
 
