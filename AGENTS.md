@@ -33,7 +33,7 @@ Run `pnpm check:task` before you report a task as done, and report its real resu
 - Stage files explicitly (`git add <path>`), never `git add -A`.
 - One branch and one PR per module or fix, with one commit per plan task. Never commit to `main`.
 - A feat, fix or perf PR touches only `api/` or only `web/` (the release-scope check). Put the other part's changes in an earlier build or chore PR.
-- The repo squash-merges, so the PR body becomes the commit body and release-please parses it. A line it cannot parse (code, for example) makes it skip the commit without warning. Every PR body has two sections, `## What` (what changes) and `## Why` (the reason), both in plain prose with no code.
+- The repo squash-merges, so the PR body becomes the commit body and release-please parses it. A line it cannot parse (code, for example) makes it skip the commit without warning. Every PR body follows [.github/pull_request_template.md](.github/pull_request_template.md): `## What` lists the changes as bullets, and `## Why` gives the reason in prose. No code in either.
 - Only if the body needs code or a special footer, end it with an override, which replaces the whole commit message for release-please. Keep it in sync with the PR title, and put any `BREAKING CHANGE:` footer inside it, or the release loses it:
 
   ```
