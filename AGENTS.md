@@ -30,15 +30,17 @@ Run `pnpm check:task` before you report a task as done, and report its real resu
 
 - Conventional Commits, checked by commitlint. Types: feat, fix, perf, refactor, test, docs, build, ci, chore, revert. Scopes: api, web, ci, deps, docs, repo.
 - Body lines are at most 100 characters.
-- Never add a `Co-Authored-By` line or any other AI attribution.
 - Stage files explicitly (`git add <path>`), never `git add -A`.
 - One branch and one PR per module or fix, with one commit per plan task. Never commit to `main`.
 - A feat, fix or perf PR touches only `api/` or only `web/` (the release-scope check). Put the other part's changes in an earlier build or chore PR.
-- The repo squash-merges, so the PR body becomes the commit body and release-please parses it. Write PR bodies in plain prose with no code, and end them with:
+- The repo squash-merges, so the PR body becomes the commit body and release-please parses it. A line it cannot parse (code, for example) makes it skip the commit without warning. Write PR bodies in plain prose with no code.
+- Only if the body needs code or a special footer, end it with an override, which replaces the whole commit message for release-please. Keep it in sync with the PR title, and put any `BREAKING CHANGE:` footer inside it, or the release loses it:
 
   ```
   BEGIN_COMMIT_OVERRIDE
   <the PR title>
+
+  BREAKING CHANGE: <only for a breaking change>
   END_COMMIT_OVERRIDE
   ```
 
