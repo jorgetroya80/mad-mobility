@@ -179,7 +179,7 @@ fun JacocoCoverageVerification.requireLineCoverage(packagePath: String) {
             .get()
             .output.classesDirs
             .asFileTree
-            .matching { include("io/github/jorgetroya80/madmobility/$packagePath/**") },
+            .matching { include("io/github/jorgetroya80/madtransit/$packagePath/**") },
     )
     violationRules {
         rule {
