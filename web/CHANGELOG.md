@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/jorgetroya80/mad-transit/compare/web-v0.3.2...web-v0.4.0) (2026-10-29)
+
+
+### Features
+
+* **web:** rename the web to mad transit ([#69](https://github.com/jorgetroya80/mad-transit/issues/69)) ([9cfb227](https://github.com/jorgetroya80/mad-transit/commit/9cfb2276a61051179df7f222c8d6f4bd2eabe2da))
+
 ## [0.3.2](https://github.com/jorgetroya80/mad-mobility/compare/web-v0.3.1...web-v0.3.2) (2026-10-28)
 
 
