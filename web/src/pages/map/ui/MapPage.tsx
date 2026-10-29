@@ -16,7 +16,7 @@ export function MapPage() {
 
   return (
     <AppLayout
-      title="BiciMAD Now"
+      title="Mad Transit"
       map={
         <StationsMap
           center={location.center}

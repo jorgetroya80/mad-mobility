@@ -9,7 +9,7 @@ function renderLayout(
 ) {
   return render(
     <AppLayout
-      title="BiciMAD Now"
+      title="Mad Transit"
       map={<div data-testid="map" />}
       panelLabel="Estaciones"
       panel={<p>Contenido del panel</p>}
@@ -23,7 +23,7 @@ describe('AppLayout', () => {
     renderLayout();
 
     expect(
-      within(screen.getByRole('main')).getByRole('heading', { level: 1, name: 'BiciMAD Now' }),
+      within(screen.getByRole('main')).getByRole('heading', { level: 1, name: 'Mad Transit' }),
     ).toBeInTheDocument();
   });
 

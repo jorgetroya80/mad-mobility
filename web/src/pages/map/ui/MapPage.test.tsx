@@ -134,7 +134,7 @@ describe('MapPage', () => {
     it('names the page and shows the map', async () => {
       await renderPage();
 
-      expect(screen.getByRole('heading', { level: 1, name: 'BiciMAD Now' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Mad Transit' })).toBeInTheDocument();
       expect(within(screen.getByRole('main')).getByTestId('base-map')).toBeInTheDocument();
     });
 
