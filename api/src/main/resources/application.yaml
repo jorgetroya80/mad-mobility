@@ -78,7 +78,7 @@ resilience4j:
         max-attempts: 2
         wait-duration: 500ms
         retry-exceptions:
-          - io.github.jorgetroya80.madmobility.shared.emt.EmtUnavailable
+          - io.github.jorgetroya80.madtransit.shared.emt.EmtUnavailable
 
 management:
   endpoints:

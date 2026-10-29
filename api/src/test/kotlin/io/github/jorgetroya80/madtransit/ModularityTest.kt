@@ -1,0 +1,28 @@
+package io.github.jorgetroya80.madtransit
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.springframework.modulith.core.ApplicationModules
+
+class ModularityTest {
+    private val modules = ApplicationModules.of(MadTransitApplication::class.java)
+
+    @Test
+    fun `modules respect their boundaries`() {
+        modules.verify()
+    }
+
+    @Test
+    fun `shared does not depend on any module`() {
+        val shared = modules.getModuleByName("shared").orElseThrow()
+
+        assertThat(shared.getDirectDependencies(modules).uniqueModules()).isEmpty()
+    }
+
+    @Test
+    fun `bicimad only depends on shared`() {
+        val bicimad = modules.getModuleByName("bicimad").orElseThrow()
+
+        assertThat(bicimad.getDirectDependencies(modules).uniqueModules().map { it.identifier.toString() }).isSubsetOf("shared")
+    }
+}
