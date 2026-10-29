@@ -10,7 +10,7 @@ if [[ -z "$version" ]]; then
   exit 1
 fi
 
-url="https://github.com/jorgetroya80/mad-mobility/releases/download/web-v${version}/web-dist.tar.gz"
+url="https://github.com/jorgetroya80/mad-transit/releases/download/web-v${version}/web-dist.tar.gz"
 echo "Deploying web ${version} from ${url}"
 
 rm -rf dist

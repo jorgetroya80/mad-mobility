@@ -1,5 +1,5 @@
 {
-  "name": "mad-mobility",
+  "name": "mad-transit",
   "private": true,
   "description": "BiciMAD Now: Madrid mobility monorepo (Spring Boot API + React web)",
   "license": "MIT",

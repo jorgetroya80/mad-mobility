@@ -3,12 +3,12 @@
 # Deploys are triggered by deploy hooks from release.yml (deploy-api, deploy-web).
 services:
   - type: web
-    name: mad-mobility-api
+    name: mad-transit-api
     runtime: image
     image:
       # deploy-api pins each release through the hook's imgURL; the Blueprint keeps
       # latest (publish-api pushes it with every release) so a sync never rolls back to an old tag
-      url: ghcr.io/jorgetroya80/mad-mobility-api:latest
+      url: ghcr.io/jorgetroya80/mad-transit-api:latest
     plan: free
     # Closest region to Madrid; it cannot be changed after the service is created
     region: frankfurt
@@ -30,10 +30,10 @@ services:
         sync: false
       # The web calls the API directly from its own origin
       - key: CORS_ALLOWED_ORIGINS
-        value: https://mad-mobility-web.onrender.com
+        value: https://mad-transit-web.onrender.com
 
   - type: web
-    name: mad-mobility-web
+    name: mad-transit-web
     runtime: static
     buildCommand: ./scripts/render-web-build.sh
     staticPublishPath: ./dist
