@@ -7,8 +7,6 @@
 
 Madrid mobility data, starting with BiciMAD, built on the EMT Madrid MobilityLabs API.
 
-**Live:** [mad-transit-web.onrender.com](https://mad-transit-web.onrender.com) (free hosting: after 15 minutes without visits the API sleeps, and the first visit takes up to 3 minutes).
-
 ## Overview
 
 What works today:
