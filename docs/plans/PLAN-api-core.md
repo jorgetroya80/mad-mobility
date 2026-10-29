@@ -55,13 +55,13 @@ T1 esqueleto Gradle
 ### Fase 1: Esqueleto
 
 - [x] **T1: Proyecto Gradle mínimo** (M, ~45 min)
-  - Descripción: wrapper 9.3.1, `settings.gradle.kts`, `build.gradle.kts` (plugins de Kotlin, Spring Boot, Spotless con ktlint y JaCoCo solo con informe; toolchain Java 25; `version` leída de `gradle.properties`), `gradle/libs.versions.toml`, `MadMobilityApplication.kt`, `application.yaml` (hilos virtuales, `spring.config.import=optional:file:.env.local[.properties]`), test de arranque de contexto.
+  - Descripción: wrapper 9.3.1, `settings.gradle.kts`, `build.gradle.kts` (plugins de Kotlin, Spring Boot, Spotless con ktlint y JaCoCo solo con informe; toolchain Java 25; `version` leída de `gradle.properties`), `gradle/libs.versions.toml`, `MadTransitApplication.kt`, `application.yaml` (hilos virtuales, `spring.config.import=optional:file:.env.local[.properties]`), test de arranque de contexto.
   - Aceptación:
     - `./gradlew build` pasa en local.
     - En el PR se ejecuta el job `API (Gradle)` con Java 25 (`java-version: '25'` en `ci.yml`; antes se omitía) y `ci-ok` queda en verde.
     - Un `.kt` mal formateado sale formateado al hacer commit (`lint-staged` + `spotlessApply`).
   - Verificación: `cd api && ./gradlew build`; revisar los checks del PR; commit de prueba con formato roto.
-  - Archivos: `api/settings.gradle.kts`, `api/build.gradle.kts`, `api/gradle/libs.versions.toml`, `api/src/main/kotlin/.../MadMobilityApplication.kt`, `api/src/main/resources/application.yaml`, `.github/workflows/ci.yml` (+ wrapper generado y test de contexto).
+  - Archivos: `api/settings.gradle.kts`, `api/build.gradle.kts`, `api/gradle/libs.versions.toml`, `api/src/main/kotlin/.../MadTransitApplication.kt`, `api/src/main/resources/application.yaml`, `.github/workflows/ci.yml` (+ wrapper generado y test de contexto).
   - Dependencias: ninguna.
 
 - [x] **T2: Health, Actuator y verificación de módulos** (S, ~30 min)
@@ -176,7 +176,7 @@ T1 esqueleto Gradle
   - Aceptación:
     - SC14: `docker build` funciona; `docker run` arranca como usuario no root (`docker exec ... id -u` ≠ 0) y `/health/live` responde 200.
     - `publish-api` deja de omitirse en la siguiente release (se confirma cuando llegue).
-  - Verificación: `docker build -t mad-mobility-api api && docker run --rm -p 8080:8080 --env-file api/.env.local mad-mobility-api`.
+  - Verificación: `docker build -t mad-transit-api api && docker run --rm -p 8080:8080 --env-file api/.env.local mad-transit-api`.
   - Archivos: `api/Dockerfile`, `api/.dockerignore`, `DockerImageTest.kt`, `build.gradle.kts`.
   - Dependencias: T10.
 

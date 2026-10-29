@@ -1,4 +1,4 @@
-# Capability Map: BiciMAD Now
+# Capability Map: Mad Transit
 
 - Created: 2026-10-03
 - Status: **approved** (2026-10-28)

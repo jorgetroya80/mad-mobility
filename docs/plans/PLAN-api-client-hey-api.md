@@ -57,7 +57,7 @@ T1 y T2 son independientes entre sí.
   - Aceptación:
     - SC5: renombrar `getStation` en `StationsController` hace fallar el test (comprobado a mano y revertido).
   - Verificación: `./api/gradlew -p api generateOpenApi`; `./api/gradlew -p api build`.
-  - Archivos: `api/src/test/kotlin/io/github/jorgetroya80/madmobility/OpenApiExportTest.kt`.
+  - Archivos: `api/src/test/kotlin/io/github/jorgetroya80/madtransit/OpenApiExportTest.kt`.
   - Dependencias: ninguna.
 
 - [x] **T3: Documentación y PR 1** (S, ~20 min)

@@ -1,6 +1,6 @@
 # @jorgetroya80/bicimad-client
 
-Typed client for the BiciMAD Now public API, generated with [hey-api](https://heyapi.dev) from the API's OpenAPI contract. Each `api` release publishes a client with the same version; the contract ships in the package as `openapi.json`.
+Typed client for the Mad Transit public API, generated with [hey-api](https://heyapi.dev) from the API's OpenAPI contract. Each `api` release publishes a client with the same version; the contract ships in the package as `openapi.json`.
 
 ## Install
 

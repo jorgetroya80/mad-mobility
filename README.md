@@ -1,13 +1,13 @@
-# Mad Mobility
+# Mad Transit
 
-[![CI](https://github.com/jorgetroya80/mad-mobility/actions/workflows/ci.yml/badge.svg)](https://github.com/jorgetroya80/mad-mobility/actions/workflows/ci.yml)
-[![API release](https://img.shields.io/github/v/release/jorgetroya80/mad-mobility?filter=api-v*&label=api)](https://github.com/jorgetroya80/mad-mobility/releases)
-[![Web release](https://img.shields.io/github/v/release/jorgetroya80/mad-mobility?filter=web-v*&label=web)](https://github.com/jorgetroya80/mad-mobility/releases)
-[![License](https://img.shields.io/github/license/jorgetroya80/mad-mobility)](LICENSE)
+[![CI](https://github.com/jorgetroya80/mad-transit/actions/workflows/ci.yml/badge.svg)](https://github.com/jorgetroya80/mad-transit/actions/workflows/ci.yml)
+[![API release](https://img.shields.io/github/v/release/jorgetroya80/mad-transit?filter=api-v*&label=api)](https://github.com/jorgetroya80/mad-transit/releases)
+[![Web release](https://img.shields.io/github/v/release/jorgetroya80/mad-transit?filter=web-v*&label=web)](https://github.com/jorgetroya80/mad-transit/releases)
+[![License](https://img.shields.io/github/license/jorgetroya80/mad-transit)](LICENSE)
 
 Madrid mobility data, starting with BiciMAD, built on the EMT Madrid MobilityLabs API.
 
-**Live:** [mad-mobility-web.onrender.com](https://mad-mobility-web.onrender.com) (free hosting: after 15 minutes without visits the API sleeps, and the first visit takes up to 3 minutes).
+**Live:** [mad-transit-web.onrender.com](https://mad-transit-web.onrender.com) (free hosting: after 15 minutes without visits the API sleeps, and the first visit takes up to 3 minutes).
 
 ## Overview
 
@@ -42,7 +42,7 @@ The repo is a monorepo with two apps. The API defines its OpenAPI contract in co
 
 ```mermaid
 flowchart LR
-    subgraph repo[mad-mobility]
+    subgraph repo[mad-transit]
         web["web/<br/>React + Vite"]
         client["OpenAPI client"]
         api["api/<br/>Kotlin + Spring Boot"]
@@ -101,8 +101,8 @@ Swagger UI is at `localhost:8080/swagger-ui.html` while `bootRun` is running. Ru
 
 Both apps run on [Render](https://render.com)'s free plan, described in [`render.yaml`](render.yaml) (a Render Blueprint). Render never builds anything: it runs what each release already published.
 
-- **API** (`mad-mobility-api`): a web service that runs the Docker image `ghcr.io/jorgetroya80/mad-mobility-api`. On an `api` release, the `deploy-api` job calls the service's deploy hook with that release's image tag.
-- **Web** (`mad-mobility-web`): a static site. Its build ([`scripts/render-web-build.sh`](scripts/render-web-build.sh)) downloads the `web-dist.tar.gz` of the current `web` release. On a `web` release, the `deploy-web` job calls its deploy hook.
+- **API** (`mad-transit-api`): a web service that runs the Docker image `ghcr.io/jorgetroya80/mad-transit-api`. On an `api` release, the `deploy-api` job calls the service's deploy hook with that release's image tag.
+- **Web** (`mad-transit-web`): a static site. Its build ([`scripts/render-web-build.sh`](scripts/render-web-build.sh)) downloads the `web-dist.tar.gz` of the current `web` release. On a `web` release, the `deploy-web` job calls its deploy hook.
 - **Direct calls**: the web's production build ([`web/.env.production`](web/.env.production)) calls the API, which allows the web's origin through CORS (`CORS_ALLOWED_ORIGINS` in `render.yaml`). The API rate-limits each client by the `True-Client-Ip` header that Cloudflare, in front of Render, sets to the real IP. A static-site rewrite of `/api/*` was tried first and dropped: its second hop through Cloudflare made every user look like Render's IP.
 
 The `deploy-*` jobs in `release.yml` only run when the repository variable `DEPLOY_ENABLED` is `true`. They need the secrets `RENDER_DEPLOY_HOOK_API` and `RENDER_DEPLOY_HOOK_WEB`. The EMT credentials (`EMT_CLIENT_ID` and `EMT_PASS_KEY`) live only in Render.

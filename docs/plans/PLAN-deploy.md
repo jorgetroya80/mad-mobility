@@ -72,7 +72,7 @@ T5 y T6 son independientes entre sí.
 ### Fase 2: despliegue automático (mismo PR `ci`)
 
 - [x] **T3: Jobs `deploy-api` y `deploy-web`** (S, ~30 min)
-  - Descripción: `deploy-api` llama a `RENDER_DEPLOY_HOOK_API` con `imgURL=ghcr.io/jorgetroya80/mad-mobility-api:<api-version>` (paso de Code Style de la spec); `deploy-web` llama a `RENDER_DEPLOY_HOOK_WEB` (o a la API REST de Render, según el Assumption 3). `timeout-minutes` en los dos y `permissions: {}`. No cambian los `if` ni los `needs`. Secretos creados en GitHub con `gh secret set`.
+  - Descripción: `deploy-api` llama a `RENDER_DEPLOY_HOOK_API` con `imgURL=ghcr.io/jorgetroya80/mad-transit-api:<api-version>` (paso de Code Style de la spec); `deploy-web` llama a `RENDER_DEPLOY_HOOK_WEB` (o a la API REST de Render, según el Assumption 3). `timeout-minutes` en los dos y `permissions: {}`. No cambian los `if` ni los `needs`. Secretos creados en GitHub con `gh secret set`.
   - Aceptación:
     - SC10: con `DEPLOY_ENABLED` sin definir, los jobs aparecen como omitidos.
     - Ningún paso imprime la URL del hook.
@@ -103,7 +103,7 @@ T5 y T6 son independientes entre sí.
     - SC3 en producción: el `429` de una IP no afecta a otra (móvil con datos y portátil).
     - SC5: `/info` devuelve `build.version` 0.6.1.
   - Verificación: `./api/gradlew -p api test --tests '*RateLimitFilterMvcTest'`; `./api/gradlew -p api build`; `curl -s https://<api>.onrender.com/info`.
-  - Archivos: `api/src/main/kotlin/io/github/jorgetroya80/madmobility/shared/web/RateLimitFilter.kt`, `api/src/test/kotlin/io/github/jorgetroya80/madmobility/shared/web/RateLimitFilterMvcTest.kt`.
+  - Archivos: `api/src/main/kotlin/io/github/jorgetroya80/madtransit/shared/web/RateLimitFilter.kt`, `api/src/test/kotlin/io/github/jorgetroya80/madtransit/shared/web/RateLimitFilterMvcTest.kt`.
   - Dependencias: checkpoint del pipeline.
 
 - [x] **T6: Atribución "Powered by EMT de Madrid"** (XS, ~15 min)
@@ -117,19 +117,19 @@ T5 y T6 son independientes entre sí.
   - Dependencias: checkpoint del pipeline (independiente de T5).
 
 - [x] **T7: CORS en el API** (XS, ~20 min)
-  - Descripción: `CORS_ALLOWED_ORIGINS=https://mad-mobility-web.onrender.com` en el servicio del API de `render.yaml`. Va en el PR `ci` con el cambio de spec y plan (rama `docs/deploy-direct-api`). Al mergear, el Blueprint sincroniza y el API se redespliega con CORS; la web 0.3.1 sigue usando el rewrite mientras tanto.
+  - Descripción: `CORS_ALLOWED_ORIGINS=https://mad-transit-web.onrender.com` en el servicio del API de `render.yaml`. Va en el PR `ci` con el cambio de spec y plan (rama `docs/deploy-direct-api`). Al mergear, el Blueprint sincroniza y el API se redespliega con CORS; la web 0.3.1 sigue usando el rewrite mientras tanto.
   - Aceptación:
-    - Un `GET` al API con `Origin: https://mad-mobility-web.onrender.com` devuelve `Access-Control-Allow-Origin` con ese origen; con otro `Origin`, no.
-  - Verificación: `curl -sI -H 'Origin: https://mad-mobility-web.onrender.com' https://mad-mobility-api.onrender.com/v1/bicimad/stations/25a`; lo mismo con `Origin: https://example.com`; validación del esquema de `render.yaml`.
+    - Un `GET` al API con `Origin: https://mad-transit-web.onrender.com` devuelve `Access-Control-Allow-Origin` con ese origen; con otro `Origin`, no.
+  - Verificación: `curl -sI -H 'Origin: https://mad-transit-web.onrender.com' https://mad-transit-api.onrender.com/v1/bicimad/stations/25a`; lo mismo con `Origin: https://example.com`; validación del esquema de `render.yaml`.
   - Archivos: `render.yaml`, `docs/specs/SPEC-deploy.md`, este plan.
   - Dependencias: T6.
 
 - [x] **T8: La web llama al API directamente** (XS, ~20 min)
-  - Descripción: `web/.env.production` con `VITE_API_BASE_URL=https://mad-mobility-api.onrender.com`; `web/README.md` lo explica. PR `fix(web): call the api directly in production`; al mergear el PR de release `web` 0.3.2, `deploy-web` la despliega.
+  - Descripción: `web/.env.production` con `VITE_API_BASE_URL=https://mad-transit-api.onrender.com`; `web/README.md` lo explica. PR `fix(web): call the api directly in production`; al mergear el PR de release `web` 0.3.2, `deploy-web` la despliega.
   - Aceptación:
     - El bundle de `pnpm --filter web run build` contiene la URL del API; `dev` y los tests siguen usando `/api`.
     - SC2 y SC3 en producción: el móvil con datos carga las estaciones mientras una ráfaga desde otra IP recibe 429.
-  - Verificación: `pnpm --filter web run lint`; `typecheck`; `test`; `build`; `grep -o 'mad-mobility-api.onrender.com' web/dist/assets/*.js`; consola del navegador sin errores de CORS.
+  - Verificación: `pnpm --filter web run lint`; `typecheck`; `test`; `build`; `grep -o 'mad-transit-api.onrender.com' web/dist/assets/*.js`; consola del navegador sin errores de CORS.
   - Archivos: `web/.env.production`, `web/README.md`.
   - Dependencias: T7.
 
