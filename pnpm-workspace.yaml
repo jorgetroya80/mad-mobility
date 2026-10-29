@@ -9,3 +9,8 @@ minimumReleaseAge: 14400
 minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client']
 
 saveExact: true
+
+# @hey-api/json-schema-ref-parser 1.4.4 pins js-yaml 4.2.0 (GHSA-52cp-r559-cp3m,
+# GHSA-5p4m-2wfm-xmqj, GHSA-2883-xcg3-v3hh). Remove once a release takes 4.3.2 or later.
+overrides:
+  'js-yaml@>=4.0.0 <4.3.2': 4.3.2
