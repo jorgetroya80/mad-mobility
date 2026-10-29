@@ -141,12 +141,63 @@ const thresholds = (t) => {
   }
   return out;
 };
+// A measured row ("Measured, not yet enforced") keeps today's value in its second cell and its
+// direction in another cell, too far for the words around the number: read both from the row.
+const measured = (t) => {
+  const direction = t.match(/must not (grow|fall)/);
+  if (!t.trim().startsWith('|') || !direction) return null;
+  const today = t.split('|').map((c) => c.trim())[2] ?? '';
+  const value = today.match(/\d+(?:\.\d+)?/);
+  return { dir: direction[1] === 'grow' ? 'max' : 'min', value: value ? Number(value[0]) : null };
+};
+const measuredVerdict = (was, now) => {
+  if (was.dir !== now.dir) return 'threshold-changed';
+  if (was.value === null) return null;
+  if (now.value === null) return 'threshold-removed';
+  return (was.dir === 'max' ? now.value > was.value : now.value < was.value)
+    ? 'threshold-loosened'
+    : null;
+};
+
+// The section each line of a CONSTRAINTS.md sits in, at the merge base, to tell a removed rule
+// from a removed gap. A gap listed under "Sin cubrir" is gone once it is covered, which does not
+// lower the bar, so it is only noted.
+const GAP_SECTION = /^## (Sin cubrir|Not covered)\b/;
+const sectionsAtBase = new Map();
+const sectionOf = (f, text) => {
+  if (!sectionsAtBase.has(f)) {
+    const lines = (git(['show', `${mergeBase}:${f}`]) ?? '').split('\n');
+    const sections = new Map();
+    let heading = '';
+    for (const line of lines) {
+      if (line.startsWith('## ')) heading = line;
+      else sections.set(line, heading);
+    }
+    sectionsAtBase.set(f, sections);
+  }
+  return sectionsAtBase.get(f).get(text) ?? '';
+};
+const notes = [];
+
 const removedRules = removed.filter((l) => isConstraints(l.file) && ruleKey(l.text) !== null);
 const addedRules = added.filter((l) => isConstraints(l.file) && ruleKey(l.text) !== null);
 for (const r of removedRules) {
   const a = addedRules.find((x) => ruleKey(x.text) === ruleKey(r.text));
   if (!a) {
-    if (!isException(r.text)) flag('rule-removed', r.file, r.text);
+    if (GAP_SECTION.test(sectionOf(r.file, r.text))) {
+      notes.push({ rule: 'gap-removed', file: r.file, text: r.text.trim().slice(0, 120) });
+    } else if (!isException(r.text)) flag('rule-removed', r.file, r.text);
+    continue;
+  }
+  const wasMeasured = measured(r.text);
+  const nowMeasured = measured(a.text);
+  if (wasMeasured && nowMeasured) {
+    const verdict = measuredVerdict(wasMeasured, nowMeasured);
+    if (verdict) flag(verdict, r.file, r.text + '  ->  ' + a.text);
+    continue;
+  }
+  if (wasMeasured) {
+    flag('threshold-removed', r.file, r.text + '  ->  ' + a.text);
     continue;
   }
   const before = thresholds(r.text);
@@ -168,6 +219,10 @@ for (const r of removedRules) {
   if (verdict) flag(verdict, r.file, r.text + '  ->  ' + a.text);
 }
 
+for (const n of notes) {
+  console.log(`floor-guard: note [${n.rule}] ${n.file}: ${n.text}`);
+  console.log('  Check that the gap is now covered, not just hidden.');
+}
 if (findings.length === 0) {
   console.log('floor-guard: clean');
   process.exit(0);

@@ -250,7 +250,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: Floor guard tests
+        run: node --test scripts/*.test.mjs
       - name: Floor guard
+        if: ${{ !cancelled() }}
         run: node scripts/floor-guard.mjs --base "$BASE"
       - name: Secrets (gitleaks)
         if: ${{ !cancelled() }}

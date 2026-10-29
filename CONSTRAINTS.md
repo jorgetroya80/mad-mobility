@@ -9,7 +9,7 @@ Lo mínimo que tiene que cumplir un cambio para darse por bueno, con el comando 
 
 ## Floor (siempre, en cada diff)
 
-Lo comprueba `node scripts/floor-guard.mjs` contra el merge base con `origin/main`. Mira solo el diff, incluidos los archivos sin seguimiento. Sale con 0 si está limpio, 1 si hay algo y 2 si no puede ejecutarse.
+Lo comprueba `node scripts/floor-guard.mjs` contra el merge base con `origin/main`. Mira solo el diff, incluidos los archivos sin seguimiento. Sale con 0 si está limpio, 1 si hay algo y 2 si no puede ejecutarse. En la tabla de valores medidos solo avisa si un valor empeora según su columna "Dirección", y quitar un hueco de "Sin cubrir" es solo una nota. Sus casos están en `scripts/floor-guard.test.mjs` (`pnpm test:scripts`).
 
 - Sin supresiones nuevas: `@ts-ignore`, `@ts-expect-error`, `oxlint-disable`, `eslint-disable`, `@Suppress(`, `ktlint-disable`, `istanbul ignore`, `v8 ignore`, `nosemgrep`, `gitleaks:allow`.
 - Sin trabajo a medias: `TODO`, `FIXME`, `TODO()`, `NotImplementedError`, `catch` vacíos.
@@ -38,7 +38,7 @@ Cada regla dice qué comando da el veredicto. Si una regla tiene número pero no
 | Script | Qué ejecuta | Tiempo hoy | Presupuesto |
 | --- | --- | --- | --- |
 | `pnpm check:fast` | typecheck de lo cambiado, lint de web, gitleaks de la rama y el floor guard | ~1 s | unos segundos |
-| `pnpm check:task` | `check:fast` + tests de web, tests de api con JaCoCo, cobertura de líneas cambiadas y capas | ~9 s sin cambios en api, ~30 s con ellos | 90 s |
+| `pnpm check:task` | `check:fast` + tests del floor guard, tests de web, tests de api con JaCoCo, cobertura de líneas cambiadas y capas | ~9 s sin cambios en api, ~30 s con ellos | 90 s |
 | `pnpm check:full` | `check:task` + Semgrep + `pnpm audit --prod` | ~15 s, más la descarga de las reglas de Semgrep | sin límite (CI) |
 
 `check:secrets` y `check:semgrep` necesitan Docker en local. CI usa las mismas imágenes, fijadas por digest.
