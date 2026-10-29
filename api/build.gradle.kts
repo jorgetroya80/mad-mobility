@@ -1,5 +1,15 @@
 import java.util.zip.ZipFile
 
+// Spring Boot's Gradle plugin pulls commons-lang3 3.16.0 through commons-compress, for
+// bootBuildImage only (GHSA-j288-q9x7-2f5v). Remove once a Spring Boot release takes 3.18.0.
+buildscript {
+    dependencies {
+        constraints {
+            classpath("org.apache.commons:commons-lang3:3.18.0")
+        }
+    }
+}
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.spring)
