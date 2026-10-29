@@ -9,6 +9,10 @@ type StationsMapProps = {
   center: Coordinates | undefined;
   userLocation: Coordinates | undefined;
   focusPadding?: { bottom: number };
+  // False keeps the selected station marked but centers the map on `center` instead.
+  focusSelected?: boolean;
+  // Called on every tapped point, also the station already selected, which does not change the URL.
+  onSelect?: (number: string) => void;
   className?: string;
 };
 
@@ -23,7 +27,14 @@ function findStation(stations: readonly Station[], number: string | undefined) {
 }
 
 // The map never blocks on the stations: the list shows loading and errors.
-export function StationsMap({ center, userLocation, focusPadding, className }: StationsMapProps) {
+export function StationsMap({
+  center,
+  userLocation,
+  focusPadding,
+  focusSelected = true,
+  onSelect,
+  className,
+}: StationsMapProps) {
   const { data } = useAllStations();
   const [need] = useNeed();
   const { number, select } = useSelectedStation();
@@ -37,8 +48,11 @@ export function StationsMap({ center, userLocation, focusPadding, className }: S
       className={className}
       points={points}
       selectedId={selected?.number}
-      onSelectPoint={select}
-      focus={selected ? { lng: selected.lon, lat: selected.lat } : center}
+      onSelectPoint={(id) => {
+        onSelect?.(id);
+        select(id);
+      }}
+      focus={selected && focusSelected ? { lng: selected.lon, lat: selected.lat } : center}
       focusPadding={focusPadding}
       userLocation={userLocation}
     />

@@ -64,7 +64,11 @@ function saveFavorites(numbers: string[]) {
   localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(numbers));
 }
 
-type ListProps = { center: Coordinates | undefined; isApproximateLocation: boolean };
+type ListProps = {
+  center: Coordinates | undefined;
+  isApproximateLocation: boolean;
+  isLocationDenied?: boolean;
+};
 
 const LOCATED: ListProps = { center: SOL, isApproximateLocation: false };
 
@@ -151,6 +155,18 @@ describe('StationList', () => {
     expect(
       screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
     ).toBeInTheDocument();
+    expect(await nearbyRegion('Cerca de la Puerta del Sol')).toBeInTheDocument();
+  });
+
+  it('says the location permission was not given when it was denied', async () => {
+    await renderList({ isApproximateLocation: true, isLocationDenied: true });
+
+    expect(
+      screen.getByText(
+        'No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Sin ubicación/)).not.toBeInTheDocument();
     expect(await nearbyRegion('Cerca de la Puerta del Sol')).toBeInTheDocument();
   });
 

@@ -13,9 +13,15 @@ type StationListProps = {
   center: Coordinates | undefined;
   // True when `center` is the Puerta del Sol fallback instead of the user's position.
   isApproximateLocation: boolean;
+  // True when the fallback is because the user did not give the location permission.
+  isLocationDenied?: boolean;
 };
 
-export function StationList({ center, isApproximateLocation }: StationListProps) {
+export function StationList({
+  center,
+  isApproximateLocation,
+  isLocationDenied = false,
+}: StationListProps) {
   const [need] = useNeed();
   const { select } = useSelectedStation();
   const nearby = useNearbyList(center, need);
@@ -23,7 +29,11 @@ export function StationList({ center, isApproximateLocation }: StationListProps)
   return (
     <div className="flex flex-col gap-4">
       {isApproximateLocation ? (
-        <PanelNotice>Sin ubicación: mostrando estaciones cerca de la Puerta del Sol</PanelNotice>
+        <PanelNotice>
+          {isLocationDenied
+            ? 'No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol'
+            : 'Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'}
+        </PanelNotice>
       ) : null}
       {nearby.status === 'ready' && nearby.stale ? (
         <StaleNotice updatedAt={nearby.updatedAt} />

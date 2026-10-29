@@ -27,6 +27,7 @@ export function MapPanel({ ref, location, isStationOpen }: MapPanelProps) {
         <StationList
           center={location.center}
           isApproximateLocation={location.isApproximateLocation}
+          isLocationDenied={location.isLocationDenied}
         />
       )}
       <footer className="mt-auto">

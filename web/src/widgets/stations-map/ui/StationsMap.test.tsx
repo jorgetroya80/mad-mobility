@@ -115,6 +115,15 @@ describe('StationsMap', () => {
     expect(lastMapProps()).toMatchObject({ selectedId: undefined, focus: SOL });
   });
 
+  it('centers on the given center, keeping the selection, when the selected station is not the focus', async () => {
+    await renderWithRouter(<StationsMap center={SOL} userLocation={USER} focusSelected={false} />, {
+      initialEntries: ['/?station=1a'],
+    });
+    await waitForPoints();
+
+    expect(lastMapProps()).toMatchObject({ selectedId: '1a', focus: SOL });
+  });
+
   it('does not move the map before there is a center', async () => {
     await renderMap('/', {});
     await waitForPoints();
@@ -145,6 +154,18 @@ describe('StationsMap', () => {
     await waitFor(() =>
       expect(router.state.location.search).toEqual({ need: 'docks', station: '2' }),
     );
+  });
+
+  it('tells about the tapped point, even the station already selected', async () => {
+    const onSelect = vi.fn<(number: string) => void>();
+    await renderWithRouter(<StationsMap center={SOL} userLocation={USER} onSelect={onSelect} />, {
+      initialEntries: ['/?station=1a'],
+    });
+    await waitForPoints();
+
+    await tapPoint('1a');
+
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('1a');
   });
 
   it('keeps the same points when only the selection changes', async () => {

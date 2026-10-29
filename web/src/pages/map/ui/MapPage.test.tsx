@@ -32,10 +32,13 @@ const STATIONS_URL = `${env.apiBaseUrl}/v1/bicimad/stations`;
 const USER = { lat: 40.4169, lng: -3.7033 };
 // Station 1a in the fixtures.
 const PUERTA_DEL_SOL_A = { lat: 40.4170224, lng: -3.7024255 };
+// Station 1b in the fixtures.
+const PUERTA_DEL_SOL_B = { lat: 40.4171037, lng: -3.7025031 };
 const PERMISSION_DENIED = 1;
+const POSITION_UNAVAILABLE = 2;
 
 // 'pending' never answers, like a browser still asking for the position.
-type GeoAnswer = 'granted' | 'denied' | 'pending';
+type GeoAnswer = 'granted' | 'denied' | 'unavailable' | 'pending';
 
 // jsdom has no geolocation: every request is answered at once with the current answer.
 function stubGeolocation(initialAnswer: GeoAnswer) {
@@ -46,7 +49,8 @@ function stubGeolocation(initialAnswer: GeoAnswer) {
       onSuccess({ coords: { latitude: USER.lat, longitude: USER.lng } } as GeolocationPosition);
       return;
     }
-    onError?.({ code: PERMISSION_DENIED, PERMISSION_DENIED } as GeolocationPositionError);
+    const code = answer === 'denied' ? PERMISSION_DENIED : POSITION_UNAVAILABLE;
+    onError?.({ code, PERMISSION_DENIED } as GeolocationPositionError);
   });
   Object.defineProperty(navigator, 'geolocation', {
     value: { getCurrentPosition },
@@ -171,6 +175,22 @@ describe('MapPage', () => {
       expect(lastMapProps()).toMatchObject({ focus: USER, userLocation: USER });
     });
 
+    // The user may have moved the map away: an equal position must still bring it back.
+    it('brings the map back to the user with "Mi ubicación", though the position is the same', async () => {
+      const user = userEvent.setup();
+      await renderPage();
+      await rowIn('Cerca de ti', '1a');
+      mapRenders.length = 0;
+
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+
+      // The focus is released while asking, so the same answer is a new focus for the map.
+      await waitFor(() =>
+        expect(lastMapProps()).toMatchObject({ focus: USER, userLocation: USER }),
+      );
+      expect(mapRenders.some((props) => props.focus === undefined)).toBe(true);
+    });
+
     it('opens ?station=1a in place of the list and selects it on the map (SC5)', async () => {
       await renderPage('/?station=1a');
 
@@ -179,6 +199,45 @@ describe('MapPage', () => {
       await waitFor(() =>
         expect(lastMapProps()).toMatchObject({ selectedId: '1a', focus: PUERTA_DEL_SOL_A }),
       );
+    });
+
+    it('centers the map on the user with "Mi ubicación" and keeps the station open', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+
+      await waitFor(() => expect(lastMapProps()).toMatchObject({ selectedId: '1a', focus: USER }));
+      expect(
+        screen.getByRole('heading', { level: 2, name: '1a · Puerta del Sol A' }),
+      ).toBeVisible();
+    });
+
+    it('focuses the next station chosen after "Mi ubicación"', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+      await waitFor(() => expect(lastMapProps().focus).toEqual(USER));
+
+      await act(async () => lastMapProps().onSelectPoint?.('1b'));
+
+      await waitFor(() =>
+        expect(lastMapProps()).toMatchObject({ selectedId: '1b', focus: PUERTA_DEL_SOL_B }),
+      );
+    });
+
+    it('focuses the open station again when its point is tapped after "Mi ubicación"', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+      await waitFor(() => expect(lastMapProps().focus).toEqual(USER));
+
+      await act(async () => lastMapProps().onSelectPoint?.('1a'));
+
+      expect(lastMapProps()).toMatchObject({ selectedId: '1a', focus: PUERTA_DEL_SOL_A });
     });
 
     it('asks for free docks with "Anclajes" without going back to loading (SC3)', async () => {
@@ -255,7 +314,9 @@ describe('MapPage', () => {
 
       expect(await rowIn('Cerca de la Puerta del Sol', '1a')).toBeInTheDocument();
       expect(
-        screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
+        screen.getByText(
+          'No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol',
+        ),
       ).toBeInTheDocument();
       expect(requests[0]?.searchParams.get('near')).toBe('40.4168,-3.7038');
       expect(lastMapProps()).toMatchObject({ focus: MADRID_CENTER, userLocation: undefined });
@@ -274,6 +335,32 @@ describe('MapPage', () => {
       expect(await rowIn('Cerca de ti', '1a')).toBeInTheDocument();
       expect(lastMapProps()).toMatchObject({ focus: USER, userLocation: USER });
     });
+
+    it('brings the map back to Puerta del Sol when "Mi ubicación" is denied again', async () => {
+      stubGeolocation('denied');
+      const user = userEvent.setup();
+      await renderPage();
+      await rowIn('Cerca de la Puerta del Sol', '1a');
+      mapRenders.length = 0;
+
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+
+      await waitFor(() => expect(lastMapProps().focus).toEqual(MADRID_CENTER));
+      expect(mapRenders.some((props) => props.focus === undefined)).toBe(true);
+    });
+  });
+
+  describe('with the location unavailable', () => {
+    it('lists the stations near Puerta del Sol with the notice without location', async () => {
+      stubGeolocation('unavailable');
+
+      await renderPage();
+
+      expect(await rowIn('Cerca de la Puerta del Sol', '1a')).toBeInTheDocument();
+      expect(
+        screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
+      ).toBeInTheDocument();
+    });
   });
 
   describe('while "Mi ubicación" asks again', () => {
@@ -291,9 +378,12 @@ describe('MapPage', () => {
         screen.getByRole('heading', { level: 2, name: 'Cerca de la Puerta del Sol' }),
       ).toBeInTheDocument();
       expect(
-        screen.getByText('Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'),
+        screen.getByText(
+          'No has dado permiso de ubicación: mostrando estaciones cerca de la Puerta del Sol',
+        ),
       ).toBeInTheDocument();
-      expect(lastMapProps()).toMatchObject({ focus: MADRID_CENTER });
+      // Without a focus the map stays where it is until the answer arrives.
+      expect(lastMapProps().focus).toBeUndefined();
     });
   });
 
@@ -339,6 +429,18 @@ describe('MapPage', () => {
 
       await user.click(sheetHandle());
       expect(lastMapProps().focusPadding).toEqual({ bottom: 0 });
+    });
+
+    it('keeps the map on the user after "Mi ubicación" when the sheet collapses', async () => {
+      const user = userEvent.setup();
+      await renderPage('/?station=1a');
+      await detailTitle('1a · Puerta del Sol A');
+      await user.click(screen.getByRole('button', { name: 'Mi ubicación' }));
+      await waitFor(() => expect(lastMapProps().focus).toEqual(USER));
+
+      await user.click(sheetHandle());
+
+      expect(lastMapProps()).toMatchObject({ focus: USER, focusPadding: { bottom: 0 } });
     });
 
     // jsdom ignores `inert`, so the row of the collapsed sheet can be clicked.
