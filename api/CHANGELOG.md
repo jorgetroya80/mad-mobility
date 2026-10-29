@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0](https://github.com/jorgetroya80/mad-transit/compare/api-v0.6.1...api-v0.7.0) (2026-10-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** Problem Details types change from urn:mad-mobility:problem:* to urn:mad-transit:problem:*, and the configuration prefix changes from mad-mobility to mad-transit. The Docker image is published under a new name, mad-transit-api.
+
+### Features
+
+* **api:** rename the api to mad transit ([#66](https://github.com/jorgetroya80/mad-transit/issues/66)) ([30a0131](https://github.com/jorgetroya80/mad-transit/commit/30a013100683751e63a7d2fc8337a71c0d88ac46))
+
 ## [0.6.1](https://github.com/jorgetroya80/mad-mobility/compare/api-v0.6.0...api-v0.6.1) (2026-10-28)
 
 
