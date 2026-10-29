@@ -77,8 +77,8 @@ Todo es secuencial: cada paso necesita lo que publica el anterior.
 
 ### Checkpoint: API
 
-- [ ] api 0.7.0 publicada como `mad-transit-api`; `DEPLOY_ENABLED` sigue en `false`; el API viejo sigue sirviendo a la web.
-- [ ] Revisión del usuario.
+- [x] api 0.7.0 publicada como `mad-transit-api`; `DEPLOY_ENABLED` sigue en `false`; el API viejo sigue sirviendo a la web.
+- [x] Revisión del usuario.
 
 ### Fase 2: servicios nuevos en Render (PR `ci`)
 
@@ -155,3 +155,5 @@ Ninguna: un solo desarrollador y cada tarea depende de lo que publica la anterio
 - 2026-10-29: T2 hecha. `DEPLOY_ENABLED=false` hasta T6.
 - 2026-10-29: T3 hecha (commit `refactor(api): move the kotlin package to madtransit`). `git mv` en `main`, `test` y `smokeTest`, más `MadTransitApplication` y su test. `./gradlew build`, `compileSmokeTestKotlin` y `jacocoTestCoverageVerification` en verde; `git log --follow` llega hasta el primer commit del API.
 - 2026-10-29: T4 hecha. Primero los tests al prefijo `mad-transit.*` y a los URNs nuevos (RED: 21 de 188 fallan), luego el código (GREEN). `./gradlew build`, `dockerImageTest` (jar `mad-transit-api-*.jar`) y `actionlint` en verde; no queda el nombre viejo en `api/` ni en `.github/` salvo `api/CHANGELOG.md`. Pendiente: release 0.7.0 e imagen pública en ghcr.io.
+- 2026-10-29: release api 0.7.0 (PR #67): `publish-api` y `publish-api-client` en verde, `deploy-api` omitido. `ghcr.io/jorgetroya80/mad-transit-api` es pública, con las etiquetas `0.7.0` y `latest` (Assumption 4). Los servicios viejos siguen sirviendo la web.
+- 2026-10-29: T5, parte de código: `render.yaml` con `mad-transit-api` (imagen `mad-transit-api:latest`, CORS para `https://mad-transit-web.onrender.com`) y `mad-transit-web`; URL nueva del repo en `scripts/render-web-build.sh` (descarga `web-v0.3.2` desde `jorgetroya80/mad-transit`); `"name": "mad-transit"` en el `package.json` raíz. Esquema de Render, `shellcheck` y `pnpm install --frozen-lockfile` sin errores. Falta el sync en Render.
