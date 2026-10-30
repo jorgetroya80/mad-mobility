@@ -68,12 +68,14 @@ abstract class EmtWireMockTest {
         /** Access token in login-ok.json (fake value). */
         const val FIXTURE_TOKEN = "00000000-0000-0000-0000-00000000a11d"
 
+        // The JDK client offers an h2c upgrade over plain HTTP, and Jetty resets upgraded requests
+        // that carry a body (POST); the EMT is HTTPS, where HTTP/2 is negotiated without an upgrade
         @JvmField
         @RegisterExtension
         val wireMock: WireMockExtension =
             WireMockExtension
                 .newInstance()
-                .options(wireMockConfig().dynamicPort())
+                .options(wireMockConfig().dynamicPort().http2PlainDisabled(true))
                 .build()
     }
 }

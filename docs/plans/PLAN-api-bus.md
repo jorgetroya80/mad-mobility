@@ -45,7 +45,7 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
   - Archivos: 5 fixtures, `src/test/resources/emt/README.md`.
   - Dependencias: ninguna.
 
-- [ ] **T2: `EmtHttpClient.post` y `code` `80` en el bus** (M, ~1 h 15 min)
+- [x] **T2: `EmtHttpClient.post` y `code` `80` en el bus** (M, ~1 h 15 min)
   - Descripción: test primero. Añadir `post(module, path, body, elementType)` con el mismo token, cupo, reintento y manejo de errores que `get`. Tests nuevos que fijan el `code` `80` tal como lo devuelve el bus: con HTTP 200 también hace login otra vez una sola vez.
   - Aceptación:
     - `code` `80` con HTTP 401 (BiciMAD, llegadas) y con HTTP 200 (lista, catálogo, detalle; `bus-token-invalid.json`) → login otra vez y repetir una vez.
@@ -156,3 +156,4 @@ Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
 - 2026-10-30: borrador a partir de la spec aprobada.
 - 2026-10-30: T2 ya no cambia el manejo del `code` `80` (el bus responde HTTP 200 con un token inválido); se quita `inService` de T6.
 - 2026-10-30: T1 hecha. 7 fixtures (también `bus-stop-detail-72.json`, con 4 líneas de 14, para tener las nocturnas). La parada `1` lleva el código inventado `999/1`, que el README documenta. Los `description` de la EMT se dejan como se capturaron.
+- 2026-10-30: T2 hecha. `post(module, path, elementType, body = null)`: el cuerpo es opcional porque la lista de paradas va sin cuerpo; el método va explícito en la petición. `EmtResponse.description` pasa a `Any?`: en las llegadas es una lista de traducciones, y como `String?` se perdía el `code` `80`. WireMock arranca sin h2c en texto plano (`http2PlainDisabled`): su Jetty cortaba los POST con cuerpo cuando se intentaba subir a HTTP/2; en producción, con HTTPS, no pasa.

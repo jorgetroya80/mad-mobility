@@ -3,7 +3,8 @@ package io.github.jorgetroya80.madtransit.shared.emt
 /** EMT response envelope: errors may come with HTTP 200, so `code` must always be checked. */
 data class EmtResponse<T>(
     val code: String?,
-    val description: String?,
+    /** Usually text, but bus arrivals send a list of translations (`[{"ES": …}, {"EN": …}]`). */
+    val description: Any?,
     val data: List<T>?,
 ) {
     val isSuccess: Boolean get() = code in SUCCESS_CODES
