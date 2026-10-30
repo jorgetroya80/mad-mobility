@@ -1,6 +1,7 @@
 package io.github.jorgetroya80.madtransit.modules.bus.http
 
 import io.github.jorgetroya80.madtransit.modules.bus.application.FindNearbyStops
+import io.github.jorgetroya80.madtransit.modules.bus.application.GetArrivals
 import io.github.jorgetroya80.madtransit.modules.bus.application.GetStop
 import io.github.jorgetroya80.madtransit.shared.web.ProblemBody
 import io.swagger.v3.oas.annotations.Operation
@@ -55,6 +56,7 @@ import org.springframework.web.server.ResponseStatusException
 class BusStopsController(
     private val findNearbyStops: FindNearbyStops,
     private val getStop: GetStop,
+    private val getArrivals: GetArrivals,
 ) {
     @GetMapping
     @Operation(
@@ -83,11 +85,33 @@ class BusStopsController(
             schema = Schema(type = "string", pattern = STOP_NUMBER_PATTERN, example = "72"),
         )
         @PathVariable number: String,
-    ): BusStopDetailResponse {
+    ): BusStopDetailResponse = BusStopDetailResponse.from(getStop(requireStopNumber(number)))
+
+    @GetMapping("/{number}/arrivals")
+    @Operation(
+        operationId = "getBusStopArrivals",
+        summary = "Get the next arrivals at a bus stop",
+        description = "The coming buses in minutes, by line and destination, with where each bus is. Refreshed every 30 seconds.",
+    )
+    @ApiResponse(responseCode = "200", description = "The arrivals; empty when no bus is coming.")
+    @ApiResponse(
+        responseCode = "404",
+        description = "No stop with this number.",
+        content = [Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = Schema(implementation = ProblemBody::class))],
+    )
+    fun arrivals(
+        @Parameter(
+            description = "Stop number, as shown on the stop pole (`number` in the list).",
+            schema = Schema(type = "string", pattern = STOP_NUMBER_PATTERN, example = "72"),
+        )
+        @PathVariable number: String,
+    ): BusStopArrivalsResponse = BusStopArrivalsResponse.from(getArrivals(requireStopNumber(number)))
+
+    private fun requireStopNumber(number: String): String {
         if (!number.matches(STOP_NUMBER)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "number must match $STOP_NUMBER_PATTERN")
         }
-        return BusStopDetailResponse.from(getStop(number))
+        return number
     }
 
     private companion object {

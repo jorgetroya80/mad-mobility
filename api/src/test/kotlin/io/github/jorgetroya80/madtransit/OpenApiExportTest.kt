@@ -181,7 +181,7 @@ class OpenApiExportTest(
         const val OUTPUT_PROPERTY = "openapi.output"
 
         // The published client names one function per operationId: every new endpoint is added here
-        val OPERATION_IDS = listOf("listStations", "getStation", "listBusStops", "getBusStop")
+        val OPERATION_IDS = listOf("listStations", "getStation", "listBusStops", "getBusStop", "getBusStopArrivals")
         const val PROBLEM_SCHEMA = "#/components/schemas/Problem"
         const val STATION_PATH = "/v1/bicimad/stations/{number}"
         const val STATION_BY_ID_PATH = "/v1/bicimad/stations/{id}"
@@ -196,6 +196,8 @@ class OpenApiExportTest(
                 "BusStopDetailResponse",
                 "BusStopInfoResponse",
                 "BusLineResponse",
+                "BusStopArrivalsResponse",
+                "BusArrivalResponse",
             )
 
         // Kotlin nullable properties of the responses; every other property is always present

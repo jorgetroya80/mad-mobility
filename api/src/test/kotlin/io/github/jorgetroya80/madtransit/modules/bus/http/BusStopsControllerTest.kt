@@ -1,15 +1,21 @@
 package io.github.jorgetroya80.madtransit.modules.bus.http
 
+import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtArrivalMapper
+import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtArrivesData
 import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtBusStop
 import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtBusStopMapper
 import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtLineInfo
 import io.github.jorgetroya80.madtransit.modules.bus.application.FindNearbyStops
+import io.github.jorgetroya80.madtransit.modules.bus.application.GetArrivals
 import io.github.jorgetroya80.madtransit.modules.bus.application.GetStop
+import io.github.jorgetroya80.madtransit.modules.bus.domain.Arrival
+import io.github.jorgetroya80.madtransit.modules.bus.domain.ArrivalSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusLine
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStop
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetail
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetailSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopSnapshot
+import io.github.jorgetroya80.madtransit.modules.bus.ports.ArrivalProvider
 import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopDetailProvider
 import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopProvider
 import io.github.jorgetroya80.madtransit.shared.emt.EmtResponse
@@ -37,11 +43,12 @@ import java.time.Clock
 import java.time.Instant
 
 @WebMvcTest(BusStopsController::class)
-@Import(FindNearbyStops::class, GetStop::class, BusStopsControllerTest.Config::class)
+@Import(FindNearbyStops::class, GetStop::class, GetArrivals::class, BusStopsControllerTest.Config::class)
 class BusStopsControllerTest(
     @Autowired private val mvc: MockMvcTester,
     @Autowired private val provider: BusStopProvider,
     @Autowired private val detailProvider: BusStopDetailProvider,
+    @Autowired private val arrivalProvider: ArrivalProvider,
 ) {
     @TestConfiguration
     class Config {
@@ -50,6 +57,9 @@ class BusStopsControllerTest(
 
         @Bean
         fun busStopDetailProvider(): BusStopDetailProvider = mockk()
+
+        @Bean
+        fun arrivalProvider(): ArrivalProvider = mockk()
 
         // Needed by the shared ProblemDetailsHandler, which the web slice loads
         @Bean
@@ -292,6 +302,108 @@ class BusStopsControllerTest(
         assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-400")
     }
 
+    @Test
+    fun `SC3 arrivals have the spec fields, soonest first, with no estimate as nulls`() {
+        given(fixtureStops())
+        givenArrivals(fixtureArrivals())
+
+        val result = mvc.get().uri("$STOPS/72/arrivals").exchange()
+
+        assertThat(result).hasStatusOk().hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+        val body = json(result.response.contentAsString)
+        assertThat(body.propertyNames()).containsExactlyInAnyOrder("arrivals", "updatedAt", "stale", "source")
+        assertThat(body.path("updatedAt").asString()).isEqualTo("2026-10-30T10:15:00Z")
+        assertThat(body.path("stale").asBoolean()).isFalse()
+        assertThat(body.path("source").asString()).isEqualTo("EMT Madrid MobilityLabs")
+        val arrivals = body.path("arrivals").values().toList()
+        assertThat(arrivals.map { it.path("line").asString() }).containsExactly("14", "45", "37", "53", "5", "C03")
+        arrivals.forEach { assertThat(it.propertyNames()).containsExactlyInAnyOrder(*ARRIVAL_PROPERTIES) }
+        val first = arrivals.first()
+        assertThat(first.path("destination").asString()).isEqualTo("PIO XII")
+        assertThat(first.path("minutes").asInt()).isEqualTo(0)
+        assertThat(first.path("noEstimate").asBoolean()).isFalse()
+        assertThat(first.path("distanceMeters").asInt()).isEqualTo(0)
+        assertThat(first.path("busLat").asDouble()).isEqualTo(40.41441008140411)
+        assertThat(first.path("busLon").asDouble()).isEqualTo(-3.6930564972057955)
+        assertThat(arrivals.map { it.path("minutes").asInt() }.dropLast(1)).containsExactly(0, 0, 2, 23, 25)
+        val noEstimate = arrivals.last()
+        assertThat(noEstimate.path("noEstimate").asBoolean()).isTrue()
+        listOf("minutes", "distanceMeters", "busLat", "busLon").forEach {
+            assertThat(noEstimate.path(it).isNull).describedAs(it).isTrue()
+        }
+    }
+
+    @Test
+    fun `arrivals carry the stale flag`() {
+        given(fixtureStops())
+        every { arrivalProvider.arrivals("72") } returns ArrivalSnapshot(fixtureArrivals(), UPDATED_AT, stale = true)
+
+        val body =
+            json(
+                mvc
+                    .get()
+                    .uri("$STOPS/72/arrivals")
+                    .exchange()
+                    .response.contentAsString,
+            )
+
+        assertThat(body.path("stale").asBoolean()).isTrue()
+    }
+
+    @Test
+    fun `no bus coming gives an empty list of arrivals`() {
+        given(fixtureStops())
+        givenArrivals(emptyList())
+
+        val result = mvc.get().uri("$STOPS/72/arrivals").exchange()
+
+        assertThat(result).hasStatusOk()
+        val arrivals = json(result.response.contentAsString).path("arrivals")
+        assertThat(arrivals.isArray).isTrue()
+        assertThat(arrivals).isEmpty()
+    }
+
+    @Test
+    fun `arrivals of an unknown stop number are a 404 problem with the request id`() {
+        given(fixtureStops())
+
+        val result =
+            mvc
+                .get()
+                .uri("$STOPS/99999999/arrivals")
+                .header(RequestIdFilter.HEADER, "req-404")
+                .exchange()
+
+        assertThat(result).hasStatus(404).hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-404")
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["abc", "72a", "-72", "7 2"])
+    fun `arrivals of a non-numeric stop number are a 400 problem with the request id`(number: String) {
+        given(fixtureStops())
+
+        val result =
+            mvc
+                .get()
+                .uri("$STOPS/{number}/arrivals", number)
+                .header(RequestIdFilter.HEADER, "req-400")
+                .exchange()
+
+        assertThat(result).hasStatus(400).hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-400")
+    }
+
+    private fun givenArrivals(arrivals: List<Arrival>) {
+        every { arrivalProvider.arrivals("72") } returns ArrivalSnapshot(arrivals, UPDATED_AT, stale = false)
+    }
+
+    private fun fixtureArrivals() =
+        EmtArrivalMapper.toDomain(
+            "72",
+            readFixture<EmtArrivesData>("/emt/bus-arrivals.json").single().arrive.orEmpty(),
+        )
+
     private fun givenDetail(
         number: String,
         detail: BusStopDetail,
@@ -322,6 +434,8 @@ class BusStopsControllerTest(
     private companion object {
         const val STOPS = "/v1/bus/stops"
         val UPDATED_AT: Instant = Instant.parse("2026-10-30T10:15:00.123456Z")
+        val ARRIVAL_PROPERTIES =
+            arrayOf("line", "destination", "minutes", "noEstimate", "distanceMeters", "busLat", "busLon")
         val LINE_PROPERTIES =
             arrayOf("label", "headerA", "headerB", "direction", "firstBus", "lastBus", "minFrequencyMinutes", "maxFrequencyMinutes")
         val DETAIL_72 =

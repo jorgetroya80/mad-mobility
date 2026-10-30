@@ -100,7 +100,7 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
 
 ### Fase 3: Llegadas y cierre
 
-- [ ] **T6: `GET /v1/bus/stops/{number}/arrivals`** (M, ~2 h)
+- [x] **T6: `GET /v1/bus/stops/{number}/arrivals`** (M, ~2 h)
   - Descripción: DTO `EmtArrive` y `EmtArrivalMapper` (spec, Code Style): `999999` → `noEstimate`, minutos redondeados hacia abajo, `busLat`/`busLon` desde `geometry` (`null` con `[0, 0]` o sin coordenadas). Provider con `POST stops/{id}/arrives/` y clave `bus-arrivals` (TTL 30 s, `max-stale` 2 min). `GetArrivals` comprueba antes la lista (`404`). Orden: minutos, `noEstimate` al final y después la línea.
   - Aceptación:
     - SC3: las 16 llegadas del fixture de la 72 en orden, con el `999999` como `noEstimate: true` y sin posición.
@@ -160,3 +160,4 @@ Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
 - 2026-10-30: T3 hecha. Los códigos de la lista coinciden con el `line` del catálogo al quitar el sentido (`073/2` → `073` → `73`). Las paradas sin nombre también se descartan, y una lista o un catálogo vacíos pasan a ser un `EmtProtocolError` en el provider (T4), como en BiciMAD, para seguir sirviendo la caché. Gate de JaCoCo nuevo `busCoverageVerification` (80 %).
 - 2026-10-30: T4 hecha. La caché `bus-stops` guarda las paradas ya traducidas con el catálogo, así que las 4.935 se traducen una vez por recarga y no en cada petición. La clave dentro de cada módulo es fija (`all`), no la fecha, para poder servir la de ayer como `stale`. En `OpenApiExportTest`, los `operationId` pasan a una constante: el floor guard avisa de una aserción reescrita (la refuerza, con `listBusStops`) y lo hará en toda la rama; decisión del usuario: commit explicándolo.
 - 2026-10-30: T5 hecha. La caché del detalle guarda la respuesta de la EMT sin traducir, y el horario de hoy se elige en cada petición, así que un detalle de antes de medianoche ya da el día nuevo. `updatedAt` es el más antiguo de la lista y el detalle, y `stale` si lo es cualquiera de los dos. Los campos sin horario van como `null`, no se omiten. `072` no es `72`: da 404. Los festivos entre semana no se detectan.
+- 2026-10-30: T6 hecha. Con la EMT caída y llegadas de más de 2 min, el API responde `503`, como dice la spec. Las líneas se ordenan como los números de parada: primero las numéricas por valor, después el resto por orden alfabético (`5` < `14` < `C03` < `N1`). Un `estimateArrive` ausente cuenta como `noEstimate`. `updatedAt` y `stale` salen solo de las llegadas. Quedan para T7: la descripción del tag `Bus`, que habla de una recarga diaria, y la descripción del OpenAPI, que solo menciona BiciMAD.
