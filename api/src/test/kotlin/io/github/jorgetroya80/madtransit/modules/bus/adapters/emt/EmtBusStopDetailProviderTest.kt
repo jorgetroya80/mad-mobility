@@ -131,7 +131,7 @@ class EmtBusStopDetailProviderTest(
 
     @Test
     fun `the stop detail has its own daily quota and a daily cache kept for a week`() {
-        assertThat(quota.modules["bus-stop-detail"]?.dailyLimit).isEqualTo(2000)
+        assertThat(quota.modules["bus-stop-detail"]?.dailyLimit).isEqualTo(20_000)
         assertThat(cache.ttl("bus-stop-detail")).isEqualTo(Duration.ofHours(24))
         assertThat(cache.maxStale("bus-stop-detail")).isEqualTo(Duration.ofDays(7))
     }

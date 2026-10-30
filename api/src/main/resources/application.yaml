@@ -81,8 +81,9 @@ mad-transit:
         ttl: 30s
         max-stale: 2m
   quota:
-    # EMT allows 20,000 calls/day; keep a margin. Per-module caps: quota.modules.<module>.daily-limit
-    global-daily-limit: 18000
+    # The EMT app allows 250,000 calls/day (apiCounter.dailyUse at login, 2026-10-30); keep a 10 % margin.
+    # Per-module caps: quota.modules.<module>.daily-limit
+    global-daily-limit: 225000
     modules:
       # One stations call per cache TTL (60 s) is ~1,440/day; twice that as margin
       bicimad:
@@ -92,12 +93,13 @@ mad-transit:
         daily-limit: 50
       bus-lines:
         daily-limit: 50
-      # One call per stop opened per day (24 h cache): room for 2,000 different stops
+      # One call per stop and day (24 h cache): 4 times the 4,935 stops, so walking every stop cannot exhaust it
       bus-stop-detail:
-        daily-limit: 2000
-      # One call per open stop every 30 s (cache TTL) is 120/hour per stop; shared by every client
+        daily-limit: 20000
+      # One call per open stop every 30 s (cache TTL); above the 86,400/day one client can make at 1 request/s,
+      # so a single client cannot exhaust it for everyone
       bus-arrivals:
-        daily-limit: 10000
+        daily-limit: 150000
   rate-limit:
     # Per-IP token bucket on /v1/**: bursts of up to capacity, then refill-per-second requests/s
     capacity: 60

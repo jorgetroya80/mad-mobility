@@ -122,7 +122,7 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
 - [x] **T8: Smoke test y documentación** (S, ~45 min)
   - Descripción: renombrar el OpenAPI generado de `build/openapi/bicimad.json` a `build/openapi/mad-transit.json` (decisión del usuario, 2026-10-30) en `api/build.gradle.kts`, `api/client/package.json`, `.github/workflows/ci.yml` y `api/AGENTS.md`. El paquete publicado sigue llevando `openapi.json`, así que el cliente no cambia. `smokeTest` llama a los tres endpoints del bus contra la EMT real. Spec y capability map a **implemented**, changelog del plan y `api/AGENTS.md` si cambia algo. Comprobar `SA` y `FE` con `smokeTest` un sábado o un domingo; si el formato difiere, PR `fix(api)` aparte.
   - Aceptación:
-    - SC6: el cupo del bus no pasa de 12.100; `emt.quota.used` muestra las cuatro claves.
+    - SC6: el cupo del bus no pasa de 170.100; `emt.quota.used` muestra las cuatro claves.
     - SC7: `pnpm check:task` en verde y el cliente generado tiene las tres operaciones.
     - `./gradlew generateOpenApi` escribe `build/openapi/mad-transit.json`; `pnpm --filter @jorgetroya80/mad-transit-client run generate` y el lint de Redocly de CI lo leen; ningún archivo fuera de `docs/` nombra `bicimad.json`.
   - Verificación: `./gradlew -p api smokeTest` (manual, con `.env.local`); `pnpm check:task`.
@@ -141,7 +141,7 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
 | Una parada de la lista que la EMT da por no disponible hace un login en cada sondeo de 30 s mientras está abierta | Medio | El login es compartido (single-flight) y se cuenta en `emt.auth.logins`; si sube, se guarda el `502` unos segundos en un cambio aparte |
 | `SA` y `FE` no se han visto en una respuesta real | Medio | La EMT ya devuelve un tipo por línea; regla de respaldo con `Clock`; `smokeTest` en fin de semana (T8) |
 | La EMT cambia el formato de la lista o pide otra vez un cuerpo | Medio | La lista vacía se trata como error, se sirve la caché `stale` hasta 7 días y el log `WARN` lo avisa |
-| El cupo de llegadas (10.000 al día) se agota con muchos usuarios | Medio | Caché compartida de 30 s por parada; `503` con `Retry-After`; la app tiene 250.000 al día (hallazgos) si hace falta subirlo en un cambio aparte |
+| El cupo de llegadas se agota con muchos usuarios o con abuso desde varias IP | Medio | Caché compartida de 30 s por parada; cupo de 150.000, por encima de lo que puede gastar una IP (86.400 al día); `503` con `Retry-After`; si las métricas muestran abuso, un límite por IP para detalle y llegadas en un PR aparte |
 | Una respuesta de 4.935 paradas pesa demasiado para el plan gratuito de Render | Bajo | gzip en T7 (179 KB en la EMT, menos en la nuestra) y ETag |
 
 ## Paralelización
@@ -166,3 +166,4 @@ Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
 - 2026-10-30: T8, código hecho. El OpenAPI generado pasa a llamarse `build/openapi/mad-transit.json` (`build.gradle.kts`, `api/client/package.json`, `ci.yml`, `api/AGENTS.md`); `release.yml` y `OpenApiExportTest` no lo nombraban. `BusSmokeTest` es una clase aparte de `EmtSmokeTest` porque necesita un servidor web real para las llamadas HTTP y el gzip. Pendiente: ejecutar `smokeTest` contra la EMT (con permiso del usuario) y, después del merge, pasar spec y capability map a **implemented**.
 - 2026-10-30: checkpoint de la fase 2 y prueba manual hechos por el usuario con `bootRun` contra la EMT real: lista cerca de Sol, detalle y llegadas de 2768 y 72, y los casos `400` y `404`. Todo bien.
 - 2026-10-30: `smokeTest` contra la EMT real. `BusSmokeTest` 4/4 en verde tras un arreglo: en Jackson 3, `JsonNode.map` aplica la función al nodo entero y no a sus elementos, así que se pasa por `values()`. Hay 41 paradas a ≤ 500 m de Sol y 2 llegadas en la 2768. La lista completa ocupa 604.926 bytes, que con gzip se quedan en 159.792. `EmtSmokeTest > translates more than 600 valid BiciMAD stations` falla: da 150 válidas de 678, aunque `GET /v1/bicimad/stations` en `bootRun` devuelve las 678. El fallo ya estaba (el test no cambia en esta rama) y se investiga en un `fix` aparte.
+- 2026-10-30: revisión del PR #87 (R1, opción 1 del usuario). Cupos: global 225.000, `bus-arrivals` 150.000 y `bus-stop-detail` 20.000. Se reescriben 3 aserciones de configuración con los valores nuevos.

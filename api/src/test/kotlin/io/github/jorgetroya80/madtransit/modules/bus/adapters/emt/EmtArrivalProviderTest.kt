@@ -132,7 +132,7 @@ class EmtArrivalProviderTest(
 
     @Test
     fun `arrivals have their own daily quota and a 30 s cache served stale for 2 minutes`() {
-        assertThat(quota.modules["bus-arrivals"]?.dailyLimit).isEqualTo(10000)
+        assertThat(quota.modules["bus-arrivals"]?.dailyLimit).isEqualTo(150_000)
         assertThat(cache.ttl("bus-arrivals")).isEqualTo(Duration.ofSeconds(30))
         assertThat(cache.maxStale("bus-arrivals")).isEqualTo(Duration.ofMinutes(2))
     }

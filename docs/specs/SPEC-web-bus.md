@@ -26,7 +26,7 @@ Que un usuario sepa en menos de 5 segundos qué parada de autobús tiene cerca y
 3. **Resumen en el mapa y detalle en el panel.** Tocar una parada abre un popup sobre el icono con un resumen y, a la vez, el detalle completo en el panel (el mismo patrón que `?station`).
 4. **Favoritos de paradas en un spec posterior.**
 5. **Un solo selector de servicio.** El buscador sigue al selector de arriba y su `SourcePicker` se oculta.
-6. **La lista no muestra llegadas.** Se decidió tras ver los datos reales: a ≤ 500 m hay entre 25 y 41 paradas. Con una llegada por fila serían hasta 41 llamadas cada 30 s por zona, unas 4.900 por hora, frente al cupo de 10.000 al día de las llegadas. Las llegadas salen solo en el popup y en el detalle.
+6. **La lista no muestra llegadas.** Se decidió tras ver los datos reales: a ≤ 500 m hay entre 25 y 41 paradas. Con una llegada por fila serían hasta 41 llamadas cada 30 s por zona, unas 4.900 por hora (unas 118.000 al día) para una sola zona, frente al cupo de 150.000 al día de las llegadas. Las llegadas salen solo en el popup y en el detalle.
 7. **Dónde está el autobús.** Cada llegada del detalle tiene un botón "Ver en el mapa", como el "Ver ubicación" del visor PMV de la EMT. El dato sale de la llamada de llegadas, sin peticiones extra.
 
 ## Assumptions
@@ -167,3 +167,4 @@ Ninguna.
 - 2026-10-30: decisión 7 (dónde está el autobús, con "Ver en el mapa"), supuesto 9 y sección "Errores: qué ve el usuario y qué hace la app". `base-map` añade el icono de vehículo y `fitPoints`.
 - 2026-10-30: aprobada por el usuario.
 - 2026-10-30: se quita `inService` (el API responde `502` estándar); ese caso entra en la fila de errores 5xx.
+- 2026-10-30: el cupo de llegadas pasa a 150.000 al día (revisión del PR #87); la decisión 6 se mantiene.

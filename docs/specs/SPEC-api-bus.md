@@ -172,10 +172,11 @@ Formato RFC 9457 de api-core (`application/problem+json` con `type`, `title`, `d
 | -------------- | ---------------------------- | ------ | ----------- | ----------- | --------------------------------------- |
 | `bus-stops`    | lista de paradas (una entrada) | 24 h   | 7 días      | 50          | 1/día                                   |
 | `bus-lines`    | catálogo de líneas (una entrada) | 24 h | 7 días      | 50          | 1/día                                   |
-| `bus-stop-detail` | detalle por parada        | 24 h   | 7 días      | 2.000       | una por parada abierta al día           |
-| `bus-arrivals` | llegadas por parada          | 30 s   | 2 min       | 10.000      | 120/h por parada abierta (polling 30 s) |
+| `bus-stop-detail` | detalle por parada        | 24 h   | 7 días      | 20.000      | una por parada abierta al día (4.935 paradas como mucho) |
+| `bus-arrivals` | llegadas por parada          | 30 s   | 2 min       | 150.000     | 120/h por parada abierta (polling 30 s) |
 
-- Total del bus: 12.100. Con BiciMAD (3.000) queda bajo el global de 18.000.
+- Total del bus: 170.100. Con BiciMAD (3.000) queda bajo el global de 225.000, que es el 90 % de las 250.000 llamadas al día de la app (`apiCounter.dailyUse`, comprobado el 2026-10-30).
+- Un solo cliente no puede agotar estos cupos. El rate limit por IP (1 petición por segundo) le deja 86.400 llamadas al día, menos que las 150.000 de llegadas. En el detalle, como mucho una llamada por parada y día (4.935), menos que las 20.000.
 - Las llegadas con más de 2 min no se sirven como `stale`: un autobús que "llega en 1 min" de hace 5 min engaña. Sin caché válida, `503`.
 - `ETag` y `Cache-Control: no-cache` ya aplican a `/v1/**` (`HttpCacheConfig`).
 
@@ -273,7 +274,7 @@ internal object EmtArrivalMapper {
 3. SC3: `GET /v1/bus/stops/{number}/arrivals` devuelve minutos por línea y destino; `999999` sale como `noEstimate: true`; las demás llevan `busLat` y `busLon`.
 4. SC4: un `code` `80` en cualquier endpoint del bus hace login otra vez una sola vez; si se repite con el token nuevo, el API responde `502` problem+json estándar.
 5. SC5: con la EMT caída, paradas y detalle se sirven `stale` hasta 7 días; las llegadas solo hasta 2 min.
-6. SC6: el cupo del bus nunca supera 12.100 llamadas/día; las métricas `emt.quota.used` muestran las cuatro claves.
+6. SC6: el cupo del bus nunca supera 170.100 llamadas/día; las métricas `emt.quota.used` muestran las cuatro claves.
 7. SC7: `pnpm check:task` pasa y el cliente generado incluye las tres operaciones.
 
 ## Hallazgos de la EMT
@@ -291,7 +292,7 @@ Capturas reales del 2026-10-30 con las credenciales de la app (`X-ClientId` + `p
 | `POST stops/999999/arrives/`                    | 200  | `80`   | "Parada no disponible actualmente o inexistente": el mismo código que un token inválido    |
 | `GET stops/arroundxy/-3.7038/40.4168/250/`      | 200  | `00`   | 3 paradas, las mismas que da la lista completa a 250 m. Ya trae etiquetas, pero no se usa (decisión 2) |
 
-- En la respuesta del login, `apiCounter.dailyUse` de la app es 250.000 llamadas, no las 20.000 que supone `QuotaTracker`. No cambia este SPEC: los cupos de arriba caben en los dos. Si se quiere usar el margen, va en un cambio aparte.
+- En la respuesta del login, `apiCounter.dailyUse` de la app es 250.000 llamadas, no las 20.000 que supone `QuotaTracker`. Desde la revisión del PR #87, el global usa ese dato (225.000).
 - Nocturnas de la parada 72 (`N1`, `N4`, `N22`, `N24`, `N25`, `N26`): empiezan entre las 23:20 y las 00:00 y terminan entre las 05:30 y las 05:45, todas con `VI` el viernes.
 - **Token inválido o ausente, por endpoint** (`code` `80`, "Error, token not found in cache"):
 
@@ -315,3 +316,4 @@ Capturas reales del 2026-10-30 con las credenciales de la app (`X-ClientId` + `p
 - 2026-10-30: decisión 6 (posición del autobús en cada llegada, `busLat` y `busLon`). La sección Errores pasa a tabla: qué hace el API con cada fallo de la EMT y qué responde. Añade `inService` y el caso del `code` `80` con HTTP 200.
 - 2026-10-30: aprobada por el usuario.
 - 2026-10-30: comprobado el `code` `80` en el bus: con un token inválido, la lista, el catálogo y el detalle responden HTTP 200, así que el HTTP no sirve para distinguirlo. Se quita `inService` y `EmtHttpClient` no cambia: un `80` que se repite tras el login da el error estándar `502` (decisión del usuario).
+- 2026-10-30: revisión del PR #87 (R1). Un solo cliente rotando paradas agotaba el cupo de llegadas (10.000) en unas 3 h y el de detalle (2.000) en unos 33 min, y después todos recibían `503`. Los cupos pasan a 150.000 y 20.000, y el global a 225.000 (el 90 % de las 250.000 llamadas reales de la app).
