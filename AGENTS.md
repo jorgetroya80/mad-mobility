@@ -5,7 +5,7 @@ Instructions for coding agents working on Mad Transit. Humans start with [README
 ## Repo map
 
 - `api/`: Spring Boot API in Kotlin that wraps the EMT MobilityLabs API. `api/client/` is the TypeScript client generated from its OpenAPI contract.
-- `web/`: React web app that calls the API only through `@jorgetroya80/bicimad-client`.
+- `web/`: React web app that calls the API only through `@jorgetroya80/mad-transit-client`.
 - `docs/specs/` and `docs/plans/`: one SPEC and one PLAN per module. Start with [docs/specs/CAPABILITY-MAP.md](docs/specs/CAPABILITY-MAP.md).
 - `CONSTRAINTS.md`: the quality bar, with the command behind each rule.
 - `render.yaml`: Render Blueprint. It deploys only from `main`.
@@ -55,7 +55,7 @@ Run `pnpm check:task` before you report a task as done, and report its real resu
 ## Gotchas
 
 - pnpm installs only package versions published at least 10 days ago (`minimumReleaseAge`), except our own client.
-- The web needs a GitHub token with `read:packages` to install `@jorgetroya80/bicimad-client`; see [web/README.md](web/README.md).
+- The web needs a GitHub token with `read:packages` to install `@jorgetroya80/mad-transit-client`; see [web/README.md](web/README.md).
 - Geolocation needs HTTPS, so a phone cannot test it against `vite --host` on the LAN. Test on Render after the merge.
 - A Render Blueprint sync never deletes rules or environment variables removed from `render.yaml`.
 - Ask before you add any dependency.

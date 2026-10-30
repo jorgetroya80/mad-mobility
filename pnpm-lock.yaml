@@ -193,9 +193,9 @@ importers:
 
   web:
     dependencies:
-      '@jorgetroya80/bicimad-client':
-        specifier: 0.6.0
-        version: 0.6.0
+      '@jorgetroya80/mad-transit-client':
+        specifier: 0.8.0
+        version: 0.8.0
       '@tanstack/react-query':
         specifier: 5.104.1
         version: 5.104.1(react@19.3.0)
@@ -506,8 +506,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@jorgetroya80/bicimad-client@0.6.0':
-    resolution: {integrity: sha512-Sv1Tp7Dp5XPodjjZhz82Qom6ZK+7dcHsZMDxut9dUGI4wNXJykoXAedgJ9vyS9XEUplNWCb6+ZfP8ecMjfg6JQ==, tarball: https://npm.pkg.github.com/download/@jorgetroya80/bicimad-client/0.6.0/44c0bd7c2eac94f7e5f4441ccaf98b00eac2ca03}
+  '@jorgetroya80/mad-transit-client@0.8.0':
+    resolution: {integrity: sha512-eKMfFIkt7eGAYftOv01+vJt49CFAJzCjsGpyadunryW9aDjihgLzvd/lfaY2rfiKxS+Y7yxN9g1V8GVZnMN8Bg==, tarball: https://npm.pkg.github.com/download/@jorgetroya80/mad-transit-client/0.8.0/4a47a2c7bf3c1d191a7932b120e7ba9fbd09c39f}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -2772,7 +2772,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 26.6.2
 
-  '@jorgetroya80/bicimad-client@0.6.0': {}
+  '@jorgetroya80/mad-transit-client@0.8.0': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

@@ -23,7 +23,7 @@ Run a single file with `pnpm --filter web exec vitest run <path>`.
 - Each slice exposes its public API through its `index.ts`. Import from there, never from internal files.
 - `maplibre-gl` is only used inside `shared/ui/base-map`.
 - The URL (`?station`, `?need`) is read and written only through TanStack Router, never through `window.location` or `history`.
-- The API is called only through `@jorgetroya80/bicimad-client`. Never hand-write API types or compute distances and ordering in the client: the API does it.
+- The API is called only through `@jorgetroya80/mad-transit-client`. Never hand-write API types or compute distances and ordering in the client: the API does it.
 - `localStorage` only stores the favorites.
 
 ## Style and tests

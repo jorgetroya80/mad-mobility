@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import type { Station, StationsResponse } from '@jorgetroya80/bicimad-client';
+import type { Station, StationsResponse } from '@jorgetroya80/mad-transit-client';
 import { stationsFixture } from '@/shared/api/mocks/fixtures';
 import { server } from '@/shared/api/mocks/node';
 import { env, SEARCH_MAX_RESULTS } from '@/shared/config';

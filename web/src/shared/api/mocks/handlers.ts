@@ -2,7 +2,7 @@ import type {
   Problem,
   StationDetailResponse,
   StationsResponse,
-} from '@jorgetroya80/bicimad-client';
+} from '@jorgetroya80/mad-transit-client';
 import { http, HttpResponse } from 'msw';
 import { env } from '@/shared/config';
 import { nearbyStationsFixture, stationNotFoundProblem, stationsFixture } from './fixtures';

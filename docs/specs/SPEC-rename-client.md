@@ -1,7 +1,7 @@
 # Spec: api-bicimad — cliente publicado como mad-transit-client
 
 - Created: 2026-10-30
-- Status: **approved** (2026-10-30)
+- Status: **implemented** (2026-10-30)
 - Plan: [PLAN-rename-client.md](../plans/PLAN-rename-client.md)
 
 Cambio del módulo `api-bicimad` del [Capability Map](CAPABILITY-MAP.md), con efecto en `web-shell`. Renombra el paquete npm del cliente generado de `@jorgetroya80/bicimad-client` a `@jorgetroya80/mad-transit-client`. El contrato HTTP del API y el código del cliente no cambian.
@@ -100,3 +100,4 @@ docs/specs/CAPABILITY-MAP.md           filas de api-bicimad y web-shell
 - 2026-10-30: versión inicial; pasa a in review.
 - 2026-10-30: spec aprobada.
 - 2026-10-30: implementación del PR 1 (T1-T2): paquete renombrado en `api/client`, CI y scripts.
+- 2026-10-30: spec implementada. SC1-SC4 comprobados; SC5 queda para el próximo deploy de la web en Render.

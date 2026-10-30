@@ -1,4 +1,4 @@
-import type { Problem, Station, StationsResponse } from '@jorgetroya80/bicimad-client';
+import type { Problem, Station, StationsResponse } from '@jorgetroya80/mad-transit-client';
 
 // Bikes cover every availability level: good (12), low (2), empty (0) and off (NO_SERVICE).
 const puertaDelSolA: Station = {

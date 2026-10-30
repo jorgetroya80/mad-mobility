@@ -1,4 +1,4 @@
-import { listStations, type StationsResponse } from '@jorgetroya80/bicimad-client';
+import { listStations, type StationsResponse } from '@jorgetroya80/mad-transit-client';
 import { env } from '@/shared/config';
 import { stationsFixture } from './mocks/fixtures';
 import { apiClient } from './client';

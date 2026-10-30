@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import type { StationsResponse } from '@jorgetroya80/bicimad-client';
+import type { StationsResponse } from '@jorgetroya80/mad-transit-client';
 import type { Coordinates } from '@/entities/station';
 import {
   nearbyStationsFixture,

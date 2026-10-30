@@ -1,4 +1,4 @@
-export type { Station } from '@jorgetroya80/bicimad-client';
+export type { Station } from '@jorgetroya80/mad-transit-client';
 
 export type Need = 'bikes' | 'docks';
 
