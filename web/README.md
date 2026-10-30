@@ -4,7 +4,7 @@ React frontend (Vite + TypeScript) for Mad Transit.
 
 ## What it does
 
-Shows BiciMAD stations on a map of Madrid, with how many bikes and free docks each one has, refreshed every minute. It gets the data from the [API](../api/README.md) only through the typed client `@jorgetroya80/bicimad-client`.
+Shows BiciMAD stations on a map of Madrid, with how many bikes and free docks each one has, refreshed every minute. It gets the data from the [API](../api/README.md) only through the typed client `@jorgetroya80/mad-transit-client`.
 
 - Lists the stations within 500 m of you (or of Puerta del Sol if location is off), ordered by the API: those with bikes (or free docks) first.
 - Filter by bikes or free docks; availability shows as color and number on the map and in the list.

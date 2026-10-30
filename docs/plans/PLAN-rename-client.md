@@ -1,7 +1,7 @@
 # Plan: api-bicimad — cliente publicado como mad-transit-client
 
 - Created: 2026-10-30
-- Status: **approved** (2026-10-30)
+- Status: **implemented** (2026-10-30)
 - Spec: [SPEC-rename-client.md](../specs/SPEC-rename-client.md)
 
 ## Overview
@@ -53,13 +53,13 @@ Todo es secuencial.
 
 ### Checkpoint: PR 1
 
-- [ ] Revisión humana del título y del cuerpo antes del squash merge.
-- [ ] El PR de release-please propone `api 0.8.0`; tras fusionarlo, `publish-api-client` publica `@jorgetroya80/mad-transit-client@0.8.0` (SC1).
-- [ ] El paquete aparece enlazado al repo `mad-transit` en GitHub Packages (supuestos 2 y 3).
+- [x] Revisión humana del título y del cuerpo antes del squash merge.
+- [x] El PR de release-please propone `api 0.8.0`; tras fusionarlo, `publish-api-client` publica `@jorgetroya80/mad-transit-client@0.8.0` (SC1).
+- [x] El paquete aparece enlazado al repo `mad-transit` en GitHub Packages (supuestos 2 y 3).
 
 ### Fase 2: web con el nombre nuevo (PR 2, `web/`)
 
-- [ ] **T3: Web usa `mad-transit-client`** (S, ~15 min)
+- [x] **T3: Web usa `mad-transit-client`** (S, ~15 min)
   - Descripción: en `web/package.json`, cambiar `@jorgetroya80/bicimad-client` por `@jorgetroya80/mad-transit-client` `0.8.0`. Cambiar el import en los 8 archivos de `web/src`. Quitar el nombre viejo de `minimumReleaseAgeExclude`. `pnpm install`.
   - Aceptación:
     - `grep -rn "bicimad-client" web/src web/package.json` no da resultados.
@@ -68,7 +68,7 @@ Todo es secuencial.
   - Archivos: `web/package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `web/src/shared/api/client.ts`, `web/src/shared/api/client.test.ts`, `web/src/shared/api/mocks/fixtures.ts`, `web/src/shared/api/mocks/handlers.ts`, `web/src/widgets/transit-search/ui/TransitSearch.test.tsx`, `web/src/widgets/station-list/ui/StationList.test.tsx`, `web/src/entities/station/model/types.ts`, `web/src/entities/station/api/fetchStations.ts`.
   - Dependencias: checkpoint del PR 1.
 
-- [ ] **T4: Documentación viva, PR 2 y cierre** (S, ~15 min)
+- [x] **T4: Documentación viva, PR 2 y cierre** (S, ~15 min)
   - Descripción: nombre nuevo en `AGENTS.md`, `README.md`, `web/AGENTS.md`, `web/README.md` y en las filas de `api-bicimad` y `web-shell` de `CAPABILITY-MAP.md`. Spec y plan a **implemented**. Push y PR `refactor(web): use the mad-transit-client package`.
   - Aceptación:
     - SC3: `grep -rn "bicimad-client" --exclude-dir=node_modules .` solo da resultados en `CHANGELOG.md`, en specs y planes cerrados y en esta spec y este plan.
@@ -101,3 +101,6 @@ Unos 60 min de trabajo en dos sesiones, más la espera de la release entre ellas
 - 2026-10-30: plan aprobado.
 - 2026-10-30: T1 implementada. `pnpm install` no cambia `pnpm-lock.yaml`: el lockfile indexa los paquetes del workspace por ruta, no por nombre. `generate`, `build`, `pnpm install --frozen-lockfile` y `pnpm check:task` en verde.
 - 2026-10-30: T2 implementada. Nombre nuevo en `api/README.md` y `api/client/README.md`.
+- 2026-10-30: checkpoint del PR 1 superado. #84 y la release #85 fusionados; `publish-api-client` publicó `@jorgetroya80/mad-transit-client@0.8.0`, público y enlazado a `jorgetroya80/mad-transit` sin pasos manuales (SC1, supuestos 2 y 3). El CI de #85 falló una vez sin ejecutar nada: dos runs sobre el mismo commit y `cancel-in-progress` canceló los dos; bastó con relanzar el último.
+- 2026-10-30: T3 implementada. El nombre viejo no puede salir de `minimumReleaseAgeExclude` en el mismo `pnpm install` que lo quita del lockfile: pnpm valida antes el lockfile existente y rechaza `bicimad-client@0.6.0` por edad. Se instala con los dos nombres y después se quita el viejo; `pnpm install --frozen-lockfile` pasa. `pnpm check:task` (368 tests de web) y el build de web en verde.
+- 2026-10-30: T4 implementada. Nombre nuevo en `AGENTS.md`, `README.md`, `web/AGENTS.md`, `web/README.md` y `CAPABILITY-MAP.md` (filas y enfoque de contrato, que recuerda el nombre viejo hasta la 0.7.1). SC3 comprobado: el nombre viejo solo queda en specs y planes ya cerrados, en `SPEC-rename-mad-transit.md` (su fuera de alcance) y en esta spec y este plan. Plan implementado; queda el checkpoint final.

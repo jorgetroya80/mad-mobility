@@ -12,7 +12,7 @@ Madrid mobility data, starting with BiciMAD, built on the EMT Madrid MobilityLab
 What works today:
 
 - **BiciMAD stations API**: list all stations and look one up by its number (`/v1/bicimad/stations`, `/v1/bicimad/stations/{number}`).
-- **Typed client**: every API release publishes `@jorgetroya80/bicimad-client` to GitHub Packages, generated from the OpenAPI contract.
+- **Typed client**: every API release publishes `@jorgetroya80/mad-transit-client` to GitHub Packages, generated from the OpenAPI contract.
 - **Web map**: nearby BiciMAD stations with live bikes and free docks, station search and favorites.
 
 Coming next: EMT buses.
@@ -32,7 +32,7 @@ Coming next: EMT buses.
 - React, Vite and TypeScript on Node 24, with pnpm
 - MapLibre for the map, Tailwind for styling
 - TanStack Query for data fetching
-- `@jorgetroya80/bicimad-client` (generated with hey-api) for typed API calls
+- `@jorgetroya80/mad-transit-client` (generated with hey-api) for typed API calls
 
 ## Architecture
 
