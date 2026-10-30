@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.0](https://github.com/jorgetroya80/mad-transit/compare/api-v0.7.1...api-v0.8.0) (2026-10-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** the client is published as @jorgetroya80/mad-transit-client; consumers must change the package name in their dependencies and imports.
+
+### Features
+
+* **api:** publish the client as mad-transit-client ([0464f7e](https://github.com/jorgetroya80/mad-transit/commit/0464f7e2d3df602a329d25b97e9bffeb96587029))
+
 ## [0.7.1](https://github.com/jorgetroya80/mad-transit/compare/api-v0.7.0...api-v0.7.1) (2026-10-29)
 
 
