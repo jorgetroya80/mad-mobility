@@ -107,8 +107,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: pnpm --filter @jorgetroya80/bicimad-client run generate
-      - run: pnpm --filter @jorgetroya80/bicimad-client run build
+      - run: pnpm --filter @jorgetroya80/mad-transit-client run generate
+      - run: pnpm --filter @jorgetroya80/mad-transit-client run build
 
   web:
     name: Web (pnpm)

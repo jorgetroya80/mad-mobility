@@ -1,4 +1,4 @@
-# @jorgetroya80/bicimad-client
+# @jorgetroya80/mad-transit-client
 
 Typed client for the Mad Transit public API, generated with [hey-api](https://heyapi.dev) from the API's OpenAPI contract. Each `api` release publishes a client with the same version; the contract ships in the package as `openapi.json`.
 
@@ -13,13 +13,13 @@ The package is on GitHub Packages, which asks for a token even for public packag
 ```
 
 ```bash
-pnpm add @jorgetroya80/bicimad-client
+pnpm add @jorgetroya80/mad-transit-client
 ```
 
 ## Usage
 
 ```ts
-import { createClient, createConfig, getStation, listStations } from '@jorgetroya80/bicimad-client';
+import { createClient, createConfig, getStation, listStations } from '@jorgetroya80/mad-transit-client';
 
 const client = createClient(createConfig({ baseUrl: 'https://api.example.com' }));
 
