@@ -207,6 +207,15 @@ class EmtHttpClientHttpTest : EmtWireMockTest() {
         assertThat(arrivalsCalls()).isEqualTo(2)
     }
 
+    @Test
+    fun `the error for a stop the EMT does not serve reads its translated description`() {
+        stubLogin()
+        wireMock.stubFor(post(urlPathEqualTo(ARRIVALS)).willReturn(stubStations(200, "bus-arrivals-missing-stop.json")))
+
+        assertThatThrownBy { client().post("bus-arrivals", ARRIVALS, Map::class.java, ARRIVALS_BODY) }
+            .hasMessageContaining("Parada no disponible actualmente o inexistente / Bus Stop disabled or not exists")
+    }
+
     private companion object {
         const val STATIONS = "/v1/transport/bicimad/stations/"
         const val STOPS_LIST = "/v1/transport/busemtmad/stops/list/"

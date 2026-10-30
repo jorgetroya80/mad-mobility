@@ -62,7 +62,10 @@ class EmtHttpClient(
         emtAuth.invalidate(token)
         val (retryBody, retryStatus) = call(request, emtAuth.accessToken(), responseType)
         if (retryBody?.code == EmtResponse.CODE_TOKEN_INVALID) {
-            throw EmtProtocolError(retryBody.code, "EMT rejected a freshly issued access token ($request)")
+            throw EmtProtocolError(
+                retryBody.code,
+                "EMT rejected a freshly issued access token ($request, description=${retryBody.description})",
+            )
         }
         return dataOrThrow(request, retryBody, retryStatus)
     }
