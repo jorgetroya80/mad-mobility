@@ -98,6 +98,18 @@ class EmtBusStopProviderTest(
     }
 
     @Test
+    fun `snapshots of the same refresh share one stop index`() {
+        stubStops(fixture("bus-stops-list.json"))
+        stubLines(fixture("bus-lines-info.json"))
+
+        val first = provider.snapshot()
+        val second = provider.snapshot()
+
+        assertThat(second.index).isSameAs(first.index)
+        assertThat(second.find("2768")?.lines).containsExactly("73", "N3")
+    }
+
+    @Test
     fun `with the EMT down, the previous stops are served as stale`() {
         stubStops(fixture("bus-stops-list.json"))
         stubLines(fixture("bus-lines-info.json"))

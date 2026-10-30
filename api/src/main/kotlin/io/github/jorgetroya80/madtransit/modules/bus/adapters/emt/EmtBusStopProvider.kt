@@ -1,6 +1,6 @@
 package io.github.jorgetroya80.madtransit.modules.bus.adapters.emt
 
-import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStop
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopIndex
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopProvider
 import io.github.jorgetroya80.madtransit.shared.emt.CacheService
@@ -22,12 +22,12 @@ class EmtBusStopProvider(
     private val cacheService: CacheService,
     private val clock: Clock,
 ) : BusStopProvider {
-    // Stops are cached already translated, so the 4,900 stops are mapped once per refresh, not per request
+    // Stops are cached translated and indexed, so the 4,900 stops are mapped once per refresh, not per request
     override fun snapshot(): BusStopSnapshot {
         val lines = cacheService.get(LINES_MODULE, CACHE_KEY, ::loadLines)
         val stops = cacheService.get(STOPS_MODULE, CACHE_KEY) { loadStops(lines.value) }
         return BusStopSnapshot(
-            stops = stops.value,
+            index = stops.value,
             updatedAt = minOf(stops.updatedAt, lines.updatedAt),
             stale = stops.stale || lines.stale,
         )
@@ -40,10 +40,10 @@ class EmtBusStopProvider(
         return lines
     }
 
-    private fun loadStops(lines: List<EmtLineInfo>): List<BusStop> {
+    private fun loadStops(lines: List<EmtLineInfo>): BusStopIndex {
         val stops = EmtBusStopMapper.toDomain(emtHttpClient.post(STOPS_MODULE, STOPS_PATH, EmtBusStop::class.java), lines)
         if (stops.isEmpty()) throw EmtProtocolError(null, "EMT returned no valid bus stops")
-        return stops
+        return BusStopIndex(stops)
     }
 
     private fun linesPath(): String {

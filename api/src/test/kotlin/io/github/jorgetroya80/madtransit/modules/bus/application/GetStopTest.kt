@@ -4,6 +4,7 @@ import io.github.jorgetroya80.madtransit.modules.bus.domain.BusLine
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStop
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetail
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetailSnapshot
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopIndex
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.domain.GeoPoint
 import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopDetailProvider
@@ -68,7 +69,7 @@ class GetStopTest {
         updatedAt: Instant = LATER,
         stale: Boolean = false,
     ) {
-        every { stops.snapshot() } returns BusStopSnapshot(stop.toList(), updatedAt, stale)
+        every { stops.snapshot() } returns BusStopSnapshot(BusStopIndex(stop.toList()), updatedAt, stale)
     }
 
     private fun givenDetail(

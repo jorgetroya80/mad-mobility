@@ -3,6 +3,7 @@ package io.github.jorgetroya80.madtransit.modules.bus.application
 import io.github.jorgetroya80.madtransit.modules.bus.domain.Arrival
 import io.github.jorgetroya80.madtransit.modules.bus.domain.ArrivalSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStop
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopIndex
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.domain.GeoPoint
 import io.github.jorgetroya80.madtransit.modules.bus.ports.ArrivalProvider
@@ -65,7 +66,7 @@ class GetArrivalsTest {
 
     private fun givenStops(vararg number: String) {
         val list = number.map { BusStop(it, "Stop $it", GeoPoint(40.42, -3.69), listOf("5")) }
-        every { stops.snapshot() } returns BusStopSnapshot(list, Instant.parse("2026-10-29T10:00:00Z"), stale = false)
+        every { stops.snapshot() } returns BusStopSnapshot(BusStopIndex(list), Instant.parse("2026-10-29T10:00:00Z"), stale = false)
     }
 
     private fun givenArrivals(vararg arrival: Arrival) {

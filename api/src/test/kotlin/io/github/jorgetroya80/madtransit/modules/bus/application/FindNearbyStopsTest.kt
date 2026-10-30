@@ -1,6 +1,7 @@
 package io.github.jorgetroya80.madtransit.modules.bus.application
 
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStop
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopIndex
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.domain.GeoPoint
 import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopProvider
@@ -66,7 +67,7 @@ class FindNearbyStopsTest {
     }
 
     private fun given(vararg stops: BusStop) {
-        every { provider.snapshot() } returns BusStopSnapshot(stops.toList(), UPDATED_AT, stale = true)
+        every { provider.snapshot() } returns BusStopSnapshot(BusStopIndex(stops.toList()), UPDATED_AT, stale = true)
     }
 
     private fun stop(

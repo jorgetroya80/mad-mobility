@@ -14,6 +14,7 @@ import io.github.jorgetroya80.madtransit.modules.bus.domain.BusLine
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStop
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetail
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetailSnapshot
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopIndex
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.ports.ArrivalProvider
 import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopDetailProvider
@@ -126,7 +127,7 @@ class BusStopsControllerTest(
 
     @Test
     fun `carries freshness and source with an ISO 8601 UTC timestamp in whole seconds`() {
-        every { provider.snapshot() } returns BusStopSnapshot(fixtureStops(), UPDATED_AT, stale = true)
+        every { provider.snapshot() } returns BusStopSnapshot(BusStopIndex(fixtureStops()), UPDATED_AT, stale = true)
 
         val body =
             json(
@@ -412,7 +413,7 @@ class BusStopsControllerTest(
     }
 
     private fun given(stops: List<BusStop>) {
-        every { provider.snapshot() } returns BusStopSnapshot(stops, UPDATED_AT, stale = false)
+        every { provider.snapshot() } returns BusStopSnapshot(BusStopIndex(stops), UPDATED_AT, stale = false)
     }
 
     private fun stopsOf(uri: String): List<JsonNode> {

@@ -21,7 +21,7 @@ class GetStop(
     // Name and position come from the list, so the result is as old and as stale as the older of both
     operator fun invoke(number: String): FoundStop {
         val snapshot = stops.snapshot()
-        val stop = snapshot.stops.find { it.number == number } ?: throw BusStopNotFound(number)
+        val stop = snapshot.find(number) ?: throw BusStopNotFound(number)
         val detail = details.detail(number)
         return FoundStop(
             stop = stop,

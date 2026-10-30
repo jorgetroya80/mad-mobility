@@ -17,7 +17,7 @@ class GetArrivals(
 ) {
     // Only the arrivals are returned, so freshness is theirs and not the stop list's
     operator fun invoke(number: String): ArrivalSnapshot {
-        if (stops.snapshot().stops.none { it.number == number }) throw BusStopNotFound(number)
+        if (stops.snapshot().find(number) == null) throw BusStopNotFound(number)
         val snapshot = arrivals.arrivals(number)
         return snapshot.copy(arrivals = snapshot.arrivals.sortedWith(SOONEST_FIRST))
     }
