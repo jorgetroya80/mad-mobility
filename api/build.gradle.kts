@@ -213,8 +213,14 @@ val bicimadCoverageVerification by tasks.registering(JacocoCoverageVerification:
     requireLineCoverage("modules/bicimad")
 }
 
+val busCoverageVerification by tasks.registering(JacocoCoverageVerification::class) {
+    description = "Checks line coverage of modules/bus."
+    group = "verification"
+    requireLineCoverage("modules/bus")
+}
+
 tasks.check {
-    dependsOn(tasks.jacocoTestCoverageVerification, bicimadCoverageVerification, verifyNoSpringdocInJar)
+    dependsOn(tasks.jacocoTestCoverageVerification, bicimadCoverageVerification, busCoverageVerification, verifyNoSpringdocInJar)
 }
 
 spotless {

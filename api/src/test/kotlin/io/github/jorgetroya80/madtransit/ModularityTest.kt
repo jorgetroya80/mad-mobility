@@ -25,4 +25,11 @@ class ModularityTest {
 
         assertThat(bicimad.getDirectDependencies(modules).uniqueModules().map { it.identifier.toString() }).isSubsetOf("shared")
     }
+
+    @Test
+    fun `bus only depends on shared`() {
+        val bus = modules.getModuleByName("bus").orElseThrow()
+
+        assertThat(bus.getDirectDependencies(modules).uniqueModules().map { it.identifier.toString() }).isSubsetOf("shared")
+    }
 }
