@@ -4,8 +4,13 @@ import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtBusStop
 import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtBusStopMapper
 import io.github.jorgetroya80.madtransit.modules.bus.adapters.emt.EmtLineInfo
 import io.github.jorgetroya80.madtransit.modules.bus.application.FindNearbyStops
+import io.github.jorgetroya80.madtransit.modules.bus.application.GetStop
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusLine
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStop
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetail
+import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopDetailSnapshot
 import io.github.jorgetroya80.madtransit.modules.bus.domain.BusStopSnapshot
+import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopDetailProvider
 import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopProvider
 import io.github.jorgetroya80.madtransit.shared.emt.EmtResponse
 import io.github.jorgetroya80.madtransit.shared.web.RequestIdFilter
@@ -32,15 +37,19 @@ import java.time.Clock
 import java.time.Instant
 
 @WebMvcTest(BusStopsController::class)
-@Import(FindNearbyStops::class, BusStopsControllerTest.Config::class)
+@Import(FindNearbyStops::class, GetStop::class, BusStopsControllerTest.Config::class)
 class BusStopsControllerTest(
     @Autowired private val mvc: MockMvcTester,
     @Autowired private val provider: BusStopProvider,
+    @Autowired private val detailProvider: BusStopDetailProvider,
 ) {
     @TestConfiguration
     class Config {
         @Bean
         fun busStopProvider(): BusStopProvider = mockk()
+
+        @Bean
+        fun busStopDetailProvider(): BusStopDetailProvider = mockk()
 
         // Needed by the shared ProblemDetailsHandler, which the web slice loads
         @Bean
@@ -179,6 +188,117 @@ class BusStopsControllerTest(
         assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-400")
     }
 
+    @Test
+    fun `SC2 stop by number has the list entry, the address and today's lines, as in the spec`() {
+        given(fixtureStops())
+        givenDetail("72", DETAIL_72)
+
+        val result = mvc.get().uri("$STOPS/72").exchange()
+
+        assertThat(result).hasStatusOk().hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+        val body = json(result.response.contentAsString)
+        assertThat(body.propertyNames()).containsExactlyInAnyOrder("stop", "updatedAt", "stale", "source")
+        assertThat(body.path("updatedAt").asString()).isEqualTo("2026-10-30T10:15:00Z")
+        assertThat(body.path("source").asString()).isEqualTo("EMT Madrid MobilityLabs")
+        val stop = body.path("stop")
+        assertThat(stop.propertyNames()).containsExactlyInAnyOrder("number", "name", "address", "lat", "lon", "lines")
+        assertThat(stop.path("number").asString()).isEqualTo("72")
+        assertThat(stop.path("name").asString()).isEqualTo("Cibeles-Casa de América")
+        assertThat(stop.path("address").asString()).isEqualTo("Pº de Recoletos, 2 (Pza. de Cibeles)")
+        assertThat(stop.path("lat").asDouble()).isEqualTo(40.420268054530624)
+        assertThat(stop.path("lon").asDouble()).isEqualTo(-3.692139136326868)
+        val line = stop.path("lines").values().first()
+        assertThat(line.propertyNames()).containsExactlyInAnyOrder(*LINE_PROPERTIES)
+        assertThat(line.path("label").asString()).isEqualTo("5")
+        assertThat(line.path("headerA").asString()).isEqualTo("SOL/SEVILLA")
+        assertThat(line.path("headerB").asString()).isEqualTo("CHAMARTIN")
+        assertThat(line.path("direction").asString()).isEqualTo("B")
+        assertThat(line.path("firstBus").asString()).isEqualTo("06:30")
+        assertThat(line.path("lastBus").asString()).isEqualTo("22:58")
+        assertThat(line.path("minFrequencyMinutes").asInt()).isEqualTo(10)
+        assertThat(line.path("maxFrequencyMinutes").asInt()).isEqualTo(22)
+    }
+
+    @Test
+    fun `a line without today's schedule sends its schedule and frequencies as null`() {
+        given(fixtureStops())
+        givenDetail(
+            "72",
+            BusStopDetail(address = null, lines = listOf(BusLine("5", "SOL/SEVILLA", "CHAMARTIN", "B", null, null, null, null))),
+        )
+
+        val body =
+            json(
+                mvc
+                    .get()
+                    .uri("$STOPS/72")
+                    .exchange()
+                    .response.contentAsString,
+            )
+
+        assertThat(body.at("/stop/address").isNull).isTrue()
+        val line = body.at("/stop/lines/0")
+        assertThat(line.propertyNames()).containsExactlyInAnyOrder(*LINE_PROPERTIES)
+        listOf("firstBus", "lastBus", "minFrequencyMinutes", "maxFrequencyMinutes").forEach {
+            assertThat(line.path(it).isNull).describedAs(it).isTrue()
+        }
+    }
+
+    @Test
+    fun `stop by number carries the stale flag`() {
+        given(fixtureStops())
+        every { detailProvider.detail("72") } returns BusStopDetailSnapshot(DETAIL_72, UPDATED_AT, stale = true)
+
+        val body =
+            json(
+                mvc
+                    .get()
+                    .uri("$STOPS/72")
+                    .exchange()
+                    .response.contentAsString,
+            )
+
+        assertThat(body.path("stale").asBoolean()).isTrue()
+    }
+
+    @Test
+    fun `unknown stop number is a 404 problem with the request id`() {
+        given(fixtureStops())
+
+        val result =
+            mvc
+                .get()
+                .uri("$STOPS/99999999")
+                .header(RequestIdFilter.HEADER, "req-404")
+                .exchange()
+
+        assertThat(result).hasStatus(404).hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-404")
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["abc", "72a", "-72", "7 2"])
+    fun `non-numeric stop number is a 400 problem with the request id`(number: String) {
+        given(fixtureStops())
+
+        val result =
+            mvc
+                .get()
+                .uri("$STOPS/{number}", number)
+                .header(RequestIdFilter.HEADER, "req-400")
+                .exchange()
+
+        assertThat(result).hasStatus(400).hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        assertThat(json(result.response.contentAsString).path("requestId").asString()).isEqualTo("req-400")
+    }
+
+    private fun givenDetail(
+        number: String,
+        detail: BusStopDetail,
+    ) {
+        every { detailProvider.detail(number) } returns BusStopDetailSnapshot(detail, UPDATED_AT, stale = false)
+    }
+
     private fun given(stops: List<BusStop>) {
         every { provider.snapshot() } returns BusStopSnapshot(stops, UPDATED_AT, stale = false)
     }
@@ -202,5 +322,12 @@ class BusStopsControllerTest(
     private companion object {
         const val STOPS = "/v1/bus/stops"
         val UPDATED_AT: Instant = Instant.parse("2026-10-30T10:15:00.123456Z")
+        val LINE_PROPERTIES =
+            arrayOf("label", "headerA", "headerB", "direction", "firstBus", "lastBus", "minFrequencyMinutes", "maxFrequencyMinutes")
+        val DETAIL_72 =
+            BusStopDetail(
+                address = "Pº de Recoletos, 2 (Pza. de Cibeles)",
+                lines = listOf(BusLine("5", "SOL/SEVILLA", "CHAMARTIN", "B", "06:30", "22:58", 10, 22)),
+            )
     }
 }

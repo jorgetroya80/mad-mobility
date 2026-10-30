@@ -63,6 +63,10 @@ mad-transit:
       bus-lines:
         ttl: 24h
         max-stale: 7d
+      # A stop's lines and schedule change rarely too; one entry per stop number
+      bus-stop-detail:
+        ttl: 24h
+        max-stale: 7d
   quota:
     # EMT allows 20,000 calls/day; keep a margin. Per-module caps: quota.modules.<module>.daily-limit
     global-daily-limit: 18000
@@ -75,6 +79,9 @@ mad-transit:
         daily-limit: 50
       bus-lines:
         daily-limit: 50
+      # One call per stop opened per day (24 h cache): room for 2,000 different stops
+      bus-stop-detail:
+        daily-limit: 2000
   rate-limit:
     # Per-IP token bucket on /v1/**: bursts of up to capacity, then refill-per-second requests/s
     capacity: 60

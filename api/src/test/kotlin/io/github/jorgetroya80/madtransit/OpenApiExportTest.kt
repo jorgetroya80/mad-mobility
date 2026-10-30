@@ -90,6 +90,50 @@ class OpenApiExportTest(
         assertThat(parameter.at("/schema/example")).isEqualTo(StringNode.valueOf("538"))
     }
 
+    @Test
+    fun `documents the bus stop address and today's schedule as always present but nullable`() {
+        val schemas = apiDocument().path("components").path("schemas")
+        val nullable =
+            mapOf(
+                "BusStopInfoResponse" to listOf("address"),
+                "BusLineResponse" to listOf("firstBus", "lastBus", "minFrequencyMinutes", "maxFrequencyMinutes"),
+            )
+
+        nullable.forEach { (schema, properties) ->
+            val required =
+                schemas
+                    .path(schema)
+                    .path("required")
+                    .values()
+                    .map { it.asString() }
+            assertThat(required).containsAll(properties)
+            properties.forEach { property ->
+                val types =
+                    schemas
+                        .path(schema)
+                        .at("/properties/$property/type")
+                        .values()
+                        .map { it.asString() }
+                assertThat(types).describedAs("$schema.$property").contains("null")
+            }
+        }
+    }
+
+    @Test
+    fun `documents the bus stop detail by its number as a digits-only string`() {
+        val parameter =
+            apiDocument()
+                .path("paths")
+                .path(BUS_STOP_PATH)
+                .path("get")
+                .path("parameters")
+                .single()
+
+        assertThat(parameter.path("name").asString()).isEqualTo("number")
+        assertThat(parameter.at("/schema/type").asString()).isEqualTo("string")
+        assertThat(parameter.at("/schema/pattern").asString()).isEqualTo("^[0-9]+$")
+    }
+
     // The client exposes one function per operationId, so renaming one is a breaking change
     @Test
     fun `keeps the operation ids the client functions are named after`() {
@@ -137,11 +181,22 @@ class OpenApiExportTest(
         const val OUTPUT_PROPERTY = "openapi.output"
 
         // The published client names one function per operationId: every new endpoint is added here
-        val OPERATION_IDS = listOf("listStations", "getStation", "listBusStops")
+        val OPERATION_IDS = listOf("listStations", "getStation", "listBusStops", "getBusStop")
         const val PROBLEM_SCHEMA = "#/components/schemas/Problem"
         const val STATION_PATH = "/v1/bicimad/stations/{number}"
         const val STATION_BY_ID_PATH = "/v1/bicimad/stations/{id}"
-        val RESPONSE_SCHEMAS = listOf("StationsResponse", "StationDetailResponse", "StationResponse", "BusStopsResponse", "BusStopResponse")
+        const val BUS_STOP_PATH = "/v1/bus/stops/{number}"
+        val RESPONSE_SCHEMAS =
+            listOf(
+                "StationsResponse",
+                "StationDetailResponse",
+                "StationResponse",
+                "BusStopsResponse",
+                "BusStopResponse",
+                "BusStopDetailResponse",
+                "BusStopInfoResponse",
+                "BusLineResponse",
+            )
 
         // Kotlin nullable properties of the responses; every other property is always present
         val OPTIONAL_PROPERTIES = setOf("distanceMeters")
