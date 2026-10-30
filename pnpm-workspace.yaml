@@ -6,7 +6,7 @@ packages:
 # Enforced in CI too.
 minimumReleaseAge: 14400
 # Our own client: web takes each release as soon as it is published
-minimumReleaseAgeExclude: ['@jorgetroya80/bicimad-client', '@jorgetroya80/mad-transit-client']
+minimumReleaseAgeExclude: ['@jorgetroya80/mad-transit-client']
 
 saveExact: true
 

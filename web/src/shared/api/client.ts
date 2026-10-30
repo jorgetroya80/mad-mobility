@@ -1,4 +1,4 @@
-import { createClient, createConfig } from '@jorgetroya80/bicimad-client';
+import { createClient, createConfig } from '@jorgetroya80/mad-transit-client';
 import { env } from '@/shared/config';
 
 // Absolute so Request accepts it outside the browser too (Node's Request has no document base URL).

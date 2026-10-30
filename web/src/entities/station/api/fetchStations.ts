@@ -3,7 +3,7 @@ import {
   listStations,
   type StationDetailResponse,
   type StationsResponse,
-} from '@jorgetroya80/bicimad-client';
+} from '@jorgetroya80/mad-transit-client';
 import { apiClient } from '@/shared/api';
 import { NEARBY_RADIUS_M } from '@/shared/config';
 import type { Need } from '../model/types';

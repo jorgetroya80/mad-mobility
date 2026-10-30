@@ -17,7 +17,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@jorgetroya80/bicimad-client": "0.6.0",
+    "@jorgetroya80/mad-transit-client": "0.8.0",
     "@tanstack/react-query": "5.104.1",
     "@tanstack/react-router": "1.170.41",
     "maplibre-gl": "6.11.2",
