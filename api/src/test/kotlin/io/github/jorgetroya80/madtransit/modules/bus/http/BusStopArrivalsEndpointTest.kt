@@ -84,6 +84,29 @@ class BusStopArrivalsEndpointTest(
     }
 
     @Test
+    fun `a stop the EMT does not serve is remembered for 30 s without asking the EMT or logging in again`() {
+        stubArrivals(fixture("bus-arrivals-missing-stop.json"))
+
+        val first = mvc.get().uri(ARRIVALS_72).exchange()
+        clock.advance(Duration.ofSeconds(29))
+        val second = mvc.get().uri(ARRIVALS_72).exchange()
+
+        listOf(first, second).forEach { result ->
+            assertThat(result).hasStatus(502).hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+            val problem = JsonMapper().readTree(result.response.contentAsString)
+            assertThat(problem.path("type").asString()).isEqualTo("urn:mad-transit:problem:emt-bad-response")
+        }
+        // Only the first request: its attempt and its single relogin
+        wireMock.verify(2, postRequestedFor(urlPathEqualTo(ARRIVES_72)))
+        wireMock.verify(2, getRequestedFor(urlPathEqualTo(LOGIN_PATH)))
+
+        clock.advance(Duration.ofSeconds(1))
+        assertThat(mvc.get().uri(ARRIVALS_72).exchange()).hasStatus(502)
+        wireMock.verify(4, postRequestedFor(urlPathEqualTo(ARRIVES_72)))
+        wireMock.verify(3, getRequestedFor(urlPathEqualTo(LOGIN_PATH)))
+    }
+
+    @Test
     fun `SC5 with the EMT down and arrivals older than 2 minutes, the API answers 503`() {
         stubArrivals(fixture("bus-arrivals.json"))
         assertThat(mvc.get().uri(ARRIVALS_72).exchange()).hasStatusOk()
