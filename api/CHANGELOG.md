@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/jorgetroya80/mad-transit/compare/api-v0.8.0...api-v0.9.0) (2026-10-30)
+
+
+### Features
+
+* **api:** add EMT bus stops, details and arrivals ([#87](https://github.com/jorgetroya80/mad-transit/issues/87)) ([b7d2cdb](https://github.com/jorgetroya80/mad-transit/commit/b7d2cdb2e7c1dd4fd2fd69aaccbac58a6d6b04db))
+
 ## [0.8.0](https://github.com/jorgetroya80/mad-transit/compare/api-v0.7.1...api-v0.8.0) (2026-10-30)
 
 
