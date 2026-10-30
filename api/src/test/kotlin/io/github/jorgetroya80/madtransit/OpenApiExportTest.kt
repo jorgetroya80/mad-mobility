@@ -1,6 +1,7 @@
 package io.github.jorgetroya80.madtransit
 
 import io.github.jorgetroya80.madtransit.modules.bicimad.ports.StationProvider
+import io.github.jorgetroya80.madtransit.modules.bus.ports.BusStopProvider
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -21,7 +22,7 @@ import java.nio.file.Path
 
 /**
  * SC9: writes the OpenAPI document of the public API to the file given by ./gradlew generateOpenApi.
- * The EMT is never called: building the document does not touch the stations.
+ * The EMT is never called: building the document does not touch the stations or the bus stops.
  */
 @Tag("openapi")
 // TestEmtController (/v1/test/**) is a test fixture, not part of the public API
@@ -37,6 +38,10 @@ class OpenApiExportTest(
         @Bean
         @Primary
         fun stationProvider(): StationProvider = mockk()
+
+        @Bean
+        @Primary
+        fun busStopProvider(): BusStopProvider = mockk()
     }
 
     @Test
@@ -95,7 +100,7 @@ class OpenApiExportTest(
                 .flatMap { it.values() }
                 .map { it.path("operationId").asString() }
 
-        assertThat(operationIds).containsExactlyInAnyOrder("listStations", "getStation")
+        assertThat(operationIds).containsExactlyInAnyOrderElementsOf(OPERATION_IDS)
     }
 
     @Test
@@ -130,10 +135,13 @@ class OpenApiExportTest(
         const val API_DOCS = "/v3/api-docs"
         const val PUBLIC_API_PREFIX = "/v1/"
         const val OUTPUT_PROPERTY = "openapi.output"
+
+        // The published client names one function per operationId: every new endpoint is added here
+        val OPERATION_IDS = listOf("listStations", "getStation", "listBusStops")
         const val PROBLEM_SCHEMA = "#/components/schemas/Problem"
         const val STATION_PATH = "/v1/bicimad/stations/{number}"
         const val STATION_BY_ID_PATH = "/v1/bicimad/stations/{id}"
-        val RESPONSE_SCHEMAS = listOf("StationsResponse", "StationDetailResponse", "StationResponse")
+        val RESPONSE_SCHEMAS = listOf("StationsResponse", "StationDetailResponse", "StationResponse", "BusStopsResponse", "BusStopResponse")
 
         // Kotlin nullable properties of the responses; every other property is always present
         val OPTIONAL_PROPERTIES = setOf("distanceMeters")

@@ -73,7 +73,7 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
   - Archivos: `ModuleMetadata.kt`, `domain/BusStop.kt`, `domain/GeoPoint.kt`, `adapters/emt/EmtBusStop.kt`, `adapters/emt/EmtBusStopMapper.kt` (+ test).
   - Dependencias: T2.
 
-- [ ] **T4: `GET /v1/bus/stops` con `near` y `radius`** (M, ~1 h 30 min)
+- [x] **T4: `GET /v1/bus/stops` con `near` y `radius`** (M, ~1 h 30 min)
   - Descripción: puerto `BusStopProvider`, `EmtBusStopProvider` con `POST stops/list/` sin cuerpo (clave `bus-stops`) y `GET lines/info/{AAAAMMDD}/` (clave `bus-lines`), los dos con TTL de 24 h y `max-stale` de 7 días. Caso de uso `FindNearbyStops`, `BusStopsQuery` (radio de 1 a 2000, por defecto 500) y `BusStopsController`. Cupos y cachés en `application.yaml`.
   - Aceptación:
     - SC1: con `near` de Sol, las paradas del fixture a ≤ 500 m, ordenadas por distancia y después por `number`, con `distanceMeters`.
@@ -158,3 +158,4 @@ Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
 - 2026-10-30: T1 hecha. 7 fixtures (también `bus-stop-detail-72.json`, con 4 líneas de 14, para tener las nocturnas). La parada `1` lleva el código inventado `999/1`, que el README documenta. Los `description` de la EMT se dejan como se capturaron.
 - 2026-10-30: T2 hecha. `post(module, path, elementType, body = null)`: el cuerpo es opcional porque la lista de paradas va sin cuerpo; el método va explícito en la petición. `EmtResponse.description` pasa a `Any?`: en las llegadas es una lista de traducciones, y como `String?` se perdía el `code` `80`. WireMock arranca sin h2c en texto plano (`http2PlainDisabled`): su Jetty cortaba los POST con cuerpo cuando se intentaba subir a HTTP/2; en producción, con HTTPS, no pasa.
 - 2026-10-30: T3 hecha. Los códigos de la lista coinciden con el `line` del catálogo al quitar el sentido (`073/2` → `073` → `73`). Las paradas sin nombre también se descartan, y una lista o un catálogo vacíos pasan a ser un `EmtProtocolError` en el provider (T4), como en BiciMAD, para seguir sirviendo la caché. Gate de JaCoCo nuevo `busCoverageVerification` (80 %).
+- 2026-10-30: T4 hecha. La caché `bus-stops` guarda las paradas ya traducidas con el catálogo, así que las 4.935 se traducen una vez por recarga y no en cada petición. La clave dentro de cada módulo es fija (`all`), no la fecha, para poder servir la de ayer como `stale`. En `OpenApiExportTest`, los `operationId` pasan a una constante: el floor guard avisa de una aserción reescrita (la refuerza, con `listBusStops`) y lo hará en toda la rama; decisión del usuario: commit explicándolo.

@@ -55,6 +55,14 @@ mad-transit:
     # Defaults for every module; override with cache.modules.<module>.ttl / max-stale
     ttl: 60s
     max-stale: 24h
+    modules:
+      # Bus stop list and line catalog change rarely: refreshed once a day, served stale for a week
+      bus-stops:
+        ttl: 24h
+        max-stale: 7d
+      bus-lines:
+        ttl: 24h
+        max-stale: 7d
   quota:
     # EMT allows 20,000 calls/day; keep a margin. Per-module caps: quota.modules.<module>.daily-limit
     global-daily-limit: 18000
@@ -62,6 +70,11 @@ mad-transit:
       # One stations call per cache TTL (60 s) is ~1,440/day; twice that as margin
       bicimad:
         daily-limit: 3000
+      # One call per cache TTL (24 h) is 1/day each; 50 leaves room for restarts, which empty the cache
+      bus-stops:
+        daily-limit: 50
+      bus-lines:
+        daily-limit: 50
   rate-limit:
     # Per-IP token bucket on /v1/**: bursts of up to capacity, then refill-per-second requests/s
     capacity: 60
