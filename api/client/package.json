@@ -1,5 +1,5 @@
 {
-  "name": "@jorgetroya80/bicimad-client",
+  "name": "@jorgetroya80/mad-transit-client",
   "version": "0.0.0",
   "description": "Typed client for the Mad Transit public API",
   "license": "MIT",

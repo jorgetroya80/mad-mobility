@@ -44,8 +44,8 @@ fi
 if $check_client; then
   echo "pre-push: type-checking api/client against the generated OpenAPI"
   ./api/gradlew -p api generateOpenApi
-  pnpm --filter @jorgetroya80/bicimad-client run generate
-  pnpm --filter @jorgetroya80/bicimad-client exec tsc --noEmit
+  pnpm --filter @jorgetroya80/mad-transit-client run generate
+  pnpm --filter @jorgetroya80/mad-transit-client exec tsc --noEmit
 fi
 
 if ! $check_web && ! $check_api; then

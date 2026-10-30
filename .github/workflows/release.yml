@@ -128,8 +128,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: pnpm --filter @jorgetroya80/bicimad-client run generate
-      - run: pnpm --filter @jorgetroya80/bicimad-client run build
+      - run: pnpm --filter @jorgetroya80/mad-transit-client run generate
+      - run: pnpm --filter @jorgetroya80/mad-transit-client run build
       # package.json keeps 0.0.0 in git: the client always takes the API version, set only here
       - name: Set the client version to the API version
         working-directory: api/client
