@@ -4,7 +4,9 @@ import io.github.resilience4j.retry.Retry
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.ResolvableType
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatusCode
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
@@ -29,16 +31,29 @@ class EmtHttpClient(
         module: String,
         path: String,
         elementType: Class<T>,
-    ): List<T> {
-        val request = EmtRequest(module, path)
-        return emtRetry.executeSupplier { getOnce(request, elementType) }
-    }
+    ): List<T> = execute(EmtRequest(module, path, HttpMethod.GET), elementType)
 
-    private fun <T : Any> getOnce(
+    /**
+     * POSTs to [path] for [module], with [body] as JSON when given, and returns the EMT `data`
+     * array as [elementType] items. Transport failures are retried once.
+     */
+    fun <T : Any> post(
+        module: String,
+        path: String,
+        elementType: Class<T>,
+        body: Any? = null,
+    ): List<T> = execute(EmtRequest(module, path, HttpMethod.POST, body), elementType)
+
+    private fun <T : Any> execute(
         request: EmtRequest,
         elementType: Class<T>,
+    ): List<T> = emtRetry.executeSupplier { executeOnce(request, responseType(elementType)) }
+
+    // The EMT answers `code` 80 on HTTP 401 or 200 depending on the endpoint, so only the code decides
+    private fun <T> executeOnce(
+        request: EmtRequest,
+        responseType: ParameterizedTypeReference<EmtResponse<T>>,
     ): List<T> {
-        val responseType = responseType(elementType)
         val token = emtAuth.accessToken()
         val (body, status) = call(request, token, responseType)
         if (body?.code != EmtResponse.CODE_TOKEN_INVALID) return dataOrThrow(request, body, status)
@@ -47,7 +62,10 @@ class EmtHttpClient(
         emtAuth.invalidate(token)
         val (retryBody, retryStatus) = call(request, emtAuth.accessToken(), responseType)
         if (retryBody?.code == EmtResponse.CODE_TOKEN_INVALID) {
-            throw EmtProtocolError(retryBody.code, "EMT rejected a freshly issued access token ($request)")
+            throw EmtProtocolError(
+                retryBody.code,
+                "EMT rejected a freshly issued access token ($request, description=${retryBody.description})",
+            )
         }
         return dataOrThrow(request, retryBody, retryStatus)
     }
@@ -59,9 +77,7 @@ class EmtHttpClient(
     ): Pair<EmtResponse<T>?, HttpStatusCode> {
         quotaTracker.acquire(request.module)
         return try {
-            emtRestClient
-                .get()
-                .uri(request.path)
+            requestSpec(request)
                 .header(ACCESS_TOKEN_HEADER, token)
                 .exchange { _, res ->
                     if (res.statusCode.is5xxServerError) {
@@ -76,6 +92,12 @@ class EmtHttpClient(
         } catch (e: ResourceAccessException) {
             throw EmtErrors.unavailable(e)
         }
+    }
+
+    private fun requestSpec(request: EmtRequest): RestClient.RequestHeadersSpec<*> {
+        val spec = emtRestClient.method(request.method).uri(request.path)
+        val body = request.body ?: return spec
+        return spec.contentType(MediaType.APPLICATION_JSON).body(body)
     }
 
     private fun <T> dataOrThrow(
@@ -96,6 +118,8 @@ class EmtHttpClient(
     private data class EmtRequest(
         val module: String,
         val path: String,
+        val method: HttpMethod,
+        val body: Any? = null,
     ) {
         override fun toString() = "$module $path"
     }

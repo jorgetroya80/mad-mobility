@@ -21,7 +21,7 @@ class EmtHealthIndicatorTest(
             .bodyJson()
             .extractingPath("$.components.emt.status")
             .isEqualTo("UP")
-        assertThat(result).bodyJson().extractingPath("$.components.emt.details.quotaLimit").isEqualTo(18_000)
+        assertThat(result).bodyJson().extractingPath("$.components.emt.details.quotaLimit").isEqualTo(225_000)
         assertThat(result.response.contentAsString).doesNotContain("test-password", "accessToken")
     }
 }

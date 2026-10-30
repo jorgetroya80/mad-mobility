@@ -24,7 +24,7 @@
     }
   },
   "scripts": {
-    "generate": "cp ../build/openapi/bicimad.json openapi.json && openapi-ts",
+    "generate": "cp ../build/openapi/mad-transit.json openapi.json && openapi-ts",
     "build": "tsc"
   },
   "devDependencies": {

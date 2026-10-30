@@ -1,0 +1,170 @@
+# Plan: api-bus
+
+- Created: 2026-10-30
+- Status: **in review** (2026-10-30)
+- Spec: [SPEC-api-bus.md](../specs/SPEC-api-bus.md)
+
+## Overview
+
+Módulo `modules/bus` con tres endpoints (`/v1/bus/stops`, `/v1/bus/stops/{number}`, `/v1/bus/stops/{number}/arrivals`) sobre `shared/emt`. Antes hay que añadir `POST` a `EmtHttpClient`. El manejo del `code` `80` no cambia: el HTTP no permite distinguir un token inválido de una parada no disponible (hallazgos de la spec). Las respuestas reales de la EMT se capturaron el 2026-10-30 y se convierten en fixtures en T1.
+
+## Decisiones de implementación
+
+- **Rama `feat/api-bus`, un PR y un commit por tarea.** Sin `Co-Authored-By`. El PR solo toca `api/` y `docs/`. Título `feat(api): add EMT bus stops, details and arrivals`: solo añade endpoints, así que no es un breaking change. release-please publica una versión menor del API y del cliente.
+- **Primero lo de más riesgo.** `POST` toca `shared/emt`, que usa BiciMAD, así que va en T2 con los tests de BiciMAD en verde antes de seguir.
+- **Fixtures recortados de las capturas reales**, como `bicimad-stations.json`: unas pocas paradas, líneas y llegadas que cubran los casos de la spec (`999999`, nocturnas, `[0, 0]`, parada inexistente). Sin el token.
+- **`GeoPoint` y el haversine se copian en `modules/bus`.** Spring Modulith prohíbe importar `bicimad` (spec, Project Structure).
+- **El tipo de día de hoy** sale de un `Clock` inyectado (Europe/Madrid), para poder testear lunes, viernes, sábado y domingo.
+
+## Grafo de dependencias
+
+```
+T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista de paradas + catálogo (adaptador)
+                                                   │        │
+                                                   │        └─► T4 GET /v1/bus/stops (near, radius)
+                                                   │                 │
+                                                   │                 ├─► T5 GET /v1/bus/stops/{number}
+                                                   │                 │
+                                                   └─────────────────┴─► T6 GET …/arrivals
+                                                                             │
+                                                         T7 compresión + OpenAPI ◄┘
+                                                                             │
+                                                                     T8 smoke + cierre
+```
+
+## Task List
+
+### Fase 1: Base compartida
+
+- [x] **T1: Fixtures del bus** (S, ~30 min)
+  - Descripción: pasar las capturas de la carpeta temporal a `src/test/resources/emt/` recortadas: `bus-stops-list.json` (paradas 72, 2115, 2768, 4025 y una con un código de línea desconocido), `bus-lines-info.json` (las líneas de esas paradas), `bus-stop-detail.json` (72 y 2768: `LA` y `VI`), `bus-arrivals.json` (72, con un `999999` y una llegada de más de 20 min), `bus-arrivals-missing-stop.json` (`code` `80`, HTTP 200) y `bus-token-invalid.json` (lista con token inválido: `code` `80`, HTTP 200). Añadir una fila por fixture a la tabla del `README.md` y los hallazgos de la spec.
+  - Aceptación:
+    - Los JSON son las respuestas reales recortadas, sin token ni datos personales.
+    - El README dice para cada uno la petición, el HTTP y el `code`.
+  - Verificación: `python3 -m json.tool` en cada archivo; `pnpm check:fast` (gitleaks).
+  - Archivos: 5 fixtures, `src/test/resources/emt/README.md`.
+  - Dependencias: ninguna.
+
+- [x] **T2: `EmtHttpClient.post` y `code` `80` en el bus** (M, ~1 h 15 min)
+  - Descripción: test primero. Añadir `post(module, path, body, elementType)` con el mismo token, cupo, reintento y manejo de errores que `get`. Tests nuevos que fijan el `code` `80` tal como lo devuelve el bus: con HTTP 200 también hace login otra vez una sola vez.
+  - Aceptación:
+    - `code` `80` con HTTP 401 (BiciMAD, llegadas) y con HTTP 200 (lista, catálogo, detalle; `bus-token-invalid.json`) → login otra vez y repetir una vez.
+    - Si se repite el `80` con el token nuevo (`bus-arrivals-missing-stop.json` en las dos respuestas) → `EmtProtocolError`, que el API devuelve como `502` estándar; un solo login.
+    - `post` envía el cuerpo JSON y la cabecera `accessToken`, cuenta en el cupo y reintenta una vez un fallo de transporte.
+    - Todos los tests de BiciMAD siguen en verde.
+  - Verificación: `./gradlew -p api test --tests '*EmtHttpClient*' --tests '*bicimad*'`.
+  - Archivos: `shared/emt/EmtHttpClient.kt`, `EmtHttpClientTest.kt`.
+  - Dependencias: T1.
+
+### Checkpoint: Fase 1
+
+- [ ] `pnpm check:task` en verde; JaCoCo de `shared` ≥ 80 %.
+- [ ] Revisión humana de `post` antes de seguir: `shared/emt` lo usa también BiciMAD.
+
+### Fase 2: Paradas
+
+- [x] **T3: Lista de paradas y catálogo de líneas (adaptador)** (M, ~1 h 30 min)
+  - Descripción: `modules/bus/ModuleMetadata.kt`, dominio `BusStop` y `GeoPoint`, DTOs `EmtBusStop` y `EmtLineInfo`, y un mapper que traduce los códigos de línea a etiquetas con el catálogo: sin sentido, sin duplicados, código desconocido tal cual + `WARN`. Paradas sin coordenadas o sin número descartadas + `WARN`. Lista o catálogo vacíos → `EmtProtocolError`.
+  - Aceptación:
+    - La parada 2768 del fixture da `lines = ["73", "N3"]`; la 72 no repite `501`.
+    - Un código que no está en el catálogo sale tal cual, con un log `WARN`.
+    - `ModularityTest` reconoce `bus` y comprueba que no importa `bicimad`.
+  - Verificación: `./gradlew -p api test --tests '*bus*' --tests '*Modularity*'`.
+  - Archivos: `ModuleMetadata.kt`, `domain/BusStop.kt`, `domain/GeoPoint.kt`, `adapters/emt/EmtBusStop.kt`, `adapters/emt/EmtBusStopMapper.kt` (+ test).
+  - Dependencias: T2.
+
+- [x] **T4: `GET /v1/bus/stops` con `near` y `radius`** (M, ~1 h 30 min)
+  - Descripción: puerto `BusStopProvider`, `EmtBusStopProvider` con `POST stops/list/` sin cuerpo (clave `bus-stops`) y `GET lines/info/{AAAAMMDD}/` (clave `bus-lines`), los dos con TTL de 24 h y `max-stale` de 7 días. Caso de uso `FindNearbyStops`, `BusStopsQuery` (radio de 1 a 2000, por defecto 500) y `BusStopsController`. Cupos y cachés en `application.yaml`.
+  - Aceptación:
+    - SC1: con `near` de Sol, las paradas del fixture a ≤ 500 m, ordenadas por distancia y después por `number`, con `distanceMeters`.
+    - Sin `near`: todas, sin `distanceMeters`. `radius` sin `near` o fuera de [1, 2000] → `400`.
+    - Dos peticiones seguidas = 1 llamada a cada endpoint de la EMT; con la EMT caída, `stale: true`.
+  - Verificación: `./gradlew -p api build`; `bootRun` + `curl -s 'localhost:8080/v1/bus/stops?near=40.4168,-3.7038' | jq '.stops | length'`.
+  - Archivos: `ports/BusStopProvider.kt`, `adapters/emt/EmtBusStopProvider.kt`, `application/FindNearbyStops.kt`, `http/BusStopsController.kt`, `http/BusStopsQuery.kt`, `http/BusStopResponse.kt`, `application.yaml` (+ tests).
+  - Dependencias: T3.
+
+- [x] **T5: `GET /v1/bus/stops/{number}`** (M, ~1 h 30 min)
+  - Descripción: DTO del detalle de la EMT y su mapper: `postalAddress`, líneas con cabeceras y sentido (`A` va hacia `headerA`), frecuencias de texto a número y el horario de hoy (supuesto 11, con `Clock`). Provider con clave `bus-stop-detail` por parada. `GetStop` comprueba antes la lista: un número que no está en ella da `404` sin llamar a la EMT. Las nocturnas cruzan la medianoche tal cual.
+  - Aceptación:
+    - SC2: la 72 da sus 14 líneas con horario y frecuencia; `N1` con `firstBus` `23:30` y `lastBus` `05:30`.
+    - Con varios tipos de día por línea, gana el de hoy: el test cubre lunes, viernes (con `VI` y sin él), sábado y domingo. Una línea sin el tipo de hoy sale con horario `null`.
+    - `GET /v1/bus/stops/99999999` → `404` y 0 llamadas en WireMock; `GET /v1/bus/stops/abc` → `400`.
+  - Verificación: `./gradlew -p api test --tests '*bus*'`.
+  - Archivos: `adapters/emt/EmtBusStopDetail.kt`, `adapters/emt/EmtBusStopDetailMapper.kt`, `adapters/emt/EmtBusStopDetailProvider.kt`, `application/GetStop.kt`, `http/BusStopsController.kt` (+ tests).
+  - Dependencias: T4.
+
+### Checkpoint: Fase 2
+
+- [ ] `pnpm check:task` en verde; JaCoCo de `modules/bus` ≥ 80 %.
+- [ ] `bootRun` con la EMT real: lista cerca de Sol y detalle de 2768 coinciden con las capturas.
+
+### Fase 3: Llegadas y cierre
+
+- [x] **T6: `GET /v1/bus/stops/{number}/arrivals`** (M, ~2 h)
+  - Descripción: DTO `EmtArrive` y `EmtArrivalMapper` (spec, Code Style): `999999` → `noEstimate`, minutos redondeados hacia abajo, `busLat`/`busLon` desde `geometry` (`null` con `[0, 0]` o sin coordenadas). Provider con `POST stops/{id}/arrives/` y clave `bus-arrivals` (TTL 30 s, `max-stale` 2 min). `GetArrivals` comprueba antes la lista (`404`). Orden: minutos, `noEstimate` al final y después la línea.
+  - Aceptación:
+    - SC3: las 16 llegadas del fixture de la 72 en orden, con el `999999` como `noEstimate: true` y sin posición.
+    - SC4: una parada de la lista con `code` `80` también tras el login → `502` problem+json estándar.
+    - SC5 (llegadas): con la EMT caída, se sirve la caché como `stale` hasta 2 min y después `503`.
+  - Verificación: `./gradlew -p api test --tests '*bus*'`; `bootRun` + `curl -s localhost:8080/v1/bus/stops/2768/arrivals`.
+  - Archivos: `domain/Arrival.kt`, `adapters/emt/EmtArrive.kt`, `adapters/emt/EmtArrivalMapper.kt`, `adapters/emt/EmtArrivalProvider.kt`, `application/GetArrivals.kt`, `http/BusStopsController.kt` (+ tests).
+  - Dependencias: T5.
+
+- [x] **T7: Compresión y contrato OpenAPI** (S, ~45 min)
+  - Descripción: `server.compression` para `application/json` a partir de 2 KB. Anotaciones springdoc de los tres endpoints: `operationId` `listBusStops`, `getBusStop` y `getBusStopArrivals`, y las respuestas `400`, `404`, `429`, `502`, `503` y `504`, como en `StationsController`.
+  - Aceptación:
+    - Con `Accept-Encoding: gzip`, `/v1/bus/stops` llega comprimido (test de integración: `Content-Encoding: gzip`).
+    - El OpenAPI generado tiene las tres operaciones con sus esquemas y errores; Redocly lint en verde.
+  - Verificación: `./gradlew -p api generateOpenApi`; `./gradlew -p api build`.
+  - Archivos: `application.yaml`, `http/BusStopsController.kt`, `OpenApiExportTest.kt` o un test HTTP nuevo.
+  - Dependencias: T6.
+
+- [x] **T8: Smoke test y documentación** (S, ~45 min)
+  - Descripción: renombrar el OpenAPI generado de `build/openapi/bicimad.json` a `build/openapi/mad-transit.json` (decisión del usuario, 2026-10-30) en `api/build.gradle.kts`, `api/client/package.json`, `.github/workflows/ci.yml` y `api/AGENTS.md`. El paquete publicado sigue llevando `openapi.json`, así que el cliente no cambia. `smokeTest` llama a los tres endpoints del bus contra la EMT real. Spec y capability map a **implemented**, changelog del plan y `api/AGENTS.md` si cambia algo. Comprobar `SA` y `FE` con `smokeTest` un sábado o un domingo; si el formato difiere, PR `fix(api)` aparte.
+  - Aceptación:
+    - SC6: el cupo del bus no pasa de 170.100; `emt.quota.used` muestra las cuatro claves.
+    - SC7: `pnpm check:task` en verde y el cliente generado tiene las tres operaciones.
+    - `./gradlew generateOpenApi` escribe `build/openapi/mad-transit.json`; `pnpm --filter @jorgetroya80/mad-transit-client run generate` y el lint de Redocly de CI lo leen; ningún archivo fuera de `docs/` nombra `bicimad.json`.
+  - Verificación: `./gradlew -p api smokeTest` (manual, con `.env.local`); `pnpm check:task`.
+  - Archivos: `api/build.gradle.kts`, `api/client/package.json`, `.github/workflows/ci.yml`, `api/AGENTS.md`, `src/smokeTest/kotlin/…`, `docs/specs/SPEC-api-bus.md`, `docs/specs/CAPABILITY-MAP.md`, este plan.
+  - Dependencias: T7.
+
+### Checkpoint final
+
+- [ ] SC1-SC7 comprobados; `pnpm check:task` y CI en verde.
+- [ ] Pedir permiso antes de push, abrir el PR y hacer merge. Después del merge, release del API y del cliente: requisito de [PLAN-web-bus.md](PLAN-web-bus.md).
+
+## Riesgos y mitigaciones
+
+| Riesgo | Impacto | Mitigación |
+| --- | --- | --- |
+| Una parada de la lista que la EMT da por no disponible hace un login en cada sondeo de 30 s mientras está abierta | Medio | El login es compartido (single-flight) y se cuenta en `emt.auth.logins`; si sube, se guarda el `502` unos segundos en un cambio aparte |
+| `SA` y `FE` no se han visto en una respuesta real | Medio | La EMT ya devuelve un tipo por línea; regla de respaldo con `Clock`; `smokeTest` en fin de semana (T8) |
+| La EMT cambia el formato de la lista o pide otra vez un cuerpo | Medio | La lista vacía se trata como error, se sirve la caché `stale` hasta 7 días y el log `WARN` lo avisa |
+| El cupo de llegadas se agota con muchos usuarios o con abuso desde varias IP | Medio | Caché compartida de 30 s por parada; cupo de 150.000, por encima de lo que puede gastar una IP (86.400 al día); `503` con `Retry-After`; si las métricas muestran abuso, un límite por IP para detalle y llegadas en un PR aparte |
+| Una respuesta de 4.935 paradas pesa demasiado para el plan gratuito de Render | Bajo | gzip en T7 (179 KB en la EMT, menos en la nuestra) y ETag |
+
+## Paralelización
+
+Secuencial: todas las tareas tocan `BusStopsController` o dependen de T2. T1 puede hacerse mientras se revisa este plan.
+
+## Estimación
+
+Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
+
+## Changelog
+
+- 2026-10-30: borrador a partir de la spec aprobada.
+- 2026-10-30: T2 ya no cambia el manejo del `code` `80` (el bus responde HTTP 200 con un token inválido); se quita `inService` de T6.
+- 2026-10-30: T1 hecha. 7 fixtures (también `bus-stop-detail-72.json`, con 4 líneas de 14, para tener las nocturnas). La parada `1` lleva el código inventado `999/1`, que el README documenta. Los `description` de la EMT se dejan como se capturaron.
+- 2026-10-30: T2 hecha. `post(module, path, elementType, body = null)`: el cuerpo es opcional porque la lista de paradas va sin cuerpo; el método va explícito en la petición. `EmtResponse.description` pasa a `Any?`: en las llegadas es una lista de traducciones, y como `String?` se perdía el `code` `80`. WireMock arranca sin h2c en texto plano (`http2PlainDisabled`): su Jetty cortaba los POST con cuerpo cuando se intentaba subir a HTTP/2; en producción, con HTTPS, no pasa.
+- 2026-10-30: T3 hecha. Los códigos de la lista coinciden con el `line` del catálogo al quitar el sentido (`073/2` → `073` → `73`). Las paradas sin nombre también se descartan, y una lista o un catálogo vacíos pasan a ser un `EmtProtocolError` en el provider (T4), como en BiciMAD, para seguir sirviendo la caché. Gate de JaCoCo nuevo `busCoverageVerification` (80 %).
+- 2026-10-30: T4 hecha. La caché `bus-stops` guarda las paradas ya traducidas con el catálogo, así que las 4.935 se traducen una vez por recarga y no en cada petición. La clave dentro de cada módulo es fija (`all`), no la fecha, para poder servir la de ayer como `stale`. En `OpenApiExportTest`, los `operationId` pasan a una constante: el floor guard avisa de una aserción reescrita (la refuerza, con `listBusStops`) y lo hará en toda la rama; decisión del usuario: commit explicándolo.
+- 2026-10-30: T5 hecha. La caché del detalle guarda la respuesta de la EMT sin traducir, y el horario de hoy se elige en cada petición, así que un detalle de antes de medianoche ya da el día nuevo. `updatedAt` es el más antiguo de la lista y el detalle, y `stale` si lo es cualquiera de los dos. Los campos sin horario van como `null`, no se omiten. `072` no es `72`: da 404. Los festivos entre semana no se detectan.
+- 2026-10-30: T6 hecha. Con la EMT caída y llegadas de más de 2 min, el API responde `503`, como dice la spec. Las líneas se ordenan como los números de parada: primero las numéricas por valor, después el resto por orden alfabético (`5` < `14` < `C03` < `N1`). Un `estimateArrive` ausente cuenta como `noEstimate`. `updatedAt` y `stale` salen solo de las llegadas. Quedan para T7: la descripción del tag `Bus`, que habla de una recarga diaria, y la descripción del OpenAPI, que solo menciona BiciMAD.
+- 2026-10-30: T7 hecha. gzip y ETag funcionan juntos sin tocar `shared`: el ETag es débil (`W/`), y Tomcat solo deja de comprimir con uno fuerte. La compresión solo cubre `application/json` y `application/problem+json`. El tamaño real comprimido se mide en T8 con la EMT. `build/openapi/bicimad.json` ya incluye el bus, así que el nombre engaña; renombrarlo toca CI y el cliente, y queda para un PR aparte.
+- 2026-10-30: T8, código hecho. El OpenAPI generado pasa a llamarse `build/openapi/mad-transit.json` (`build.gradle.kts`, `api/client/package.json`, `ci.yml`, `api/AGENTS.md`); `release.yml` y `OpenApiExportTest` no lo nombraban. `BusSmokeTest` es una clase aparte de `EmtSmokeTest` porque necesita un servidor web real para las llamadas HTTP y el gzip. Pendiente: ejecutar `smokeTest` contra la EMT (con permiso del usuario) y, después del merge, pasar spec y capability map a **implemented**.
+- 2026-10-30: checkpoint de la fase 2 y prueba manual hechos por el usuario con `bootRun` contra la EMT real: lista cerca de Sol, detalle y llegadas de 2768 y 72, y los casos `400` y `404`. Todo bien.
+- 2026-10-30: `smokeTest` contra la EMT real. `BusSmokeTest` 4/4 en verde tras un arreglo: en Jackson 3, `JsonNode.map` aplica la función al nodo entero y no a sus elementos, así que se pasa por `values()`. Hay 41 paradas a ≤ 500 m de Sol y 2 llegadas en la 2768. La lista completa ocupa 604.926 bytes, que con gzip se quedan en 159.792. `EmtSmokeTest > translates more than 600 valid BiciMAD stations` falla: da 150 válidas de 678, aunque `GET /v1/bicimad/stations` en `bootRun` devuelve las 678. El fallo ya estaba (el test no cambia en esta rama) y se investiga en un `fix` aparte.
+- 2026-10-30: revisión del PR #87 (R1, opción 1 del usuario). Cupos: global 225.000, `bus-arrivals` 150.000 y `bus-stop-detail` 20.000. Se reescriben 3 aserciones de configuración con los valores nuevos.
+- 2026-10-30: revisión del PR #87, hallazgos opcionales O1-O4 hechos. O1: la caché pasa a 20.000 entradas. O2: índice por número, construido una vez por recarga de la lista. O3: `description` vuelve a ser `String?`; la lista de traducciones se une con " / ". O4: una parada con `code` 80 tras el login se recuerda 30 s y da `502` sin llamar a la EMT ni repetir el login. Esto sustituye a las últimas llegadas buenas, que ya no se sirven como `stale`: la EMT dice que la parada no está disponible, y mostrar llegadas viejas engañaría.

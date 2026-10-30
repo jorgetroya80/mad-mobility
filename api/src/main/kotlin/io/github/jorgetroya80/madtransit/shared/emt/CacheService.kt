@@ -113,6 +113,7 @@ class CacheService(
     }
 
     private companion object {
-        const val MAX_ENTRIES = 10_000L
+        // Room for bus detail and arrivals of every stop (2 x 4,935) so they never evict the stop list
+        const val MAX_ENTRIES = 20_000L
     }
 }

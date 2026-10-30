@@ -1,0 +1,20 @@
+{
+  "code": "80",
+  "description": [
+    {
+      "ES": "Parada no disponible actualmente o inexistente"
+    },
+    {
+      "EN": "Bus Stop disabled or not exists"
+    }
+  ],
+  "datetime": "2026-10-30T11:39:32.059359",
+  "data": [
+    {
+      "Arrive": [],
+      "StopInfo": [],
+      "ExtraInfo": [],
+      "Incident": {}
+    }
+  ]
+}

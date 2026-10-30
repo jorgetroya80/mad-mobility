@@ -1,0 +1,50 @@
+{
+  "code": "00",
+  "description": "Data recovered OK",
+  "datetime": "2026-10-30T11:45:38.502282",
+  "data": [
+    {
+      "stops": [
+        {
+          "stop": "2768",
+          "name": "Emigrantes-Carretera de Canillas",
+          "postalAddress": "Ctra. de Canillas con C/ Emigrantes",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.63630844401443,
+              40.465384358196
+            ]
+          },
+          "pmv": null,
+          "dataLine": [
+            {
+              "line": "073",
+              "label": "73",
+              "direction": "A",
+              "maxFreq": "24",
+              "minFreq": "10",
+              "headerA": "DIEGO DE LEON",
+              "headerB": "FERIA DE MADRID",
+              "startTime": "06:15",
+              "stopTime": "23:30",
+              "dayType": "LA"
+            },
+            {
+              "line": "503",
+              "label": "N3",
+              "direction": "A",
+              "maxFreq": "25",
+              "minFreq": "15",
+              "headerA": "CIBELES",
+              "headerB": "FERIA DE MADRID",
+              "startTime": "00:00",
+              "stopTime": "05:45",
+              "dayType": "VI"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

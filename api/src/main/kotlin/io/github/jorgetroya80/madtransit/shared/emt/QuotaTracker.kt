@@ -13,7 +13,7 @@ import kotlin.concurrent.withLock
 
 @ConfigurationProperties("mad-transit.quota")
 data class QuotaProperties(
-    /** Safety margin below the EMT daily quota of 20,000 calls. */
+    /** Conservative default (below the 20,000 calls/day of a personal EMT account); application.yaml sets the app's limit. */
     val globalDailyLimit: Int = 18_000,
     /** Optional per-module caps, e.g. mad-transit.quota.modules.bicimad.daily-limit. */
     val modules: Map<String, ModuleQuota> = emptyMap(),

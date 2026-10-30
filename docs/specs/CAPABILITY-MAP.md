@@ -14,11 +14,14 @@ Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene
 | `web-shell`   | Proyecto Vite + React + Tailwind + TanStack Query con arquitectura FSD, oxlint, oxfmt y versiones fijadas; cliente API tipado (paquete `@jorgetroya80/mad-transit-client`), mapa base, layout responsive | api-bicimad, foundation | [SPEC-web-shell.md](SPEC-web-shell.md)     | implemented           |
 | `web-bicimad` | Mapa, lista, detalle, filtros y favoritos de estaciones                                                                                                                                              | web-shell, api-bicimad  | [SPEC-web-bicimad.md](SPEC-web-bicimad.md) | implemented           |
 | `deploy`      | Despliegue en Render (plan gratuito, Blueprint `render.yaml`): API desde la imagen de ghcr.io y web desde `web-dist.tar.gz`, con deploy hooks en `release.yml`; la web llama al API con CORS | foundation              | [SPEC-deploy.md](SPEC-deploy.md)           | implemented           |
+| `api-bus`     | Módulo `bus`: paradas cercanas, detalle con líneas y llegadas en `/v1/bus/stops/*`; `POST` en `EmtHttpClient`; caché y cupo propios | api-core | [SPEC-api-bus.md](SPEC-api-bus.md) | approved |
+| `web-bus`     | Selector BiciMAD / Bus, iconos de parada en el mapa, popup de resumen, lista, detalle con llegadas y buscador | web-shell, api-bus | [SPEC-web-bus.md](SPEC-web-bus.md) | approved |
 
 ## Orden de construcción
 
 ```
 foundation -> api-core -> api-bicimad -> web-shell -> web-bicimad -> deploy
+api-core -> api-bus -> (release del cliente) -> web-bus
 ```
 
 **Enfoque de contrato: código primero (2026-10-03, revisado 2026-10-05, 2026-10-27 y 2026-10-30).** Los controladores Spring son la fuente de verdad; springdoc genera el OpenAPI en el build (no se commitea). En cada release del API se publica en GitHub Packages el paquete `@jorgetroya80/mad-transit-client` (hasta la 0.7.1, `@jorgetroya80/bicimad-client`), con la misma versión que el API. Desde la 0.6.0 lo genera hey-api (tipos, una función por `operationId` y su cliente fetch, con el `openapi.json` dentro; ver [SPEC-api-client-hey-api.md](SPEC-api-client-hey-api.md)); hasta la 0.5.0 eran tipos de `openapi-typescript` + `openapi-fetch`. El frontend instala ese paquete. Por eso se construye después de `api-bicimad`.
