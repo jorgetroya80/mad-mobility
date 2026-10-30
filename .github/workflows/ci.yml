@@ -103,7 +103,7 @@ jobs:
           cache: pnpm
           registry-url: https://npm.pkg.github.com
           scope: '@jorgetroya80'
-      - run: npx --yes @redocly/cli@2 lint build/openapi/bicimad.json
+      - run: npx --yes @redocly/cli@2 lint build/openapi/mad-transit.json
       - run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

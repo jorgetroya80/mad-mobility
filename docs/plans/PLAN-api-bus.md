@@ -120,12 +120,13 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
   - Dependencias: T6.
 
 - [ ] **T8: Smoke test y documentación** (S, ~45 min)
-  - Descripción: `smokeTest` llama a los tres endpoints del bus contra la EMT real. Spec y capability map a **implemented**, changelog del plan y `api/AGENTS.md` si cambia algo. Comprobar `SA` y `FE` con `smokeTest` un sábado o un domingo; si el formato difiere, PR `fix(api)` aparte.
+  - Descripción: renombrar el OpenAPI generado de `build/openapi/bicimad.json` a `build/openapi/mad-transit.json` (decisión del usuario, 2026-10-30) en `api/build.gradle.kts`, `api/client/package.json`, `.github/workflows/ci.yml` y `api/AGENTS.md`. El paquete publicado sigue llevando `openapi.json`, así que el cliente no cambia. `smokeTest` llama a los tres endpoints del bus contra la EMT real. Spec y capability map a **implemented**, changelog del plan y `api/AGENTS.md` si cambia algo. Comprobar `SA` y `FE` con `smokeTest` un sábado o un domingo; si el formato difiere, PR `fix(api)` aparte.
   - Aceptación:
     - SC6: el cupo del bus no pasa de 12.100; `emt.quota.used` muestra las cuatro claves.
     - SC7: `pnpm check:task` en verde y el cliente generado tiene las tres operaciones.
+    - `./gradlew generateOpenApi` escribe `build/openapi/mad-transit.json`; `pnpm --filter @jorgetroya80/mad-transit-client run generate` y el lint de Redocly de CI lo leen; ningún archivo fuera de `docs/` nombra `bicimad.json`.
   - Verificación: `./gradlew -p api smokeTest` (manual, con `.env.local`); `pnpm check:task`.
-  - Archivos: `src/smokeTest/kotlin/…`, `docs/specs/SPEC-api-bus.md`, `docs/specs/CAPABILITY-MAP.md`, este plan.
+  - Archivos: `api/build.gradle.kts`, `api/client/package.json`, `.github/workflows/ci.yml`, `api/AGENTS.md`, `src/smokeTest/kotlin/…`, `docs/specs/SPEC-api-bus.md`, `docs/specs/CAPABILITY-MAP.md`, este plan.
   - Dependencias: T7.
 
 ### Checkpoint final
@@ -162,3 +163,4 @@ Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
 - 2026-10-30: T5 hecha. La caché del detalle guarda la respuesta de la EMT sin traducir, y el horario de hoy se elige en cada petición, así que un detalle de antes de medianoche ya da el día nuevo. `updatedAt` es el más antiguo de la lista y el detalle, y `stale` si lo es cualquiera de los dos. Los campos sin horario van como `null`, no se omiten. `072` no es `72`: da 404. Los festivos entre semana no se detectan.
 - 2026-10-30: T6 hecha. Con la EMT caída y llegadas de más de 2 min, el API responde `503`, como dice la spec. Las líneas se ordenan como los números de parada: primero las numéricas por valor, después el resto por orden alfabético (`5` < `14` < `C03` < `N1`). Un `estimateArrive` ausente cuenta como `noEstimate`. `updatedAt` y `stale` salen solo de las llegadas. Quedan para T7: la descripción del tag `Bus`, que habla de una recarga diaria, y la descripción del OpenAPI, que solo menciona BiciMAD.
 - 2026-10-30: T7 hecha. gzip y ETag funcionan juntos sin tocar `shared`: el ETag es débil (`W/`), y Tomcat solo deja de comprimir con uno fuerte. La compresión solo cubre `application/json` y `application/problem+json`. El tamaño real comprimido se mide en T8 con la EMT. `build/openapi/bicimad.json` ya incluye el bus, así que el nombre engaña; renombrarlo toca CI y el cliente, y queda para un PR aparte.
+- 2026-10-30: T8, código hecho. El OpenAPI generado pasa a llamarse `build/openapi/mad-transit.json` (`build.gradle.kts`, `api/client/package.json`, `ci.yml`, `api/AGENTS.md`); `release.yml` y `OpenApiExportTest` no lo nombraban. `BusSmokeTest` es una clase aparte de `EmtSmokeTest` porque necesita un servidor web real para las llamadas HTTP y el gzip. Pendiente: ejecutar `smokeTest` contra la EMT (con permiso del usuario) y, después del merge, pasar spec y capability map a **implemented**.

@@ -10,7 +10,7 @@ Run them from `api/`:
 ./gradlew build             # compile, ktlint check, tests, JaCoCo coverage gates, jar checks
 ./gradlew test              # tests only (writes the JaCoCo HTML and XML reports)
 ./gradlew spotlessApply     # format Kotlin and Gradle files with ktlint
-./gradlew generateOpenApi   # write build/openapi/bicimad.json without the EMT
+./gradlew generateOpenApi   # write build/openapi/mad-transit.json without the EMT
 ./gradlew bootRun           # run on localhost:8080 (needs .env.local)
 ./gradlew smokeTest         # call the real EMT with .env.local (manual, never in CI)
 ./gradlew dockerImageTest   # build the Dockerfile and check the container (needs Docker)

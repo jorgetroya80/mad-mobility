@@ -120,7 +120,7 @@ val dockerImageTest by tasks.registering(Test::class) {
 }
 
 val generateOpenApi by tasks.registering(Test::class) {
-    description = "Writes the OpenAPI document of the public API to build/openapi/bicimad.json (no EMT needed)."
+    description = "Writes the OpenAPI document of the public API to build/openapi/mad-transit.json (no EMT needed)."
     group = "documentation"
     testClassesDirs =
         sourceSets.test
@@ -128,7 +128,7 @@ val generateOpenApi by tasks.registering(Test::class) {
             .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     useJUnitPlatform { includeTags("openapi") }
-    val document = layout.buildDirectory.file("openapi/bicimad.json")
+    val document = layout.buildDirectory.file("openapi/mad-transit.json")
     outputs.file(document)
     systemProperty("openapi.output", document.get().asFile.path)
 }
