@@ -1,0 +1,186 @@
+{
+  "code": "00",
+  "description": " Data recovered OK (lapsed: 151 millsecs)",
+  "data": [
+    {
+      "line": "362",
+      "label": "002",
+      "nameA": "PUERTA DE TOLEDO",
+      "nameB": "ARGÜELLES",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "005",
+      "label": "5",
+      "nameA": "SOL SEVILLA",
+      "nameB": "CHAMARTIN",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "014",
+      "label": "14",
+      "nameA": "CONDE DE CASAL",
+      "nameB": "PIO XII",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "027",
+      "label": "27",
+      "nameA": "EMBAJADORES",
+      "nameB": "PLAZA CASTILLA",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "037",
+      "label": "37",
+      "nameA": "CUATRO CAMINOS",
+      "nameB": "PUENTE VALLECAS",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "045",
+      "label": "45",
+      "nameA": "LEGAZPI",
+      "nameB": "REINA VICTORIA",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "053",
+      "label": "53",
+      "nameA": "SOL SEVILLA",
+      "nameB": "ARTURO SORIA",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "073",
+      "label": "73",
+      "nameA": "DIEGO DE LEON",
+      "nameB": "FERIA DE MADRID",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "150",
+      "label": "150",
+      "nameA": "SOL SEVILLA",
+      "nameB": "VIRGEN CORTIJO",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "161",
+      "label": "161",
+      "nameA": "MONCLOA",
+      "nameB": "ARAVACA SUR",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "363",
+      "label": "C03",
+      "nameA": "PUERTA DE TOLEDO",
+      "nameB": "ARGÜELLES",
+      "group": "110",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "601",
+      "label": "M1",
+      "nameA": "SOL SEVILLA",
+      "nameB": "EMBAJADORES",
+      "group": "155",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "603",
+      "label": "M3",
+      "nameA": "PUERTA DEL SOL/SEVILLA",
+      "nameB": "PUERTA TOLEDO",
+      "group": "155",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "501",
+      "label": "N1",
+      "nameA": "CIBELES",
+      "nameB": "SANCHINARRO",
+      "group": "320",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "503",
+      "label": "N3",
+      "nameA": "CIBELES",
+      "nameB": "FERIA DE MADRID",
+      "group": "320",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "504",
+      "label": "N4",
+      "nameA": "CIBELES",
+      "nameB": "BARAJAS",
+      "group": "320",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "522",
+      "label": "N22",
+      "nameA": "CIBELES",
+      "nameB": "BARRIO DE LA PAZ",
+      "group": "320",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "524",
+      "label": "N24",
+      "nameA": "CIBELES",
+      "nameB": "LAS TABLAS",
+      "group": "320",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "525",
+      "label": "N25",
+      "nameA": "ALONSO MARTINEZ",
+      "nameB": "VILLA VALLECAS",
+      "group": "320",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    },
+    {
+      "line": "526",
+      "label": "N26",
+      "nameA": "ALONSO MARTINEZ",
+      "nameB": "ALUCHE",
+      "group": "320",
+      "startDate": "30/10/2026",
+      "endDate": "30/10/2026"
+    }
+  ]
+}

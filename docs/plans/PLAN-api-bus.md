@@ -36,7 +36,7 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
 
 ### Fase 1: Base compartida
 
-- [ ] **T1: Fixtures del bus** (S, ~30 min)
+- [x] **T1: Fixtures del bus** (S, ~30 min)
   - Descripción: pasar las capturas de la carpeta temporal a `src/test/resources/emt/` recortadas: `bus-stops-list.json` (paradas 72, 2115, 2768, 4025 y una con un código de línea desconocido), `bus-lines-info.json` (las líneas de esas paradas), `bus-stop-detail.json` (72 y 2768: `LA` y `VI`), `bus-arrivals.json` (72, con un `999999` y una llegada de más de 20 min), `bus-arrivals-missing-stop.json` (`code` `80`, HTTP 200) y `bus-token-invalid.json` (lista con token inválido: `code` `80`, HTTP 200). Añadir una fila por fixture a la tabla del `README.md` y los hallazgos de la spec.
   - Aceptación:
     - Los JSON son las respuestas reales recortadas, sin token ni datos personales.
@@ -155,3 +155,4 @@ Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
 
 - 2026-10-30: borrador a partir de la spec aprobada.
 - 2026-10-30: T2 ya no cambia el manejo del `code` `80` (el bus responde HTTP 200 con un token inválido); se quita `inService` de T6.
+- 2026-10-30: T1 hecha. 7 fixtures (también `bus-stop-detail-72.json`, con 4 líneas de 14, para tener las nocturnas). La parada `1` lleva el código inventado `999/1`, que el README documenta. Los `description` de la EMT se dejan como se capturaron.

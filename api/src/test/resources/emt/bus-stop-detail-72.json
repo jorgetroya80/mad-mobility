@@ -1,0 +1,74 @@
+{
+  "code": "00",
+  "description": "Data recovered OK",
+  "datetime": "2026-10-30T11:39:31.651607",
+  "data": [
+    {
+      "stops": [
+        {
+          "stop": "72",
+          "name": "Cibeles-Casa de América",
+          "postalAddress": "Pº de Recoletos, 2 (Pza. de Cibeles)",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.69214452424823,
+              40.4203613685499
+            ]
+          },
+          "pmv": "60996",
+          "dataLine": [
+            {
+              "line": "005",
+              "label": "5",
+              "direction": "B",
+              "maxFreq": "22",
+              "minFreq": "10",
+              "headerA": "SOL/SEVILLA",
+              "headerB": "CHAMARTIN",
+              "startTime": "06:30",
+              "stopTime": "22:58",
+              "dayType": "LA"
+            },
+            {
+              "line": "014",
+              "label": "14",
+              "direction": "B",
+              "maxFreq": "17",
+              "minFreq": "5",
+              "headerA": "CONDE DE CASAL",
+              "headerB": "PIO XII",
+              "startTime": "06:20",
+              "stopTime": "23:40",
+              "dayType": "LA"
+            },
+            {
+              "line": "501",
+              "label": "N1",
+              "direction": "B",
+              "maxFreq": "25",
+              "minFreq": "15",
+              "headerA": "CIBELES",
+              "headerB": "SANCHINARRO",
+              "startTime": "23:30",
+              "stopTime": "05:30",
+              "dayType": "VI"
+            },
+            {
+              "line": "525",
+              "label": "N25",
+              "direction": "A",
+              "maxFreq": "25",
+              "minFreq": "15",
+              "headerA": "ALONSO MARTINEZ",
+              "headerB": "VILLA VALLECAS",
+              "startTime": "00:00",
+              "stopTime": "05:45",
+              "dayType": "VI"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

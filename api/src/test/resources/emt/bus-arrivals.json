@@ -1,0 +1,122 @@
+{
+  "code": "00",
+  "description": " Data recovered OK  (lapsed: 882 millsecs)",
+  "datetime": "2026-10-30T11:39:30.460685",
+  "data": [
+    {
+      "Arrive": [
+        {
+          "line": "14",
+          "stop": "72",
+          "isHead": "False",
+          "destination": "PIO XII",
+          "deviation": 0,
+          "bus": 5570,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.6930564972057955,
+              40.41441008140411
+            ]
+          },
+          "estimateArrive": 0,
+          "DistanceBus": 0,
+          "positionTypeBus": "0"
+        },
+        {
+          "line": "45",
+          "stop": "72",
+          "isHead": "False",
+          "destination": "REINA VICTORIA",
+          "deviation": 0,
+          "bus": 4789,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.6929444233271567,
+              40.4184197529838
+            ]
+          },
+          "estimateArrive": 55,
+          "DistanceBus": 140,
+          "positionTypeBus": "0"
+        },
+        {
+          "line": "37",
+          "stop": "72",
+          "isHead": "False",
+          "destination": "CUATRO CAMINOS",
+          "deviation": 0,
+          "bus": 2290,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.6935615845532666,
+              40.415389031429086
+            ]
+          },
+          "estimateArrive": 168,
+          "DistanceBus": 450,
+          "positionTypeBus": "0"
+        },
+        {
+          "line": "53",
+          "stop": "72",
+          "isHead": "False",
+          "destination": "ARTURO SORIA",
+          "deviation": 0,
+          "bus": 2342,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.6746594908623296,
+              40.42519458686542
+            ]
+          },
+          "estimateArrive": 1383,
+          "DistanceBus": 3565,
+          "positionTypeBus": "0"
+        },
+        {
+          "line": "5",
+          "stop": "72",
+          "isHead": "False",
+          "destination": "CHAMARTIN",
+          "deviation": 0,
+          "bus": 4828,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.689059360890421,
+              40.43504651880885
+            ]
+          },
+          "estimateArrive": 1553,
+          "DistanceBus": 2788,
+          "positionTypeBus": "0"
+        },
+        {
+          "line": "C03",
+          "stop": "72",
+          "isHead": "False",
+          "destination": "ARGÜELLES",
+          "deviation": 0,
+          "bus": 116,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -3.698598476664241,
+              40.42830459662096
+            ]
+          },
+          "estimateArrive": 999999,
+          "DistanceBus": 7613,
+          "positionTypeBus": "0"
+        }
+      ],
+      "StopInfo": [],
+      "ExtraInfo": [],
+      "Incident": {}
+    }
+  ]
+}

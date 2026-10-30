@@ -1,0 +1,103 @@
+{
+  "code": "00",
+  "description": "4935 Records recovered (lapsed: 368 millsecs)",
+  "datetime": "2026-10-30T11:39:11.327429",
+  "data": [
+    {
+      "node": "72",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.692139136326868,
+          40.420268054530624
+        ]
+      },
+      "name": "Cibeles-Casa de América",
+      "wifi": "0",
+      "lines": [
+        "014/1",
+        "150/1",
+        "027/1",
+        "037/2",
+        "045/1",
+        "005/1",
+        "053/1",
+        "363/1",
+        "501/1",
+        "501/2",
+        "522/1",
+        "522/2",
+        "524/1",
+        "524/2",
+        "525/2",
+        "526/2",
+        "504/1",
+        "504/2"
+      ]
+    },
+    {
+      "node": "2115",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.705616121396342,
+          40.41513710448409
+        ]
+      },
+      "name": "Plaza Santa Cruz-Plaza Mayor",
+      "wifi": "0",
+      "lines": [
+        "603/2"
+      ]
+    },
+    {
+      "node": "2768",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.636305450659557,
+          40.46529114072302
+        ]
+      },
+      "name": "Emigrantes-Carretera de Canillas",
+      "wifi": "0",
+      "lines": [
+        "073/2",
+        "503/2"
+      ]
+    },
+    {
+      "node": "4025",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.702833610585003,
+          40.41469907672767
+        ]
+      },
+      "name": "Benavente",
+      "wifi": "0",
+      "lines": [
+        "362/1",
+        "601/2",
+        "603/2"
+      ]
+    },
+    {
+      "node": "1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.782875407208744,
+          40.470050286124454
+        ]
+      },
+      "name": "Avenida Valdemarín-Blanca de Castilla",
+      "wifi": "0",
+      "lines": [
+        "161/1",
+        "999/1"
+      ]
+    }
+  ]
+}
