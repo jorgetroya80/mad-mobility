@@ -120,6 +120,18 @@ class OpenApiExportTest(
     }
 
     @Test
+    fun `documents the arrival estimate and bus position as always present but nullable`() {
+        val arrival = apiDocument().at("/components/schemas/BusArrivalResponse")
+        val nullable = listOf("minutes", "distanceMeters", "busLat", "busLon")
+
+        assertThat(arrival.path("required").values().map { it.asString() }).containsAll(nullable)
+        nullable.forEach { property ->
+            val types = arrival.at("/properties/$property/type").values().map { it.asString() }
+            assertThat(types).describedAs("BusArrivalResponse.$property").contains("null")
+        }
+    }
+
+    @Test
     fun `documents the bus stop detail by its number as a digits-only string`() {
         val parameter =
             apiDocument()

@@ -110,7 +110,7 @@ T1 fixtures ──► T2 EmtHttpClient (POST + code 80) ──┬─► T3 lista
   - Archivos: `domain/Arrival.kt`, `adapters/emt/EmtArrive.kt`, `adapters/emt/EmtArrivalMapper.kt`, `adapters/emt/EmtArrivalProvider.kt`, `application/GetArrivals.kt`, `http/BusStopsController.kt` (+ tests).
   - Dependencias: T5.
 
-- [ ] **T7: Compresión y contrato OpenAPI** (S, ~45 min)
+- [x] **T7: Compresión y contrato OpenAPI** (S, ~45 min)
   - Descripción: `server.compression` para `application/json` a partir de 2 KB. Anotaciones springdoc de los tres endpoints: `operationId` `listBusStops`, `getBusStop` y `getBusStopArrivals`, y las respuestas `400`, `404`, `429`, `502`, `503` y `504`, como en `StationsController`.
   - Aceptación:
     - Con `Accept-Encoding: gzip`, `/v1/bus/stops` llega comprimido (test de integración: `Content-Encoding: gzip`).
@@ -161,3 +161,4 @@ Unas 10 h en total. Fase 1 ~2 h, fase 2 ~4 h 30 min y fase 3 ~3 h 30 min.
 - 2026-10-30: T4 hecha. La caché `bus-stops` guarda las paradas ya traducidas con el catálogo, así que las 4.935 se traducen una vez por recarga y no en cada petición. La clave dentro de cada módulo es fija (`all`), no la fecha, para poder servir la de ayer como `stale`. En `OpenApiExportTest`, los `operationId` pasan a una constante: el floor guard avisa de una aserción reescrita (la refuerza, con `listBusStops`) y lo hará en toda la rama; decisión del usuario: commit explicándolo.
 - 2026-10-30: T5 hecha. La caché del detalle guarda la respuesta de la EMT sin traducir, y el horario de hoy se elige en cada petición, así que un detalle de antes de medianoche ya da el día nuevo. `updatedAt` es el más antiguo de la lista y el detalle, y `stale` si lo es cualquiera de los dos. Los campos sin horario van como `null`, no se omiten. `072` no es `72`: da 404. Los festivos entre semana no se detectan.
 - 2026-10-30: T6 hecha. Con la EMT caída y llegadas de más de 2 min, el API responde `503`, como dice la spec. Las líneas se ordenan como los números de parada: primero las numéricas por valor, después el resto por orden alfabético (`5` < `14` < `C03` < `N1`). Un `estimateArrive` ausente cuenta como `noEstimate`. `updatedAt` y `stale` salen solo de las llegadas. Quedan para T7: la descripción del tag `Bus`, que habla de una recarga diaria, y la descripción del OpenAPI, que solo menciona BiciMAD.
+- 2026-10-30: T7 hecha. gzip y ETag funcionan juntos sin tocar `shared`: el ETag es débil (`W/`), y Tomcat solo deja de comprimir con uno fuerte. La compresión solo cubre `application/json` y `application/problem+json`. El tamaño real comprimido se mide en T8 con la EMT. `build/openapi/bicimad.json` ya incluye el bus, así que el nombre engaña; renombrarlo toca CI y el cliente, y queda para un PR aparte.

@@ -25,7 +25,10 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/v1/bus/stops")
 // Public API: no authentication (security: [] in the OpenAPI document)
 @SecurityRequirements
-@Tag(name = "Bus", description = "EMT bus stops, refreshed from the EMT once a day.")
+@Tag(
+    name = "Bus",
+    description = "EMT bus stops: the stops, their lines and schedules are refreshed from the EMT once a day, arrivals every 30 seconds.",
+)
 @ApiResponse(
     responseCode = "400",
     description = "Invalid parameter.",

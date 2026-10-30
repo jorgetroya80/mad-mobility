@@ -14,6 +14,13 @@ spring:
     # Modules are shared and each modules/<name>, marked with @ApplicationModule + @PackageInfo
     detection-strategy: explicitly-annotated
 
+server:
+  # The full bus stop list is ~900 KB of JSON; gzip cuts it to a fraction. Small bodies are not worth it
+  compression:
+    enabled: true
+    mime-types: application/json, application/problem+json
+    min-response-size: 2KB
+
 logging:
   structured:
     format:
@@ -35,7 +42,9 @@ springdoc:
       title: Mad Transit API
       version: ${build.version}
       description: >-
-        Real-time BiciMAD stations in Madrid, nearest first and ranked by what you need (a bike or a free dock).
+        Real-time BiciMAD stations and EMT bus stops in Madrid. BiciMAD stations come nearest first and ranked
+        by what you need (a bike or a free dock); bus stops come with their lines, today's schedule and the next
+        arrivals.
         Powered by [EMT de Madrid](https://www.emtmadrid.es) through its MobilityLabs open data platform.
       license:
         name: MIT
