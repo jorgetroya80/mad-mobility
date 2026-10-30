@@ -41,7 +41,8 @@ class BusSmokeTest(
     fun `shows a bus stop with its lines`() {
         val lines = getJson("$STOPS/$STOP").path("stop").path("lines")
 
-        assertThat(lines.map { it.path("label").asString() }).contains(LINE)
+        // JsonNode.map applies to the node itself, not to its elements: go through values()
+        assertThat(lines.values().map { it.path("label").asString() }).contains(LINE)
         log.info("Bus smoke test: stop {} has {} lines", STOP, lines.size())
     }
 
