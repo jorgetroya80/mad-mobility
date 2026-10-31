@@ -14,7 +14,7 @@ export function SearchInput({ ref, itemLabel, query, onQueryChange, onKeyDown }:
 
   return (
     <>
-      <label htmlFor={id} className="text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="text-sm font-medium text-fg-muted">
         {`Buscar ${itemLabel} por número`}
       </label>
       <input
@@ -27,7 +27,7 @@ export function SearchInput({ ref, itemLabel, query, onQueryChange, onKeyDown }:
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
         onKeyDown={onKeyDown}
-        className="min-h-11 rounded-md border border-slate-300 bg-white px-3 text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+        className="min-h-11 rounded-control border border-input-line bg-surface px-3 text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       />
     </>
   );

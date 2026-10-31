@@ -69,7 +69,7 @@ T2 a T6 solo dependen de T1 y no comparten archivos; van en serie para tener un 
   - Archivos: `entities/station/ui/{AvailabilityBadge.tsx,AvailabilityBadge.test.tsx,StationRow.tsx}`, `features/filter-by-need/ui/NeedToggle.tsx`, `features/toggle-favorite/ui/FavoriteButton.tsx`, `features/locate-user/ui/LocateButton.tsx`.
   - Dependencias: T1.
 
-- [ ] **T4: Buscador por número** (S, ~45 min)
+- [x] **T4: Buscador por número** (S, ~45 min)
   - Descripción: migrar `SearchInput` (borde `border-input-line`), `ResultList`, `SearchByNumber` y `SourcePicker` (`peer-checked:bg-primary peer-checked:text-primary-foreground`).
   - Aceptación:
     - Los cuatro archivos sin clases de la paleta por defecto.
@@ -143,3 +143,4 @@ Unas 6 h en total. Fase 1 ~1 h 45 min, fase 2 ~2 h 45 min y fase 3 ~1 h 30 min.
 - 2026-10-31: T1 hecha. Vite resuelve la ruta del paquete dentro de `url()` en `index.css`, así que no hacen falta las alternativas. `web/dist` solo lleva `inter-latin-wght-normal.woff2` (48 KB). `check:task` en verde, 368 tests sin cambios.
 - 2026-10-31: T2 hecha. El borde del círculo usa un `case` con tres ramas: seleccionado, `empty` (2 px) y el resto. `userLocationLayer` recibe `MapColors`. 371 tests y `check:task` en verde.
 - 2026-10-31: T3 hecha. El padding del badge pasa a cada tono (`px-1.5` en `empty`) para que el borde de 2 px no cambie su tamaño. `FavoriteButton` marcado pasa de ámbar a `primary-soft` con estrella `primary`, como en el diseño. 372 tests y `check:task` en verde.
+- 2026-10-31: T4 hecha. Sustitución mecánica de clases en los cuatro archivos; el campo usa `border-input-line` (≥ 3:1). 372 tests y `check:task` en verde.

@@ -39,7 +39,7 @@ export function SearchByNumber({ sources }: SearchByNumberProps) {
           onResultKeyDown={onResultKeyDown}
         />
       ) : null}
-      <output className="text-sm text-slate-700 empty:hidden">
+      <output className="text-sm text-fg-muted empty:hidden">
         {searchStatusText(source, query, results.length)}
       </output>
     </div>

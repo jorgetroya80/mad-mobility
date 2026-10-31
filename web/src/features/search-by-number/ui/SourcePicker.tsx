@@ -12,7 +12,7 @@ export function SourcePicker({ sources, selectedId, onChange }: SourcePickerProp
   const name = useId();
 
   return (
-    <fieldset className="inline-flex self-start rounded-md border border-slate-300 bg-white p-0.5">
+    <fieldset className="inline-flex self-start rounded-control border border-line-strong bg-surface p-0.5">
       <legend className="sr-only">Servicio</legend>
       {sources.map((source) => (
         <label key={source.id}>
@@ -24,7 +24,7 @@ export function SourcePicker({ sources, selectedId, onChange }: SourcePickerProp
             onChange={() => onChange(source.id)}
             className="peer sr-only"
           />
-          <span className="flex min-h-11 min-w-11 cursor-pointer items-center rounded px-4 font-medium text-slate-700 peer-checked:bg-sky-700 peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-700 hover:bg-slate-50 peer-checked:hover:bg-sky-700">
+          <span className="flex min-h-11 min-w-11 cursor-pointer items-center rounded-control px-4 font-medium text-fg-muted peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:bg-chip peer-checked:hover:bg-primary">
             {source.label}
           </span>
         </label>
