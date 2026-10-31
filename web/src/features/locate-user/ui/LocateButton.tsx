@@ -18,7 +18,7 @@ export function LocateButton({ status, onLocate, className = '', ...props }: Loc
       aria-busy={pending || undefined}
       aria-disabled={pending || undefined}
       onClick={pending ? undefined : onLocate}
-      className={`min-h-11 rounded-md border border-slate-300 bg-white px-4 font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 aria-disabled:cursor-wait aria-disabled:text-slate-500 ${className}`}
+      className={`min-h-11 rounded-control border border-line-strong bg-surface px-4 font-medium text-fg hover:bg-chip focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:cursor-wait aria-disabled:text-fg-muted ${className}`}
     >
       {pending ? 'Localizando…' : 'Mi ubicación'}
     </button>

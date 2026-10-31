@@ -18,6 +18,15 @@ describe('AvailabilityBadge', () => {
     },
   );
 
+  it('draws the empty badge with a dashed border and keeps the screen-reader text', () => {
+    render(<AvailabilityBadge level="empty" count={0} need="bikes" />);
+
+    const badge = screen.getByText('0 bicis').parentElement;
+    expect(badge).toHaveClass('border-2', 'border-dashed', 'border-availability-empty-line');
+    expect(screen.getByText('0 bicis')).toHaveClass('sr-only');
+    expect(badge).toHaveTextContent('0');
+  });
+
   it('says "Sin servicio" instead of the count when the station is off', () => {
     render(<AvailabilityBadge level="off" count={7} need="bikes" />);
 

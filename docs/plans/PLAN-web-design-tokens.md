@@ -60,7 +60,7 @@ T2 a T6 solo dependen de T1 y no comparten archivos; van en serie para tener un 
 
 ### Fase 2: Migración de clases
 
-- [ ] **T3: `entities/station` y features pequeñas** (M, ~1 h)
+- [x] **T3: `entities/station` y features pequeñas** (M, ~1 h)
   - Descripción: `AvailabilityBadge` con `empty` en blanco y `border-2 border-dashed border-availability-empty-line`. Migrar `StationRow`, `NeedToggle` (`aria-pressed:bg-primary aria-pressed:text-primary-foreground`), `FavoriteButton` y `LocateButton` según la tabla.
   - Aceptación:
     - El test de `AvailabilityBadge` comprueba el borde discontinuo de `empty` y sigue encontrando el texto para lectores de pantalla.
@@ -142,3 +142,4 @@ Unas 6 h en total. Fase 1 ~1 h 45 min, fase 2 ~2 h 45 min y fase 3 ~1 h 30 min.
 - 2026-10-31: aprobado por el usuario.
 - 2026-10-31: T1 hecha. Vite resuelve la ruta del paquete dentro de `url()` en `index.css`, así que no hacen falta las alternativas. `web/dist` solo lleva `inter-latin-wght-normal.woff2` (48 KB). `check:task` en verde, 368 tests sin cambios.
 - 2026-10-31: T2 hecha. El borde del círculo usa un `case` con tres ramas: seleccionado, `empty` (2 px) y el resto. `userLocationLayer` recibe `MapColors`. 371 tests y `check:task` en verde.
+- 2026-10-31: T3 hecha. El padding del badge pasa a cada tono (`px-1.5` en `empty`) para que el borde de 2 px no cambie su tamaño. `FavoriteButton` marcado pasa de ámbar a `primary-soft` con estrella `primary`, como en el diseño. 372 tests y `check:task` en verde.
