@@ -36,6 +36,28 @@ describe('stationsCache', () => {
     expect(readNearbyStations('bikes')).toBeUndefined();
   });
 
+  it('parses the same saved list only once', () => {
+    saveAllStations(stationsFixture);
+    const parse = vi.spyOn(JSON, 'parse');
+
+    const first = readAllStations();
+    const second = readAllStations();
+
+    expect(second).toBe(first);
+    expect(parse).toHaveBeenCalledTimes(1);
+  });
+
+  it('parses the list again once a new one is saved', () => {
+    saveAllStations(stationsFixture);
+    const first = readAllStations();
+
+    vi.setSystemTime(new Date(NOW.getTime() + 30_000));
+    saveAllStations(stationsFixture);
+
+    expect(readAllStations()).not.toBe(first);
+    expect(readAllStations()?.savedAt).toBe(NOW.getTime() + 30_000);
+  });
+
   it('saves the full list with the time it was saved', () => {
     saveAllStations(stationsFixture);
 

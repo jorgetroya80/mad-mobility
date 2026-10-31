@@ -51,14 +51,26 @@ function parseNearby(raw: unknown): CachedNearby | undefined {
   return { ...cached, near: raw.near };
 }
 
-function read<T>(key: string, parse: (raw: unknown) => T | undefined): T | undefined {
-  const raw = readRaw(key);
-  if (raw === null) return undefined;
+// The last text read per key and what it parsed to. The full list is ~600 stations and is read
+// more than once at start (initialData and its date), so the same text is parsed only once.
+const lastReadByKey = new Map<string, { raw: string; value: unknown }>();
+
+function parseRaw<T>(raw: string, parse: (raw: unknown) => T | undefined): T | undefined {
   try {
     return parse(JSON.parse(raw));
   } catch {
     return undefined;
   }
+}
+
+function read<T>(key: string, parse: (raw: unknown) => T | undefined): T | undefined {
+  const raw = readRaw(key);
+  if (raw === null) return undefined;
+  const last = lastReadByKey.get(key);
+  if (last?.raw === raw) return last.value as T | undefined;
+  const value = parseRaw(raw, parse);
+  lastReadByKey.set(key, { raw, value });
+  return value;
 }
 
 export function readAllStations(): CachedStations | undefined {
