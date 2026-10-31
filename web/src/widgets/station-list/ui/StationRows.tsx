@@ -9,7 +9,7 @@ type StationRowsProps = {
 // `data-station-number` lets the page return the focus to the row a detail was opened from.
 export function StationRows({ stations, need, onSelect }: StationRowsProps) {
   return (
-    <ul className="divide-y divide-slate-200">
+    <ul className="divide-y divide-line">
       {stations.map((station) => (
         <li key={station.number}>
           <StationRow

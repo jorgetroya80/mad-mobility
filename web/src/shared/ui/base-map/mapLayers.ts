@@ -22,7 +22,7 @@ export function addPointLayers(map: Map) {
     data: toUserLocationCollection(undefined),
   });
   for (const layer of pointLayers(colors)) map.addLayer(layer);
-  map.addLayer(userLocationLayer(colors.userLocation));
+  map.addLayer(userLocationLayer(colors));
 }
 
 export function listenToPointClicks(map: Map, onSelect: (id: string) => void) {

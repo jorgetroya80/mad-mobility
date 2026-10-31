@@ -15,7 +15,10 @@ function Separator() {
 
 export function ResultList({ ref, results, onChoose, onResultKeyDown }: ResultListProps) {
   return (
-    <ul ref={ref} className="divide-y divide-slate-200 rounded-md border border-slate-300 bg-white">
+    <ul
+      ref={ref}
+      className="divide-y divide-line rounded-control border border-line-strong bg-surface"
+    >
       {results.map((item, index) => (
         <li key={item.number}>
           <button
@@ -23,14 +26,14 @@ export function ResultList({ ref, results, onChoose, onResultKeyDown }: ResultLi
             data-number={item.number}
             onClick={() => onChoose(item)}
             onKeyDown={(event) => onResultKeyDown(event, index)}
-            className="flex min-h-11 w-full flex-col justify-center px-3 py-2 text-left hover:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-700"
+            className="flex min-h-11 w-full flex-col justify-center px-3 py-2 text-left hover:bg-chip focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
           >
             <span>
-              <span className="font-semibold text-slate-900">{item.number}</span>
-              <Separator /> <span className="text-slate-700">{item.title}</span>
+              <span className="font-semibold text-fg">{item.number}</span>
+              <Separator /> <span className="text-fg-muted">{item.title}</span>
             </span>
             {item.subtitle ? (
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-fg-muted">
                 <Separator /> {item.subtitle}
               </span>
             ) : null}

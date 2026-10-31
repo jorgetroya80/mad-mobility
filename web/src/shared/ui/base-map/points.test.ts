@@ -23,7 +23,12 @@ const colors: MapColors = {
     off: { fill: '#off', text: '#off-text' },
   },
   userLocation: '#user',
+  pointStroke: '#stroke',
+  pointSelectedStroke: '#selected-stroke',
+  emptyStroke: '#empty-stroke',
 };
+
+const isEmptyTone = ['==', ['get', 'tone'], 'empty'];
 
 describe('toFeatureCollection', () => {
   it('turns each point into a GeoJSON point with [lng, lat] coordinates', () => {
@@ -122,16 +127,43 @@ describe('pointLayers', () => {
       'case',
       ['get', 'selected'],
       expect.any(Number),
+      isEmptyTone,
+      expect.any(Number),
       expect.any(Number),
     ]);
     const [, , selectedRadius, radiusOtherwise] = radius as [string, unknown, number, number];
     expect(selectedRadius).toBeGreaterThan(radiusOtherwise);
+    const [, , selectedWidth, , , widthOtherwise] = strokeWidth as unknown[];
+    expect(selectedWidth).toBeGreaterThan(widthOtherwise as number);
+  });
+
+  it('borders the empty tone with a 2 px line, between the selected and the other widths', () => {
+    const [circle] = pointLayers(colors);
+    const strokeWidth = circle.paint?.['circle-stroke-width'] as unknown[];
+    const [, , selectedWidth, , emptyWidth, widthOtherwise] = strokeWidth;
+
+    expect(emptyWidth).toBe(2);
+    expect(selectedWidth).toBeGreaterThan(emptyWidth as number);
+    expect(emptyWidth).toBeGreaterThan(widthOtherwise as number);
+  });
+
+  it('strokes the selected point, then the empty tone, then the rest with their theme colors', () => {
+    const [circle] = pointLayers(colors);
+
+    expect(circle.paint?.['circle-stroke-color']).toEqual([
+      'case',
+      ['get', 'selected'],
+      '#selected-stroke',
+      isEmptyTone,
+      '#empty-stroke',
+      '#stroke',
+    ]);
   });
 });
 
 describe('userLocationLayer', () => {
   it('draws the user as a dot in its own source and color', () => {
-    const layer = userLocationLayer('#user');
+    const layer = userLocationLayer(colors);
 
     expect(layer).toMatchObject({
       id: USER_LOCATION_LAYER_ID,
@@ -139,5 +171,9 @@ describe('userLocationLayer', () => {
       source: USER_LOCATION_SOURCE_ID,
     });
     expect(layer.paint?.['circle-color']).toBe('#user');
+  });
+
+  it('borders the dot with the point stroke color', () => {
+    expect(userLocationLayer(colors).paint?.['circle-stroke-color']).toBe('#stroke');
   });
 });

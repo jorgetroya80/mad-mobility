@@ -10,7 +10,7 @@ export function NeedToggle() {
   const [need, setNeed] = useNeed();
 
   return (
-    <fieldset className="inline-flex rounded-md border border-slate-300 bg-white p-0.5">
+    <fieldset className="inline-flex rounded-control border border-line-strong bg-surface p-0.5">
       <legend className="sr-only">Buscar</legend>
       {OPTIONS.map((option) => (
         <button
@@ -18,7 +18,7 @@ export function NeedToggle() {
           type="button"
           aria-pressed={option.need === need}
           onClick={() => setNeed(option.need)}
-          className="min-h-11 min-w-11 rounded px-4 font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 aria-pressed:bg-sky-700 aria-pressed:text-white"
+          className="min-h-11 min-w-11 rounded-control px-4 font-medium text-fg-muted hover:bg-chip focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
         >
           {option.label}
         </button>

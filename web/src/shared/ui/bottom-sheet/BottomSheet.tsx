@@ -41,7 +41,7 @@ export function BottomSheet({
     <div className="h-(--handle-height) shrink-0" style={stripStyle}>
       <div
         style={sheetStyle}
-        className={`fixed inset-x-0 bottom-0 z-10 flex flex-col rounded-t-2xl bg-white shadow-[0_-4px_16px_rgb(0_0_0/0.15)] transition-transform duration-300 ease-out motion-reduce:transition-none ${expanded ? 'translate-y-0' : 'translate-y-[calc(100%-var(--handle-height))]'}`}
+        className={`fixed inset-x-0 bottom-0 z-10 flex flex-col rounded-t-sheet bg-surface shadow-sheet transition-transform duration-300 ease-out motion-reduce:transition-none ${expanded ? 'translate-y-0' : 'translate-y-[calc(100%-var(--handle-height))]'}`}
       >
         <button
           id={handleId}
@@ -49,9 +49,9 @@ export function BottomSheet({
           aria-expanded={expanded}
           aria-controls={contentId}
           onClick={toggle}
-          className="flex h-(--handle-height) w-full shrink-0 flex-col items-center justify-center gap-1 px-4 font-medium text-slate-800 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-700"
+          className="flex h-(--handle-height) w-full shrink-0 flex-col items-center justify-center gap-1 px-4 font-medium text-fg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
         >
-          <span aria-hidden="true" className="h-1 w-10 rounded-full bg-slate-300" />
+          <span aria-hidden="true" className="h-1 w-10 rounded-full bg-handle" />
           {label}
         </button>
         {/* inert, not hidden: collapsed content stays painted while it slides out, but is

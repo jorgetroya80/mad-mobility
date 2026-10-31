@@ -2,7 +2,13 @@ import { MAP_POINT_TONES, type MapPointTone } from './points';
 
 export type ToneColors = { fill: string; text: string };
 
-export type MapColors = { tones: Record<MapPointTone, ToneColors>; userLocation: string };
+export type MapColors = {
+  tones: Record<MapPointTone, ToneColors>;
+  userLocation: string;
+  pointStroke: string;
+  pointSelectedStroke: string;
+  emptyStroke: string;
+};
 
 // The theme tokens in index.css are the single source of these colors; MapLibre paint
 // properties cannot read CSS variables, so their values are copied when the layers are added.
@@ -20,5 +26,8 @@ export function readMapColors(): MapColors {
       ToneColors
     >,
     userLocation: token('map-user-location'),
+    pointStroke: token('map-point-stroke'),
+    pointSelectedStroke: token('map-point-selected-stroke'),
+    emptyStroke: token('availability-empty-line'),
   };
 }

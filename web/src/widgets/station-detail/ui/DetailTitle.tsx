@@ -14,7 +14,7 @@ export function DetailTitle({ id, number, name }: DetailTitleProps) {
       ref={ref}
       id={id}
       tabIndex={-1}
-      className="text-lg font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+      className="text-lg font-semibold text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       {name === undefined ? `Estación ${number}` : `${number} · ${name}`}
     </h2>

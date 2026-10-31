@@ -17,9 +17,9 @@ export function FavoriteButton({ number, className = '', ...props }: FavoriteBut
       {...props}
       aria-pressed={pressed}
       onClick={() => toggle(number)}
-      className={`inline-flex min-h-11 min-w-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 aria-pressed:border-amber-500 aria-pressed:bg-amber-50 ${className}`}
+      className={`inline-flex min-h-11 min-w-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-4 font-medium text-fg hover:bg-chip focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-pressed:border-primary aria-pressed:bg-primary-soft ${className}`}
     >
-      <span aria-hidden="true" className="text-lg text-amber-700">
+      <span aria-hidden="true" className="text-lg text-primary">
         {pressed ? '★' : '☆'}
       </span>
       Favorita

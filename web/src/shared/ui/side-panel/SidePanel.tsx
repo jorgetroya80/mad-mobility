@@ -8,7 +8,7 @@ export function SidePanel({ label, className = '', children, ...props }: SidePan
     <section
       {...props}
       aria-label={label}
-      className={`h-full w-90 shrink-0 overflow-y-auto border-r border-slate-200 bg-white ${className}`}
+      className={`h-full w-90 shrink-0 overflow-y-auto border-r border-line bg-surface ${className}`}
     >
       {children}
     </section>
