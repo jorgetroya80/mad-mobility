@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/jorgetroya80/mad-transit/compare/web-v0.4.1...web-v0.5.0) (2026-10-31)
+
+
+### Features
+
+* **web:** apply the Mad Transit design theme ([#89](https://github.com/jorgetroya80/mad-transit/issues/89)) ([ce47c58](https://github.com/jorgetroya80/mad-transit/commit/ce47c58364aebda824fd3cd0e6e63da8672b583e))
+
 ## [0.4.1](https://github.com/jorgetroya80/mad-transit/compare/web-v0.4.0...web-v0.4.1) (2026-10-29)
 
 
