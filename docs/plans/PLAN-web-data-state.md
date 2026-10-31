@@ -39,7 +39,7 @@ T6 solo depende de T1 y de que los widgets tengan `status` (T4 y T5): va despué
 
 ### Fase 1: Estado y peticiones
 
-- [ ] **T1: Función de estado y conexión** (S, ~1 h)
+- [x] **T1: Función de estado y conexión** (S, ~1 h)
   - Descripción: `DataStatus` en `model/types.ts`. `model/dataStatus.ts` con la función pura de la spec. `STALE_AFTER_MS` (5 min) en `shared/config`. `shared/lib/network/useOnline.ts` lee `onlineManager` de TanStack Query con `useSyncExternalStore`. `model/useDataStatus.ts` recibe `{ data, isError, refetch, dataUpdatedAt }` y la marca `stale` del API, y devuelve `{ status, updatedAt, retry }`.
   - Aceptación:
     - `dataStatus` cubre las cinco filas de la tabla, la prioridad entre estados y el límite de 5 min (justo por debajo y por encima).
@@ -151,3 +151,4 @@ Unas 8 h en total. Fase 1 ~3 h 45 min, fase 2 ~2 h 30 min y fase 3 ~1 h 45 min.
 
 - 2026-10-31: borrador a partir de la spec aprobada.
 - 2026-10-31: aprobado por el usuario.
+- 2026-10-31: T1 hecha. `useDataStatus` acepta cualquier consulta cuyo dato traiga `updatedAt` y `stale` (lista, cercanas y detalle) y se exporta desde `entities/station` con su tipo `DataStatusResult`. Si `updatedAt` no se puede leer, la edad sale de `dataUpdatedAt`. Un dato de exactamente 5 min sigue en `ok`; pasa a `stale` al superarlos, en el siguiente tic de `useNow` (30 s). `useOnline` se suscribe a `onlineManager` sin listeners propios. 27 tests nuevos (399 en total) y `check:task` en verde.

@@ -1,0 +1,46 @@
+import { NOW_TICK_MS } from '@/shared/config';
+import { useNow, useOnline } from '@/shared/lib';
+import { dataStatus } from './dataStatus';
+import { parseUpdatedAt } from './parseUpdatedAt';
+import type { DataStatus } from './types';
+
+// The slice of a station query this needs. Every station response carries the API's
+// `updatedAt` and its `stale` flag.
+type StationsQuery = {
+  data: { updatedAt: string; stale: boolean } | undefined;
+  isError: boolean;
+  dataUpdatedAt: number;
+  refetch: () => unknown;
+};
+
+export type DataStatusResult = {
+  status: DataStatus;
+  updatedAt: Date | undefined;
+  retry: () => void;
+};
+
+// Without a readable API date, the data is as old as the response that brought it. The clock
+// ticks so data turns stale after 5 min even when nothing else re-renders.
+export function useDataStatus({
+  data,
+  isError,
+  dataUpdatedAt,
+  refetch,
+}: StationsQuery): DataStatusResult {
+  const online = useOnline();
+  const now = useNow(NOW_TICK_MS);
+  const updatedAt = data ? (parseUpdatedAt(data.updatedAt) ?? new Date(dataUpdatedAt)) : undefined;
+
+  return {
+    status: dataStatus({
+      hasData: data !== undefined,
+      failed: isError,
+      apiStale: data?.stale ?? false,
+      updatedAt,
+      now: now.getTime(),
+      online,
+    }),
+    updatedAt,
+    retry: () => void refetch(),
+  };
+}

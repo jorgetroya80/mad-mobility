@@ -15,6 +15,7 @@ import {
   QUERY_RETRY_COUNT,
   REDUCED_MOTION_QUERY,
   SEARCH_MAX_RESULTS,
+  STALE_AFTER_MS,
 } from '.';
 
 describe('shared/config public API', () => {
@@ -24,6 +25,10 @@ describe('shared/config public API', () => {
 
   it('polls every minute', () => {
     expect(POLL_INTERVAL_MS).toBe(60_000);
+  });
+
+  it('treats data older than 5 min as stale', () => {
+    expect(STALE_AFTER_MS).toBe(300_000);
   });
 
   it('retries a failed query once', () => {

@@ -15,4 +15,5 @@ export {
   QUERY_RETRY_COUNT,
   REDUCED_MOTION_QUERY,
   SEARCH_MAX_RESULTS,
+  STALE_AFTER_MS,
 } from './constants';
