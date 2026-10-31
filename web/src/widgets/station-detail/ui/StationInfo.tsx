@@ -20,7 +20,7 @@ export function StationInfo({ station, status, updatedAt, center }: StationInfoP
     <>
       {status === 'stale' ? <StaleNotice updatedAt={updatedAt} /> : null}
       {status === 'offline' ? <PanelNotice>Sin conexión</PanelNotice> : null}
-      <StationFields station={station} distanceMeters={distanceMeters} />
+      <StationFields station={station} status={status} distanceMeters={distanceMeters} />
       <FavoriteButton number={station.number} className="self-start" />
       {updatedAt ? <UpdatedAt date={updatedAt} /> : null}
     </>

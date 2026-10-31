@@ -1,6 +1,7 @@
 import {
   AvailabilityBadge,
   availabilityFor,
+  type DataStatus,
   formatDistance,
   type Station,
 } from '@/entities/station';
@@ -8,7 +9,11 @@ import { DetailField } from './DetailField';
 
 type FieldsStation = Pick<Station, 'address' | 'status' | 'bikes' | 'freeDocks' | 'totalDocks'>;
 
-type StationFieldsProps = { station: FieldsStation; distanceMeters: number | undefined };
+type StationFieldsProps = {
+  station: FieldsStation;
+  status: DataStatus;
+  distanceMeters: number | undefined;
+};
 
 const STATUS_TEXT = {
   OPERATIONAL: 'En servicio',
@@ -16,9 +21,9 @@ const STATUS_TEXT = {
 } as const satisfies Record<Station['status'], string>;
 
 // Bikes and free docks reuse the availability badge, so they never rely on color alone.
-export function StationFields({ station, distanceMeters }: StationFieldsProps) {
-  const bikes = availabilityFor(station, 'bikes');
-  const docks = availabilityFor(station, 'docks');
+export function StationFields({ station, status, distanceMeters }: StationFieldsProps) {
+  const bikes = availabilityFor(station, 'bikes', status);
+  const docks = availabilityFor(station, 'docks', status);
 
   return (
     <dl className="divide-y divide-line">

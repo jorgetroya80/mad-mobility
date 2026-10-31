@@ -14,7 +14,7 @@ const station = {
 
 describe('StationRow', () => {
   it('names the button with number, name, distance and availability', () => {
-    render(<StationRow station={station} need="bikes" />);
+    render(<StationRow station={station} need="bikes" status="ok" />);
 
     expect(
       screen.getByRole('button', { name: 'Estación 1a, Puerta del Sol A, a 120 m, 12 bicis' }),
@@ -22,13 +22,13 @@ describe('StationRow', () => {
   });
 
   it('shows the availability for the chosen need', () => {
-    render(<StationRow station={station} need="docks" />);
+    render(<StationRow station={station} need="docks" status="ok" />);
 
     expect(screen.getByRole('button', { name: /3 anclajes libres$/ })).toBeInTheDocument();
   });
 
   it('shows number, name and distance as visible text', () => {
-    render(<StationRow station={station} need="bikes" />);
+    render(<StationRow station={station} need="bikes" status="ok" />);
 
     const row = screen.getByRole('button');
     expect(row).toHaveTextContent('1a');
@@ -39,14 +39,14 @@ describe('StationRow', () => {
   it('omits the distance when the station has none', () => {
     const { distanceMeters: _omitted, ...withoutDistance } = station;
 
-    render(<StationRow station={withoutDistance} need="bikes" />);
+    render(<StationRow station={withoutDistance} need="bikes" status="ok" />);
 
     const row = screen.getByRole('button', { name: 'Estación 1a, Puerta del Sol A, 12 bicis' });
     expect(row).not.toHaveTextContent(' m');
   });
 
   it('says "Sin servicio" for a station out of service', () => {
-    render(<StationRow station={{ ...station, status: 'NO_SERVICE' }} need="bikes" />);
+    render(<StationRow station={{ ...station, status: 'NO_SERVICE' }} need="bikes" status="ok" />);
 
     expect(screen.getByRole('button', { name: /, Sin servicio$/ })).toBeInTheDocument();
   });
@@ -56,7 +56,14 @@ describe('StationRow', () => {
     const ref = createRef<HTMLButtonElement>();
 
     render(
-      <StationRow station={station} need="bikes" onClick={onClick} ref={ref} data-station="1a" />,
+      <StationRow
+        station={station}
+        need="bikes"
+        status="ok"
+        onClick={onClick}
+        ref={ref}
+        data-station="1a"
+      />,
     );
     await userEvent.click(screen.getByRole('button'));
 
@@ -64,5 +71,15 @@ describe('StationRow', () => {
     expect(ref.current).toBe(screen.getByRole('button'));
     expect(ref.current).toHaveAttribute('data-station', '1a');
     expect(ref.current).toHaveAttribute('type', 'button');
+  });
+
+  it('says the availability is not confirmed when the data is stale', () => {
+    render(<StationRow station={station} need="bikes" status="stale" />);
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Estación 1a, Puerta del Sol A, a 120 m, 12 bicis, sin confirmar',
+      }),
+    ).toBeInTheDocument();
   });
 });

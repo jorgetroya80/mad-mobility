@@ -5,7 +5,7 @@ import type {
 } from 'maplibre-gl';
 import type { MapColors, ToneColors } from './mapColors';
 
-export const MAP_POINT_TONES = ['good', 'low', 'empty', 'off'] as const;
+export const MAP_POINT_TONES = ['good', 'low', 'empty', 'off', 'unconfirmed'] as const;
 
 export type MapPointTone = (typeof MAP_POINT_TONES)[number];
 
@@ -67,7 +67,7 @@ export function toUserLocationCollection(
 }
 
 function byTone(colors: MapColors, pick: (tone: ToneColors) => string): ExpressionSpecification {
-  const { good, low, empty, off } = colors.tones;
+  const { good, low, empty, off, unconfirmed } = colors.tones;
   return [
     'match',
     ['get', 'tone'],
@@ -77,6 +77,8 @@ function byTone(colors: MapColors, pick: (tone: ToneColors) => string): Expressi
     pick(low),
     'empty',
     pick(empty),
+    'unconfirmed',
+    pick(unconfirmed),
     pick(off),
   ];
 }

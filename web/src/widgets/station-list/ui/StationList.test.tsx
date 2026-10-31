@@ -244,6 +244,32 @@ describe('StationList', () => {
     expect(await screen.findByText(/Sin confirmar/)).toHaveTextContent(/^Sin confirmar$/);
   });
 
+  it('greys out the counts of unconfirmed data', async () => {
+    nearbyJson({ ...nearbyStationsFixture, stale: true });
+
+    await renderList();
+
+    expect(
+      await screen.findByRole('button', {
+        name: 'Estación 1a, Puerta del Sol A, a 12 m, 12 bicis, sin confirmar',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('greys out the favorites when the full list is not confirmed', async () => {
+    saveFavorites(['1b']);
+    server.use(
+      http.get(STATIONS_URL, () => HttpResponse.json({ ...stationsFixture, stale: true })),
+    );
+
+    await renderList();
+
+    const favorites = await screen.findByRole('region', { name: 'Favoritas' });
+    expect(
+      await within(favorites).findByRole('button', { name: /2 bicis, sin confirmar$/ }),
+    ).toBeInTheDocument();
+  });
+
   it('does not warn about fresh data', async () => {
     await renderList();
     await screen.findByRole('button', { name: /^Estación 1a/ });

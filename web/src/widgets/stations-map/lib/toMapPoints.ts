@@ -2,6 +2,7 @@ import {
   type AvailabilityLevel,
   availabilityFor,
   availabilityLabel,
+  type DataStatus,
   type Need,
   type Station,
 } from '@/entities/station';
@@ -16,10 +17,11 @@ const TONE_BY_LEVEL = {
   low: 'low',
   empty: 'empty',
   off: 'off',
+  unconfirmed: 'unconfirmed',
 } as const satisfies Record<AvailabilityLevel, MapPointTone>;
 
-function toMapPoint(station: MapStation, need: Need): MapPoint {
-  const availability = availabilityFor(station, need);
+function toMapPoint(station: MapStation, need: Need, status: DataStatus): MapPoint {
+  const availability = availabilityFor(station, need, status);
   return {
     id: station.number,
     lng: station.lon,
@@ -29,6 +31,10 @@ function toMapPoint(station: MapStation, need: Need): MapPoint {
   };
 }
 
-export function toMapPoints(stations: readonly MapStation[], need: Need): MapPoint[] {
-  return stations.map((station) => toMapPoint(station, need));
+export function toMapPoints(
+  stations: readonly MapStation[],
+  need: Need,
+  status: DataStatus,
+): MapPoint[] {
+  return stations.map((station) => toMapPoint(station, need, status));
 }

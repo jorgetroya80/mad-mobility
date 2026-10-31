@@ -35,7 +35,7 @@ export function NearbyStations({ list, need, onSelect }: NearbyStationsProps) {
       {stations.length === 0 ? (
         <StateMessage variant="empty" title={`Ninguna estación en ${NEARBY_RADIUS_M} m`} />
       ) : (
-        <StationRows stations={stations} need={need} onSelect={onSelect} />
+        <StationRows stations={stations} need={need} status={list.status} onSelect={onSelect} />
       )}
     </>
   );

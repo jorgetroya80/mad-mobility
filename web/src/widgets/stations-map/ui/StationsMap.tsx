@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { type Coordinates, type Station, useAllStations } from '@/entities/station';
+import { type Coordinates, type Station, useAllStations, useDataStatus } from '@/entities/station';
 import { useNeed } from '@/features/filter-by-need';
 import { useSelectedStation } from '@/features/select-station';
 import { BaseMap } from '@/shared/ui';
@@ -35,12 +35,15 @@ export function StationsMap({
   onSelect,
   className,
 }: StationsMapProps) {
-  const { data } = useAllStations();
+  const query = useAllStations();
+  const { status } = useDataStatus(query);
+  const { data } = query;
   const [need] = useNeed();
   const { number, select } = useSelectedStation();
   const stations = data?.stations ?? NO_STATIONS;
-  // Stable while stations and need stay the same, so the map only resets its data on real changes.
-  const points = useMemo(() => toMapPoints(stations, need), [stations, need]);
+  // Stable while stations, need and status stay the same, so the map only resets its data on
+  // real changes.
+  const points = useMemo(() => toMapPoints(stations, need, status), [stations, need, status]);
   const selected = findStation(stations, number);
 
   return (

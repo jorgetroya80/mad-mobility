@@ -16,4 +16,12 @@ describe('availabilityText', () => {
     expect(availabilityText('off', 7, 'bikes')).toBe('Sin servicio');
     expect(availabilityText('off', 0, 'docks')).toBe('Sin servicio');
   });
+
+  it.each([
+    [3, 'bikes', '3 bicis, sin confirmar'],
+    [1, 'docks', '1 anclaje libre, sin confirmar'],
+    [0, 'bikes', '0 bicis, sin confirmar'],
+  ] as const)('says unconfirmed %i %s as "%s"', (count, need, expected) => {
+    expect(availabilityText('unconfirmed', count, need)).toBe(expected);
+  });
 });

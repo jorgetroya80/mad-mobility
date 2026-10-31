@@ -12,6 +12,7 @@ const TONES = {
   empty:
     'px-1.5 bg-availability-empty text-availability-empty-foreground border-2 border-dashed border-availability-empty-line',
   off: 'px-2 bg-availability-off text-availability-off-foreground',
+  unconfirmed: 'px-2 bg-availability-unconfirmed text-availability-unconfirmed-foreground',
 } as const satisfies Record<AvailabilityLevel, string>;
 
 // Color is never the only cue: the pill shows the number (or a dash when off) and screen

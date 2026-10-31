@@ -205,6 +205,16 @@ describe('StationDetail', () => {
     );
   });
 
+  it('greys out the counts when the data is not confirmed', async () => {
+    stationJson({ stale: true });
+
+    await renderDetail();
+    await openedTitle();
+
+    expect(field('Bicis')).toHaveTextContent('12 bicis, sin confirmar');
+    expect(field('Anclajes libres')).toHaveTextContent('12 anclajes libres, sin confirmar');
+  });
+
   it('dates the station by its arrival when updatedAt is invalid', async () => {
     stationJson({ updatedAt: 'nope' });
 
