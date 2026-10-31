@@ -17,7 +17,7 @@ export function SelectedStationDetail({ number, center }: SelectedStationDetailP
       <DetailTitle
         id={headingId}
         number={number}
-        name={detail.status === 'ready' ? detail.station.name : undefined}
+        name={detail.status === 'not-found' ? undefined : detail.station?.name}
       />
       <DetailBody detail={detail} center={center} />
     </section>

@@ -30,4 +30,13 @@ describe('data freshness', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent(/^Sin confirmar$/);
   });
+
+  it.each([
+    ['it just arrived', NOW],
+    ['it is dated after the clock tick', new Date(NOW.getTime() + 10_000)],
+  ])('warns about unconfirmed data without a time when %s', (_case, updatedAt) => {
+    render(<StaleNotice updatedAt={updatedAt} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^Sin confirmar$/);
+  });
 });

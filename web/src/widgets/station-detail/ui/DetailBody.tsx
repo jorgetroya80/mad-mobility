@@ -20,7 +20,8 @@ export function DetailBody({ detail, center }: DetailBodyProps) {
       </StateMessage>
     );
   }
-  if (detail.status === 'error') {
+  // Offline without data looks like an error until web-error-states gives it its own text.
+  if (detail.station === undefined) {
     return (
       <StateMessage variant="error" title="No se pudo cargar la estación">
         <MessageAction onClick={detail.retry}>Reintentar</MessageAction>
@@ -30,9 +31,8 @@ export function DetailBody({ detail, center }: DetailBodyProps) {
   return (
     <StationInfo
       station={detail.station}
+      status={detail.status}
       updatedAt={detail.updatedAt}
-      stale={detail.stale}
-      refreshFailed={detail.refreshFailed}
       center={center}
     />
   );

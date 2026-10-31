@@ -1,14 +1,16 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { onlineManager } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import type { Coordinates } from '@/entities/station';
 import { staleStationsFixture, stationsFixture } from '@/shared/api/mocks/fixtures';
 import { server } from '@/shared/api/mocks/node';
-import { env, POLL_INTERVAL_MS } from '@/shared/config';
+import { env, POLL_INTERVAL_MS, STATIONS_STORAGE_KEY } from '@/shared/config';
 import { renderWithRouter } from '../../../../test/renderWithRouter';
 import { StationDetail } from './StationDetail';
 
-const STATION_URL = `${env.apiBaseUrl}/v1/bicimad/stations/:number`;
+const STATIONS_URL = `${env.apiBaseUrl}/v1/bicimad/stations`;
+const STATION_URL = `${STATIONS_URL}/:number`;
 const SOL: Coordinates = { lat: 40.41702, lng: -3.70243 };
 // Five minutes after the fixtures' `updatedAt` (10:15), 35 after the stale one (09:45).
 const NOW = new Date('2026-10-13T10:20:00Z');
@@ -38,6 +40,17 @@ function failStation() {
       { title: 'Internal Server Error', status: SERVER_ERROR },
       { status: SERVER_ERROR },
     ),
+  );
+}
+
+function failAllStations() {
+  server.use(http.get(STATIONS_URL, () => HttpResponse.error()));
+}
+
+function saveAllStations(savedAt: number) {
+  localStorage.setItem(
+    STATIONS_STORAGE_KEY,
+    JSON.stringify({ response: stationsFixture, savedAt }),
   );
 }
 
@@ -81,6 +94,7 @@ describe('StationDetail', () => {
     vi.useRealTimers();
     localStorage.clear();
     server.events.removeAllListeners();
+    onlineManager.setOnline(true);
   });
 
   it('shows the station data, a favorite button and the update time', async () => {
@@ -191,17 +205,18 @@ describe('StationDetail', () => {
     );
   });
 
-  it('hides the update time when updatedAt is invalid', async () => {
+  it('dates the station by its arrival when updatedAt is invalid', async () => {
     stationJson({ updatedAt: 'nope' });
 
     await renderDetail();
     await openedTitle();
 
-    expect(screen.queryByText(/Actualizado/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Actualizado/)).toHaveTextContent('Actualizado ahora');
   });
 
   it('shows an error and retries on demand', async () => {
     failStation();
+    failAllStations();
 
     await renderDetail();
 
@@ -222,7 +237,66 @@ describe('StationDetail', () => {
     failStation();
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
 
-    expect(await screen.findByText('No se pudo actualizar', {}, AFTER_RETRY)).toBeInTheDocument();
+    expect(await screen.findByText(/^Sin confirmar/, {}, AFTER_RETRY)).toBeInTheDocument();
+    expect(screen.queryByText('No se pudo actualizar')).not.toBeInTheDocument();
     expect(field('Bicis')).toHaveTextContent('12 bicis');
+  });
+
+  it('prefers its own data over the full list', async () => {
+    const { updatedAt, stale, source } = stationsFixture;
+    respondStation(() =>
+      HttpResponse.json({ station: { ...puertaDelSolA, bikes: 3 }, updatedAt, stale, source }),
+    );
+
+    await renderDetail();
+
+    await waitFor(() => expect(field('Bicis')).toHaveTextContent('3 bicis'));
+  });
+
+  it('says a station is missing even when the full list still has it', async () => {
+    respondStation(() =>
+      HttpResponse.json(
+        { title: 'Not Found', status: 404 },
+        { status: 404, headers: { 'Content-Type': 'application/problem+json' } },
+      ),
+    );
+
+    await renderDetail();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Estación no encontrada');
+  });
+
+  it('shows the station from the saved full list, unconfirmed, when the requests fail', async () => {
+    saveAllStations(NOW.getTime() - 60_000);
+    failStation();
+    failAllStations();
+
+    await renderDetail();
+
+    expect(await openedTitle()).toBeInTheDocument();
+    expect(await screen.findByText(/^Sin confirmar/)).toBeInTheDocument();
+    expect(field('Bicis')).toHaveTextContent('12 bicis');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows the station from the saved full list when offline', async () => {
+    saveAllStations(NOW.getTime() - 60_000);
+    onlineManager.setOnline(false);
+
+    await renderDetail();
+
+    expect(await openedTitle()).toBeInTheDocument();
+    expect(screen.getByText('Sin conexión')).toBeInTheDocument();
+    expect(field('Bicis')).toHaveTextContent('12 bicis');
+  });
+
+  it('shows the error with a retry when offline without data', async () => {
+    onlineManager.setOnline(false);
+
+    await renderDetail();
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('No se pudo cargar la estación');
+    expect(within(alert).getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });

@@ -236,14 +236,12 @@ describe('StationList', () => {
     );
   });
 
-  it('dates stale data by its arrival when updatedAt is invalid', async () => {
+  it('warns without a time about stale data that just arrived with an invalid updatedAt', async () => {
     nearbyJson({ ...nearbyStationsFixture, updatedAt: 'nope', stale: true });
 
     await renderList();
 
-    expect(await screen.findByText(/Sin confirmar/)).toHaveTextContent(
-      'Sin confirmar: datos de ahora',
-    );
+    expect(await screen.findByText(/Sin confirmar/)).toHaveTextContent(/^Sin confirmar$/);
   });
 
   it('does not warn about fresh data', async () => {
