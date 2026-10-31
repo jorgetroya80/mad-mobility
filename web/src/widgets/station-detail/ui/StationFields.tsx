@@ -21,7 +21,7 @@ export function StationFields({ station, distanceMeters }: StationFieldsProps) {
   const docks = availabilityFor(station, 'docks');
 
   return (
-    <dl className="divide-y divide-slate-200">
+    <dl className="divide-y divide-line">
       <DetailField term="Dirección">{station.address}</DetailField>
       {distanceMeters === undefined ? null : (
         <DetailField term="Distancia">{formatDistance(distanceMeters)}</DetailField>

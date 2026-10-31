@@ -7,7 +7,7 @@ export function MessageAction({ className = '', ...props }: MessageActionProps) 
     <button
       type="button"
       {...props}
-      className={`min-h-11 rounded-md px-3 font-medium underline focus-visible:outline-2 focus-visible:outline-sky-700 ${className}`}
+      className={`min-h-11 rounded-control px-3 font-medium underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${className}`}
     />
   );
 }

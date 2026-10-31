@@ -94,7 +94,7 @@ T2 a T6 solo dependen de T1 y no comparten archivos; van en serie para tener un 
 
 ### Fase 3: Widgets y cierre
 
-- [ ] **T6: Detalle de estación** (M, ~45 min)
+- [x] **T6: Detalle de estación** (M, ~45 min)
   - Descripción: migrar `BackButton`, `DetailField`, `DetailTitle`, `MessageAction` y `StationFields`.
   - Aceptación:
     - Los cinco archivos sin clases de la paleta por defecto.
@@ -145,3 +145,4 @@ Unas 6 h en total. Fase 1 ~1 h 45 min, fase 2 ~2 h 45 min y fase 3 ~1 h 30 min.
 - 2026-10-31: T3 hecha. El padding del badge pasa a cada tono (`px-1.5` en `empty`) para que el borde de 2 px no cambie su tamaño. `FavoriteButton` marcado pasa de ámbar a `primary-soft` con estrella `primary`, como en el diseño. 372 tests y `check:task` en verde.
 - 2026-10-31: T4 hecha. Sustitución mecánica de clases en los cuatro archivos; el campo usa `border-input-line` (≥ 3:1). 372 tests y `check:task` en verde.
 - 2026-10-31: T5 hecha. `PanelNotice` y `StateMessage` usan `rounded-card` (12 px, el radio de los avisos del diseño) y conservan su borde izquierdo de 4 px. 372 tests y `check:task` en verde.
+- 2026-10-31: T6 hecha. `MessageAction` gana `outline-offset-2`, que le faltaba (supuesto 6). 372 tests y `check:task` en verde.
