@@ -2,6 +2,7 @@ import {
   type Coordinates,
   type DataStatus,
   type Need,
+  readNearbyStations,
   type Station,
   useDataStatus,
   useNearbyStations,
@@ -16,9 +17,12 @@ export type NearbyList = {
 };
 
 // Without a center (location pending) the query stays idle, which reads as loading unless a
-// saved list fills in.
+// saved list fills in. TanStack drops that saved list (placeholder data) once the request
+// fails, so it is read again here: the list stays on screen, unconfirmed, instead of an error.
 export function useNearbyList(center: Coordinates | undefined, need: Need): NearbyList {
   const query = useNearbyStations(center, need);
-  const { status, updatedAt, retry } = useDataStatus(query);
-  return { status, stations: query.data?.stations, updatedAt, retry };
+  const { isError, dataUpdatedAt, refetch } = query;
+  const data = query.data ?? (isError ? readNearbyStations(need)?.response : undefined);
+  const { status, updatedAt, retry } = useDataStatus({ data, isError, dataUpdatedAt, refetch });
+  return { status, stations: data?.stations, updatedAt, retry };
 }

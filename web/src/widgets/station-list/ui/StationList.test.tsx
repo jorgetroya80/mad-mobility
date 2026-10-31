@@ -345,6 +345,24 @@ describe('StationList', () => {
     expect(screen.queryByText('Cargando estaciones cercanas…')).not.toBeInTheDocument();
   });
 
+  // TanStack drops placeholder data once the request fails: the saved list must survive it.
+  it.each([
+    ['the API fails', () => failNearby()],
+    ['the network fails', () => respondNearby(() => HttpResponse.error())],
+  ])('keeps the saved nearby list, unconfirmed, when %s', async (_case, fail) => {
+    localStorage.setItem(
+      NEARBY_STORAGE_KEYS.bikes,
+      JSON.stringify({ near: '40.4170,-3.7024', response: nearbyStationsFixture, savedAt: 0 }),
+    );
+    fail();
+
+    await renderList();
+
+    expect(await screen.findByText(/^Sin confirmar/, {}, AFTER_RETRY)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Estación 1a/ })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('shows how long ago the nearby list was updated', async () => {
     await renderList();
 
