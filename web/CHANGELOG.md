@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/jorgetroya80/mad-transit/compare/web-v0.5.0...web-v0.6.0) (2026-10-31)
+
+
+### Features
+
+* **web:** keep stations visible when the data cannot be confirmed ([#92](https://github.com/jorgetroya80/mad-transit/issues/92)) ([a44dd37](https://github.com/jorgetroya80/mad-transit/commit/a44dd3731d6ff440a6054eb5213c0e02194ad742))
+
 ## [0.5.0](https://github.com/jorgetroya80/mad-transit/compare/web-v0.4.1...web-v0.5.0) (2026-10-31)
 
 
