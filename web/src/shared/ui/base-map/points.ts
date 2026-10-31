@@ -29,14 +29,15 @@ const POINT_RADIUS_PX = 12;
 const SELECTED_POINT_RADIUS_PX = 16;
 const POINT_STROKE_WIDTH_PX = 1.5;
 const SELECTED_POINT_STROKE_WIDTH_PX = 3;
-const POINT_STROKE_COLOR = '#ffffff';
-const SELECTED_POINT_STROKE_COLOR = '#030712';
+// The empty tone is filled white like the map, so its border has to be visible.
+const EMPTY_POINT_STROKE_WIDTH_PX = 2;
 const USER_LOCATION_RADIUS_PX = 8;
 const USER_LOCATION_STROKE_WIDTH_PX = 3;
 const SELECTED_SORT_KEY = 1;
 const UNSELECTED_SORT_KEY = 0;
 
 const isSelected: ExpressionSpecification = ['get', 'selected'];
+const isEmptyTone: ExpressionSpecification = ['==', ['get', 'tone'], 'empty'];
 
 function toPoint({ lng, lat }: LngLat): GeoJSON.Point {
   return { type: 'Point', coordinates: [lng, lat] };
@@ -84,6 +85,11 @@ function whenSelected<T>(selected: T, otherwise: T): ExpressionSpecification {
   return ['case', isSelected, selected, otherwise] as ExpressionSpecification;
 }
 
+// The selection wins over the empty tone's border, so the selected point always looks the same.
+function whenSelectedOrEmpty<T>(selected: T, empty: T, otherwise: T): ExpressionSpecification {
+  return ['case', isSelected, selected, isEmptyTone, empty, otherwise] as ExpressionSpecification;
+}
+
 export function pointLayers(
   colors: MapColors,
 ): [CircleLayerSpecification, SymbolLayerSpecification] {
@@ -97,8 +103,16 @@ export function pointLayers(
       paint: {
         'circle-color': byTone(colors, (tone) => tone.fill),
         'circle-radius': whenSelected(SELECTED_POINT_RADIUS_PX, POINT_RADIUS_PX),
-        'circle-stroke-width': whenSelected(SELECTED_POINT_STROKE_WIDTH_PX, POINT_STROKE_WIDTH_PX),
-        'circle-stroke-color': whenSelected(SELECTED_POINT_STROKE_COLOR, POINT_STROKE_COLOR),
+        'circle-stroke-width': whenSelectedOrEmpty(
+          SELECTED_POINT_STROKE_WIDTH_PX,
+          EMPTY_POINT_STROKE_WIDTH_PX,
+          POINT_STROKE_WIDTH_PX,
+        ),
+        'circle-stroke-color': whenSelectedOrEmpty(
+          colors.pointSelectedStroke,
+          colors.emptyStroke,
+          colors.pointStroke,
+        ),
       },
     },
     {
@@ -119,16 +133,19 @@ export function pointLayers(
   ];
 }
 
-export function userLocationLayer(color: string): CircleLayerSpecification {
+export function userLocationLayer({
+  userLocation,
+  pointStroke,
+}: Pick<MapColors, 'userLocation' | 'pointStroke'>): CircleLayerSpecification {
   return {
     id: USER_LOCATION_LAYER_ID,
     type: 'circle',
     source: USER_LOCATION_SOURCE_ID,
     paint: {
-      'circle-color': color,
+      'circle-color': userLocation,
       'circle-radius': USER_LOCATION_RADIUS_PX,
       'circle-stroke-width': USER_LOCATION_STROKE_WIDTH_PX,
-      'circle-stroke-color': POINT_STROKE_COLOR,
+      'circle-stroke-color': pointStroke,
     },
   };
 }

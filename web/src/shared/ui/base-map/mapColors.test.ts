@@ -10,6 +10,9 @@ const tokens = {
   '--color-availability-off': '#6b7280',
   '--color-availability-off-foreground': '#ffffff',
   '--color-map-user-location': '#2563eb',
+  '--color-map-point-stroke': '#ffffff',
+  '--color-map-point-selected-stroke': '#0b5cad',
+  '--color-availability-empty-line': '#b42318',
 };
 
 describe('readMapColors', () => {
@@ -17,7 +20,7 @@ describe('readMapColors', () => {
     for (const token of Object.keys(tokens)) document.documentElement.style.removeProperty(token);
   });
 
-  it('reads the availability and user location colors from the theme tokens', () => {
+  it('reads the availability, user location and stroke colors from the theme tokens', () => {
     for (const [token, value] of Object.entries(tokens)) {
       document.documentElement.style.setProperty(token, value);
     }
@@ -30,6 +33,9 @@ describe('readMapColors', () => {
         off: { fill: '#6b7280', text: '#ffffff' },
       },
       userLocation: '#2563eb',
+      pointStroke: '#ffffff',
+      pointSelectedStroke: '#0b5cad',
+      emptyStroke: '#b42318',
     });
   });
 });

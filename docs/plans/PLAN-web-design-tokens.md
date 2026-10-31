@@ -43,7 +43,7 @@ T2 a T6 solo dependen de T1 y no comparten archivos; van en serie para tener un 
   - Archivos: `web/package.json`, `pnpm-lock.yaml`, `web/src/app/styles/index.css`.
   - Dependencias: ninguna.
 
-- [ ] **T2: Colores del mapa desde los tokens** (S, ~1 h)
+- [x] **T2: Colores del mapa desde los tokens** (S, ~1 h)
   - Descripción: `MapColors` añade `pointStroke`, `pointSelectedStroke` y `emptyStroke`, leídos con `token()`. `points.ts` quita `POINT_STROKE_COLOR` y `SELECTED_POINT_STROKE_COLOR`. El borde del círculo es `pointSelectedStroke` si está seleccionado, `emptyStroke` (2 px) si el tono es `empty` y `pointStroke` en otro caso. El punto de ubicación usa `pointStroke`.
   - Aceptación:
     - `readMapColors()` devuelve los tres colores nuevos (test con las variables CSS).
@@ -141,3 +141,4 @@ Unas 6 h en total. Fase 1 ~1 h 45 min, fase 2 ~2 h 45 min y fase 3 ~1 h 30 min.
 - 2026-10-31: borrador a partir de la spec aprobada.
 - 2026-10-31: aprobado por el usuario.
 - 2026-10-31: T1 hecha. Vite resuelve la ruta del paquete dentro de `url()` en `index.css`, así que no hacen falta las alternativas. `web/dist` solo lleva `inter-latin-wght-normal.woff2` (48 KB). `check:task` en verde, 368 tests sin cambios.
+- 2026-10-31: T2 hecha. El borde del círculo usa un `case` con tres ramas: seleccionado, `empty` (2 px) y el resto. `userLocationLayer` recibe `MapColors`. 371 tests y `check:task` en verde.
