@@ -103,7 +103,7 @@ T2 a T6 solo dependen de T1 y no comparten archivos; van en serie para tener un 
   - Archivos: `widgets/station-detail/ui/{BackButton,DetailField,DetailTitle,MessageAction,StationFields}.tsx`.
   - Dependencias: T1.
 
-- [ ] **T7: Lista de estaciones y cierre** (S, ~45 min)
+- [x] **T7: Lista de estaciones y cierre** (S, ~45 min)
   - Descripción: migrar `NearbyStations`, `StationRows` y `StationSection` (`divide-line`). Ejecutar los dos `grep` de la spec. Spec y capability map a **implemented** después del merge; changelog de este plan.
   - Aceptación:
     - SC2: los dos `grep` de la spec no devuelven nada.
@@ -146,3 +146,4 @@ Unas 6 h en total. Fase 1 ~1 h 45 min, fase 2 ~2 h 45 min y fase 3 ~1 h 30 min.
 - 2026-10-31: T4 hecha. Sustitución mecánica de clases en los cuatro archivos; el campo usa `border-input-line` (≥ 3:1). 372 tests y `check:task` en verde.
 - 2026-10-31: T5 hecha. `PanelNotice` y `StateMessage` usan `rounded-card` (12 px, el radio de los avisos del diseño) y conservan su borde izquierdo de 4 px. 372 tests y `check:task` en verde.
 - 2026-10-31: T6 hecha. `MessageAction` gana `outline-offset-2`, que le faltaba (supuesto 6). 372 tests y `check:task` en verde.
+- 2026-10-31: T7 hecha. Los dos `grep` de la spec salen vacíos (SC2); `web/dist` solo lleva el `.woff2` latin (SC5); 372 tests y `check:task` en verde (SC6, SC7). Quedan el recorrido manual con Tab (SC4) y pasar spec y mapa a **implemented** tras el merge.

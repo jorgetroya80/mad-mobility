@@ -26,11 +26,11 @@ export function StationSection({ section, heading, caption, children }: StationS
         <h2
           id={headingId}
           tabIndex={-1}
-          className="text-base font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+          className="text-base font-semibold text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           {heading}
         </h2>
-        <p id={captionId} className="text-sm text-slate-600">
+        <p id={captionId} className="text-sm text-fg-muted">
           {caption}
         </p>
       </div>

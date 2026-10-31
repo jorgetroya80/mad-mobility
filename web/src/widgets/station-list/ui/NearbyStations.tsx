@@ -20,7 +20,7 @@ export function NearbyStations({ list, need, onSelect }: NearbyStationsProps) {
         <button
           type="button"
           onClick={list.retry}
-          className="min-h-11 rounded-md px-3 font-medium underline focus-visible:outline-2 focus-visible:outline-sky-700"
+          className="min-h-11 rounded-control px-3 font-medium underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Reintentar
         </button>
