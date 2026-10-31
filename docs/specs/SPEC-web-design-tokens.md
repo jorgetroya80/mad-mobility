@@ -120,3 +120,4 @@ Ninguna.
 - 2026-10-31: borrador a partir del documento de diseño (revisión 32) y del lienzo, con las decisiones 1 a 4 del usuario.
 - 2026-10-31: revisión tras los cambios del lienzo (leyenda con «Fuera de servicio» y «Sin confirmar»; límite de consultas sin hora fija). No cambian el tema: la leyenda usa tokens que ya están y los textos son de `web-redesign-desktop` y `web-bus`. Se añaden al supuesto 3 dos clases que la tabla de migración no recogía (`text-white` y `rounded-t-2xl`) y el token `--color-primary-foreground`.
 - 2026-10-31: aprobada por el usuario.
+- 2026-10-31: `--color-input-line` pasa a `#7d8794` (3,64:1 sobre blanco) por decisión del diseñador; el valor del documento de diseño daba 2,12:1.
