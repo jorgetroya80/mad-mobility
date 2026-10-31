@@ -1,7 +1,7 @@
 # Spec: web-design-tokens
 
 - Created: 2026-10-31
-- Status: **approved** (2026-10-31)
+- Status: **implemented** (2026-10-31)
 - Plan: [PLAN-web-design-tokens.md](../plans/PLAN-web-design-tokens.md)
 
 Módulo `web-design-tokens` del [Capability Map](CAPABILITY-MAP.md), el primero del rediseño de la UI. Es la fase 1 del documento «Mad Transit — Especificación de UI» (revisión 32) y del lienzo «Mad Transit · rediseño», que son privados. Sustituye la paleta por defecto de Tailwind por el tema del rediseño, sin cambiar la estructura de ningún componente.
@@ -121,3 +121,4 @@ Ninguna.
 - 2026-10-31: revisión tras los cambios del lienzo (leyenda con «Fuera de servicio» y «Sin confirmar»; límite de consultas sin hora fija). No cambian el tema: la leyenda usa tokens que ya están y los textos son de `web-redesign-desktop` y `web-bus`. Se añaden al supuesto 3 dos clases que la tabla de migración no recogía (`text-white` y `rounded-t-2xl`) y el token `--color-primary-foreground`.
 - 2026-10-31: aprobada por el usuario.
 - 2026-10-31: `--color-input-line` pasa a `#7d8794` (3,64:1 sobre blanco) por decisión del diseñador; el valor del documento de diseño daba 2,12:1.
+- 2026-10-31: implementada; en `main` con el PR #89.

@@ -1,7 +1,7 @@
 # Plan: web-design-tokens
 
 - Created: 2026-10-31
-- Status: **approved** (2026-10-31)
+- Status: **implemented** (2026-10-31)
 - Spec: [SPEC-web-design-tokens.md](../specs/SPEC-web-design-tokens.md)
 
 ## Overview
@@ -117,7 +117,7 @@ T2 a T6 solo dependen de T1 y no comparten archivos; van en serie para tener un 
 - [ ] SC1-SC7 comprobados; CI en verde.
 - [ ] Recorrido manual con Tab en escritorio y en móvil (DevTools) en `dev:mock` (SC4).
 - [ ] Pedir permiso antes de push, abrir el PR y hacer merge.
-- [ ] Después del despliegue: comprobar la fuente y los colores en Render, y marcar spec y capability map como **implemented**.
+- [x] Después del despliegue: comprobar la fuente y los colores en Render, y marcar spec y capability map como **implemented**.
 
 ## Riesgos y mitigaciones
 
@@ -148,3 +148,4 @@ Unas 6 h en total. Fase 1 ~1 h 45 min, fase 2 ~2 h 45 min y fase 3 ~1 h 30 min.
 - 2026-10-31: T6 hecha. `MessageAction` gana `outline-offset-2`, que le faltaba (supuesto 6). 372 tests y `check:task` en verde.
 - 2026-10-31: T7 hecha. Los dos `grep` de la spec salen vacíos (SC2); `web/dist` solo lleva el `.woff2` latin (SC5); 372 tests y `check:task` en verde (SC6, SC7). Quedan el recorrido manual con Tab (SC4) y pasar spec y mapa a **implemented** tras el merge.
 - 2026-10-31: revisión de código: `--color-input-line` (`#a9b3bf`) daba 2,12:1 sobre blanco, por debajo del 3:1 de WCAG 1.4.11. El diseñador lo cambia a `#7d8794` (3,64:1).
+- 2026-10-31: en `main` con el PR #89 y desplegada en Render (web 0.5.0); fuente y colores comprobados. Spec, plan y capability map pasan a **implemented**.
