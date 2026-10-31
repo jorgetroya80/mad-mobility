@@ -186,8 +186,8 @@ describe('StationDetail', () => {
 
     await renderDetail();
 
-    expect(await screen.findByText(/la EMT no responde/)).toHaveTextContent(
-      'Datos de hace 35 minutos: la EMT no responde',
+    expect(await screen.findByText(/Sin confirmar/)).toHaveTextContent(
+      'Sin confirmar: datos de hace 35 minutos',
     );
   });
 

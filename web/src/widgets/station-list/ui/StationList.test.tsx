@@ -1,4 +1,5 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { onlineManager } from '@tanstack/react-query';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import type { StationsResponse } from '@jorgetroya80/mad-transit-client';
@@ -9,7 +10,7 @@ import {
   stationsFixture,
 } from '@/shared/api/mocks/fixtures';
 import { server } from '@/shared/api/mocks/node';
-import { env, FAVORITES_STORAGE_KEY, POLL_INTERVAL_MS } from '@/shared/config';
+import { env, FAVORITES_STORAGE_KEY, NEARBY_STORAGE_KEYS, POLL_INTERVAL_MS } from '@/shared/config';
 import { renderWithRouter } from '../../../../test/renderWithRouter';
 import { StationList } from './StationList';
 
@@ -96,6 +97,7 @@ describe('StationList', () => {
     vi.useRealTimers();
     localStorage.clear();
     server.events.removeAllListeners();
+    onlineManager.setOnline(true);
   });
 
   it.each([
@@ -214,7 +216,8 @@ describe('StationList', () => {
     failNearby();
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
 
-    expect(await screen.findByText('No se pudo actualizar', {}, AFTER_RETRY)).toBeInTheDocument();
+    expect(await screen.findByText(/^Sin confirmar/, {}, AFTER_RETRY)).toBeInTheDocument();
+    expect(screen.queryByText('No se pudo actualizar')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Estación 1a/ })).toBeInTheDocument();
     expect(screen.getByText(/Actualizado/)).toBeInTheDocument();
   });
@@ -228,18 +231,18 @@ describe('StationList', () => {
 
     await renderList();
 
-    expect(await screen.findByText(/la EMT no responde/)).toHaveTextContent(
-      'Datos de hace 35 minutos: la EMT no responde',
+    expect(await screen.findByText(/Sin confirmar/)).toHaveTextContent(
+      'Sin confirmar: datos de hace 35 minutos',
     );
   });
 
-  it('warns about stale data without a time when updatedAt is invalid', async () => {
+  it('dates stale data by its arrival when updatedAt is invalid', async () => {
     nearbyJson({ ...nearbyStationsFixture, updatedAt: 'nope', stale: true });
 
     await renderList();
 
-    expect(await screen.findByText(/la EMT no responde/)).toHaveTextContent(
-      'Datos antiguos: la EMT no responde',
+    expect(await screen.findByText(/Sin confirmar/)).toHaveTextContent(
+      'Sin confirmar: datos de ahora',
     );
   });
 
@@ -247,7 +250,75 @@ describe('StationList', () => {
     await renderList();
     await screen.findByRole('button', { name: /^Estación 1a/ });
 
-    expect(screen.queryByText(/la EMT no responde/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sin confirmar/)).not.toBeInTheDocument();
+  });
+
+  it('marks the list unconfirmed once the data is over 5 min old', async () => {
+    await renderList();
+    await screen.findByRole('button', { name: /^Estación 1a/ });
+
+    // The fixtures are 5 min old at NOW: the next clock tick passes the limit.
+    await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+    expect(await screen.findByText(/^Sin confirmar/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Estación 1a/ })).toBeInTheDocument();
+  });
+
+  it('keeps the rows and says so when the connection drops', async () => {
+    await renderList();
+    await screen.findByRole('button', { name: /^Estación 1a/ });
+
+    act(() => {
+      window.dispatchEvent(new Event('offline'));
+    });
+
+    expect(await screen.findByText('Sin conexión')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Estación 1a/ })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('asks again and drops the notice when the connection returns', async () => {
+    const requests = recordNearbyRequests();
+    await renderList();
+    await screen.findByRole('button', { name: /^Estación 1a/ });
+    act(() => {
+      window.dispatchEvent(new Event('offline'));
+    });
+    await screen.findByText('Sin conexión');
+    // The poll that falls due while offline waits for the connection.
+    await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+    const requestsWhileOffline = requests.length;
+
+    act(() => {
+      window.dispatchEvent(new Event('online'));
+    });
+
+    await waitFor(() => expect(requests.length).toBeGreaterThan(requestsWhileOffline));
+    await waitFor(() => expect(screen.queryByText('Sin conexión')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /^Estación 1a/ })).toBeInTheDocument();
+  });
+
+  it('shows the error with a retry when offline without data', async () => {
+    onlineManager.setOnline(false);
+
+    await renderList();
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('No se pudieron cargar las estaciones cercanas');
+    expect(within(alert).getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+
+  it('shows the saved nearby list while the location is pending', async () => {
+    localStorage.setItem(
+      NEARBY_STORAGE_KEYS.bikes,
+      JSON.stringify({ near: '40.4170,-3.7024', response: nearbyStationsFixture, savedAt: 0 }),
+    );
+
+    await renderList({ center: undefined });
+
+    const region = await nearbyRegion();
+    expect(await within(region).findAllByRole('button', { name: /^Estación/ })).toHaveLength(3);
+    expect(screen.queryByText('Cargando estaciones cercanas…')).not.toBeInTheDocument();
   });
 
   it('shows how long ago the nearby list was updated', async () => {
@@ -260,13 +331,13 @@ describe('StationList', () => {
     );
   });
 
-  it('hides the update time when updatedAt is invalid', async () => {
+  it('dates the list by its arrival when updatedAt is invalid', async () => {
     nearbyJson({ ...nearbyStationsFixture, updatedAt: 'nope' });
 
     await renderList();
     await screen.findByRole('button', { name: /^Estación 1a/ });
 
-    expect(screen.queryByText(/Actualizado/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Actualizado/)).toHaveTextContent('Actualizado ahora');
   });
 
   it('shows favorites on top in insertion order, skipping unknown numbers (SC8)', async () => {

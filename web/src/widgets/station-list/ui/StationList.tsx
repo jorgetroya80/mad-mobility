@@ -35,8 +35,9 @@ export function StationList({
             : 'Sin ubicación: mostrando estaciones cerca de la Puerta del Sol'}
         </PanelNotice>
       ) : null}
-      {nearby.status === 'ready' && nearby.stale ? (
-        <StaleNotice updatedAt={nearby.updatedAt} />
+      {nearby.status === 'stale' ? <StaleNotice updatedAt={nearby.updatedAt} /> : null}
+      {nearby.status === 'offline' && nearby.stations ? (
+        <PanelNotice>Sin conexión</PanelNotice>
       ) : null}
       <FavoriteStations need={need} onSelect={select} />
       <StationSection

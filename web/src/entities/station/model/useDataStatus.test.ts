@@ -90,6 +90,14 @@ describe('useDataStatus', () => {
     expect(result.current.updatedAt).toEqual(received);
   });
 
+  it('leaves the date unknown for placeholder data without a readable API date', () => {
+    const { result } = renderHook(() =>
+      useDataStatus(query({ data: { updatedAt: 'nope', stale: false }, dataUpdatedAt: 0 })),
+    );
+
+    expect(result.current.updatedAt).toBeUndefined();
+  });
+
   it('retries by refetching', () => {
     const refetch = vi.fn<() => void>();
     const { result } = renderHook(() => useDataStatus(query({ refetch })));
