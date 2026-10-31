@@ -1,4 +1,5 @@
 import { setupWorker } from 'msw/browser';
-import { handlers } from './handlers';
+import { apiTimestamp, createHandlers } from './handlers';
 
-export const worker = setupWorker(...handlers);
+// dev:mock dates the data now, so the stations look confirmed instead of 5 min old and grey.
+export const worker = setupWorker(...createHandlers({ updatedAt: () => apiTimestamp(new Date()) }));

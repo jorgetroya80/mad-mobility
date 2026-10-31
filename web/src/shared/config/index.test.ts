@@ -8,13 +8,17 @@ import {
   MADRID_ZOOM,
   MAP_STYLE_URL,
   MD_MEDIA_QUERY,
+  NEARBY_STORAGE_KEYS,
   NEAR_COORDINATE_DECIMALS,
   NEARBY_RADIUS_M,
   NOW_TICK_MS,
   POLL_INTERVAL_MS,
-  QUERY_RETRY_COUNT,
   REDUCED_MOTION_QUERY,
+  REQUEST_TIMEOUT_MS,
+  RETRY_DELAYS_MS,
   SEARCH_MAX_RESULTS,
+  STALE_AFTER_MS,
+  STATIONS_STORAGE_KEY,
 } from '.';
 
 describe('shared/config public API', () => {
@@ -22,12 +26,20 @@ describe('shared/config public API', () => {
     expect(env.apiBaseUrl).toBe('/api');
   });
 
-  it('polls every minute', () => {
-    expect(POLL_INTERVAL_MS).toBe(60_000);
+  it('polls every 30 s', () => {
+    expect(POLL_INTERVAL_MS).toBe(30_000);
   });
 
-  it('retries a failed query once', () => {
-    expect(QUERY_RETRY_COUNT).toBe(1);
+  it('treats data older than 5 min as stale', () => {
+    expect(STALE_AFTER_MS).toBe(300_000);
+  });
+
+  it('gives up on a request after 10 s', () => {
+    expect(REQUEST_TIMEOUT_MS).toBe(10_000);
+  });
+
+  it('waits 30, 60 and then 120 s after consecutive failures', () => {
+    expect(RETRY_DELAYS_MS).toEqual([30_000, 60_000, 120_000]);
   });
 
   it('centers the map on Puerta del Sol', () => {
@@ -74,5 +86,13 @@ describe('shared/config public API', () => {
 
   it('stores favorites under a namespaced key', () => {
     expect(FAVORITES_STORAGE_KEY).toBe('bicimad-now:favorites');
+  });
+
+  it('caches the stations under namespaced keys', () => {
+    expect(STATIONS_STORAGE_KEY).toBe('bicimad-now:stations');
+    expect(NEARBY_STORAGE_KEYS).toEqual({
+      bikes: 'bicimad-now:nearby-bikes',
+      docks: 'bicimad-now:nearby-docks',
+    });
   });
 });

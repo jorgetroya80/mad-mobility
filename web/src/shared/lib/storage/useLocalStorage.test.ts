@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { useLocalStorage } from './useLocalStorage';
+import { readRaw, useLocalStorage, writeRaw } from './useLocalStorage';
 
 const FALLBACK: string[] = [];
 
@@ -132,5 +132,30 @@ describe('useLocalStorage', () => {
 
     expect(result.current[0]).toBe(FALLBACK);
     for (const spy of consoleSpies) expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe('readRaw and writeRaw', () => {
+  afterEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('reads back a written string', () => {
+    const key = freshKey();
+
+    writeRaw(key, '{"a":1}');
+
+    expect(readRaw(key)).toBe('{"a":1}');
+    expect(localStorage.getItem(key)).toBe('{"a":1}');
+  });
+
+  it('keeps a value in memory when the storage refuses the write', () => {
+    const key = freshKey();
+    failStorage('setItem');
+
+    writeRaw(key, 'kept');
+
+    expect(readRaw(key)).toBe('kept');
   });
 });

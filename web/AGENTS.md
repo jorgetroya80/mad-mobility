@@ -24,7 +24,7 @@ Run a single file with `pnpm --filter web exec vitest run <path>`.
 - `maplibre-gl` is only used inside `shared/ui/base-map`.
 - The URL (`?station`, `?need`) is read and written only through TanStack Router, never through `window.location` or `history`.
 - The API is called only through `@jorgetroya80/mad-transit-client`. Never hand-write API types or compute distances and ordering in the client: the API does it.
-- `localStorage` only stores the favorites.
+- `localStorage` only stores the favorites, the last stations lists (a cache shown while the network answers or when it cannot) and UI preferences.
 
 ## Style and tests
 

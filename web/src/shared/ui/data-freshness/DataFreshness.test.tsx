@@ -19,17 +19,24 @@ describe('data freshness', () => {
     expect(screen.getByText(/Actualizado/)).toHaveTextContent('Actualizado hace 5 minutos');
   });
 
-  it('warns about stale data with its age in a live region', () => {
+  it('warns about unconfirmed data with its age in a live region', () => {
     render(<StaleNotice updatedAt={FIVE_MINUTES_AGO} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Datos de hace 5 minutos: la EMT no responde',
-    );
+    expect(screen.getByRole('status')).toHaveTextContent('Sin confirmar: datos de hace 5 minutos');
   });
 
-  it('warns about stale data without a time when it is unknown', () => {
+  it('warns about unconfirmed data without a time when it is unknown', () => {
     render(<StaleNotice updatedAt={undefined} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Datos antiguos: la EMT no responde');
+    expect(screen.getByRole('status')).toHaveTextContent(/^Sin confirmar$/);
+  });
+
+  it.each([
+    ['it just arrived', NOW],
+    ['it is dated after the clock tick', new Date(NOW.getTime() + 10_000)],
+  ])('warns about unconfirmed data without a time when %s', (_case, updatedAt) => {
+    render(<StaleNotice updatedAt={updatedAt} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^Sin confirmar$/);
   });
 });

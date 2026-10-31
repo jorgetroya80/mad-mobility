@@ -2,6 +2,7 @@ export type { GeolocationState, GeolocationStatus, GeoPosition } from './geo/use
 export { useGeolocation } from './geo/useGeolocation';
 export { useMediaQuery } from './media/useMediaQuery';
 export { useViewportHeight } from './media/useViewportHeight';
-export { useLocalStorage } from './storage/useLocalStorage';
-export { formatRelative } from './time/formatRelative';
+export { useOnline } from './network/useOnline';
+export { readRaw, useLocalStorage, writeRaw } from './storage/useLocalStorage';
+export { formatRelative, isJustNow } from './time/formatRelative';
 export { useNow } from './time/useNow';

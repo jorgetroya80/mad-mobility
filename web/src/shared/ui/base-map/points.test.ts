@@ -21,6 +21,7 @@ const colors: MapColors = {
     low: { fill: '#low', text: '#low-text' },
     empty: { fill: '#empty', text: '#empty-text' },
     off: { fill: '#off', text: '#off-text' },
+    unconfirmed: { fill: '#unconfirmed', text: '#unconfirmed-text' },
   },
   userLocation: '#user',
   pointStroke: '#stroke',
@@ -95,6 +96,8 @@ describe('pointLayers', () => {
       '#low',
       'empty',
       '#empty',
+      'unconfirmed',
+      '#unconfirmed',
       '#off',
     ]);
   });
@@ -113,6 +116,8 @@ describe('pointLayers', () => {
       '#low-text',
       'empty',
       '#empty-text',
+      'unconfirmed',
+      '#unconfirmed-text',
       '#off-text',
     ]);
   });

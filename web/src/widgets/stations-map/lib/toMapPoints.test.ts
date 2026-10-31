@@ -6,7 +6,7 @@ const { stations } = stationsFixture;
 
 describe('toMapPoints', () => {
   it('keeps one point per station, identified by its number at its coordinates', () => {
-    const points = toMapPoints(stations, 'bikes');
+    const points = toMapPoints(stations, 'bikes', 'ok');
 
     expect(points.map(({ id, lng, lat }) => ({ id, lng, lat }))).toEqual(
       stations.map(({ number, lon, lat }) => ({ id: number, lng: lon, lat })),
@@ -14,7 +14,7 @@ describe('toMapPoints', () => {
   });
 
   it('shows the bikes and their availability when looking for bikes', () => {
-    const points = toMapPoints(stations, 'bikes');
+    const points = toMapPoints(stations, 'bikes', 'ok');
 
     expect(points.map(({ id, label, tone }) => ({ id, label, tone }))).toEqual([
       { id: '1a', label: '12', tone: 'good' },
@@ -25,7 +25,7 @@ describe('toMapPoints', () => {
   });
 
   it('shows the free docks and their availability when looking for docks', () => {
-    const points = toMapPoints(stations, 'docks');
+    const points = toMapPoints(stations, 'docks', 'ok');
 
     expect(points.map(({ id, label, tone }) => ({ id, label, tone }))).toEqual([
       { id: '1a', label: '12', tone: 'good' },
@@ -40,12 +40,26 @@ describe('toMapPoints', () => {
       .slice(0, 1)
       .map((station) => ({ ...station, status: 'NO_SERVICE', bikes: 7 }));
 
-    expect(toMapPoints(offStations, 'bikes')).toEqual([
+    expect(toMapPoints(offStations, 'bikes', 'ok')).toEqual([
       expect.objectContaining({ label: '–', tone: 'off' }),
     ]);
   });
 
   it('returns no points without stations', () => {
-    expect(toMapPoints([], 'bikes')).toEqual([]);
+    expect(toMapPoints([], 'bikes', 'ok')).toEqual([]);
   });
+
+  it.each(['stale', 'offline'] as const)(
+    'greys every point out when %s, keeping the count',
+    (status) => {
+      const points = toMapPoints(stations, 'bikes', status);
+
+      expect(points.map(({ id, label, tone }) => ({ id, label, tone }))).toEqual([
+        { id: '1a', label: '12', tone: 'unconfirmed' },
+        { id: '1b', label: '2', tone: 'unconfirmed' },
+        { id: '2', label: '0', tone: 'unconfirmed' },
+        { id: '3', label: '0', tone: 'unconfirmed' },
+      ]);
+    },
+  );
 });

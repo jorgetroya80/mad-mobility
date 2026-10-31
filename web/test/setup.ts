@@ -8,4 +8,6 @@ beforeEach(() => stubMatchMedia(false));
 // jsdom does not implement scrollTo, which the router calls on every navigation.
 beforeEach(() => vi.spyOn(window, 'scrollTo').mockImplementation(() => {}));
 afterEach(() => server.resetHandlers());
+// Every successful stations query saves its list: no test starts from another test's cache.
+afterEach(() => localStorage.clear());
 afterAll(() => server.close());

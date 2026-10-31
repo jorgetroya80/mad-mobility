@@ -1,6 +1,6 @@
 import type { Need } from '@/entities/station';
 import { NEARBY_RADIUS_M } from '@/shared/config';
-import { PanelNotice, StateMessage, UpdatedAt } from '@/shared/ui';
+import { StateMessage, UpdatedAt } from '@/shared/ui';
 import type { NearbyList } from '../model/useNearbyList';
 import { StationRows } from './StationRows';
 
@@ -11,10 +11,12 @@ type NearbyStationsProps = {
 };
 
 export function NearbyStations({ list, need, onSelect }: NearbyStationsProps) {
+  const { stations } = list;
   if (list.status === 'loading') {
     return <StateMessage variant="loading" title="Cargando estaciones cercanas…" />;
   }
-  if (list.status === 'error') {
+  // Offline without data looks like an error until web-error-states gives it its own text.
+  if (stations === undefined) {
     return (
       <StateMessage variant="error" title="No se pudieron cargar las estaciones cercanas">
         <button
@@ -29,12 +31,11 @@ export function NearbyStations({ list, need, onSelect }: NearbyStationsProps) {
   }
   return (
     <>
-      {list.refreshFailed ? <PanelNotice>No se pudo actualizar</PanelNotice> : null}
       {list.updatedAt ? <UpdatedAt date={list.updatedAt} /> : null}
-      {list.stations.length === 0 ? (
+      {stations.length === 0 ? (
         <StateMessage variant="empty" title={`Ninguna estación en ${NEARBY_RADIUS_M} m`} />
       ) : (
-        <StationRows stations={list.stations} need={need} onSelect={onSelect} />
+        <StationRows stations={stations} need={need} status={list.status} onSelect={onSelect} />
       )}
     </>
   );

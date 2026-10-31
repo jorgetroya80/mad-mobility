@@ -34,4 +34,15 @@ describe('AvailabilityBadge', () => {
     expect(badge).toHaveClass('bg-availability-off');
     expect(badge).not.toHaveTextContent('7');
   });
+
+  it('shows the count of unconfirmed data in grey and says it is not confirmed', () => {
+    render(<AvailabilityBadge level="unconfirmed" count={3} need="bikes" />);
+
+    const badge = screen.getByText('3 bicis, sin confirmar').parentElement;
+    expect(badge).toHaveClass(
+      'bg-availability-unconfirmed',
+      'text-availability-unconfirmed-foreground',
+    );
+    expect(badge).toHaveTextContent('3');
+  });
 });

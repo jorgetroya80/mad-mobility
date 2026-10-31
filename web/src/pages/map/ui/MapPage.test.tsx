@@ -121,11 +121,18 @@ function saveFavorites(numbers: string[]) {
   localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(numbers));
 }
 
+// Five minutes after the fixtures' `updatedAt`: their data is still confirmed. Only the date is
+// fake, so timers and user events run as usual.
+const NOW = new Date('2026-10-13T10:20:00Z');
+
 beforeEach(() => {
   mapRenders.length = 0;
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(NOW);
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   Reflect.deleteProperty(navigator, 'geolocation');
   localStorage.clear();
   server.events.removeAllListeners();

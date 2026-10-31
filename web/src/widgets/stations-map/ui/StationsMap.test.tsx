@@ -1,6 +1,9 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import type { Coordinates } from '@/entities/station';
-import { stationsFixture } from '@/shared/api/mocks/fixtures';
+import { http, HttpResponse } from 'msw';
+import { staleStationsFixture, stationsFixture } from '@/shared/api/mocks/fixtures';
+import { server } from '@/shared/api/mocks/node';
+import { env } from '@/shared/config';
 import type * as SharedUi from '@/shared/ui';
 import type { MapPoint } from '@/shared/ui';
 import { renderWithRouter } from '../../../../test/renderWithRouter';
@@ -27,6 +30,8 @@ vi.mock('@/shared/ui', async (importOriginal) => ({
   },
 }));
 
+// The fixtures' data is 5 min old here, still confirmed.
+const NOW = new Date('2026-10-13T10:20:00Z');
 const SOL: Coordinates = { lat: 40.41702, lng: -3.70243 };
 const USER: Coordinates = { lat: 40.42, lng: -3.7 };
 // Station 1a in the fixtures.
@@ -57,7 +62,11 @@ function renderMap(initialEntry = '/', { center }: { center?: Coordinates } = { 
 
 beforeEach(() => {
   mapRenders.length = 0;
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.setSystemTime(NOW);
 });
+
+afterEach(() => vi.useRealTimers());
 
 describe('StationsMap', () => {
   it('renders the map before the stations arrive', async () => {
@@ -177,5 +186,18 @@ describe('StationsMap', () => {
     await waitFor(() => expect(lastMapProps().selectedId).toBe('1b'));
 
     expect(lastMapProps().points).toBe(points);
+  });
+
+  it('greys every point out when the data is not confirmed', async () => {
+    server.use(
+      http.get(`${env.apiBaseUrl}/v1/bicimad/stations`, () =>
+        HttpResponse.json(staleStationsFixture),
+      ),
+    );
+
+    await renderMap();
+    await waitForPoints();
+
+    expect(lastMapProps().points?.every(({ tone }) => tone === 'unconfirmed')).toBe(true);
   });
 });

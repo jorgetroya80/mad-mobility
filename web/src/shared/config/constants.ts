@@ -1,6 +1,12 @@
-export const POLL_INTERVAL_MS = 60_000;
+export const POLL_INTERVAL_MS = 30_000;
 
-export const QUERY_RETRY_COUNT = 1;
+export const REQUEST_TIMEOUT_MS = 10_000;
+
+// Wait before the next request after 1, 2 and 3+ consecutive failures. Never faster than 30 s.
+export const RETRY_DELAYS_MS = [30_000, 60_000, 120_000] as const;
+
+// Data older than this reads as unconfirmed even if no request failed.
+export const STALE_AFTER_MS = 300_000;
 
 export const MADRID_CENTER = { lng: -3.7038, lat: 40.4168 } as const;
 
@@ -31,3 +37,11 @@ export const GEOLOCATION_MAX_AGE_MS = 60_000;
 export const SEARCH_MAX_RESULTS = 8;
 
 export const FAVORITES_STORAGE_KEY = 'bicimad-now:favorites';
+
+// The last stations lists, shown while the network answers or when it cannot.
+export const STATIONS_STORAGE_KEY = 'bicimad-now:stations';
+
+export const NEARBY_STORAGE_KEYS = {
+  bikes: 'bicimad-now:nearby-bikes',
+  docks: 'bicimad-now:nearby-docks',
+} as const;

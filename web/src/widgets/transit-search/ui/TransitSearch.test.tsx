@@ -1,5 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { onlineManager } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import type { Station, StationsResponse } from '@jorgetroya80/mad-transit-client';
 import { stationsFixture } from '@/shared/api/mocks/fixtures';
@@ -160,5 +161,16 @@ describe('TransitSearch', () => {
       await screen.findByText('No se pudieron cargar las estaciones', {}, AFTER_RETRY),
     ).toBeInTheDocument();
     expect(resultNumbers()).toEqual([]);
+  });
+
+  it('says the stations could not be loaded when offline without data', async () => {
+    onlineManager.setOnline(false);
+    const { user } = await renderSearch();
+
+    await user.type(searchBox(), '1');
+
+    expect(screen.getByText('No se pudieron cargar las estaciones')).toBeInTheDocument();
+    expect(resultNumbers()).toEqual([]);
+    act(() => onlineManager.setOnline(true));
   });
 });

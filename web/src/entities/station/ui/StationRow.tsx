@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 import { availabilityFor } from '../model/availability';
-import type { Need, Station } from '../model/types';
+import type { DataStatus, Need, Station } from '../model/types';
 import { AvailabilityBadge } from './AvailabilityBadge';
 import { availabilityText } from './availabilityText';
 import { formatDistance } from './formatDistance';
@@ -15,10 +15,11 @@ type RowStation = Pick<
 type StationRowProps = Omit<ComponentProps<'button'>, 'children' | 'aria-label'> & {
   station: RowStation;
   need: Need;
+  status: DataStatus;
 };
 
-export function StationRow({ station, need, className = '', ...props }: StationRowProps) {
-  const { level, count } = availabilityFor(station, need);
+export function StationRow({ station, need, status, className = '', ...props }: StationRowProps) {
+  const { level, count } = availabilityFor(station, need, status);
   const distance =
     station.distanceMeters === undefined ? undefined : formatDistance(station.distanceMeters);
   const label = [

@@ -17,11 +17,12 @@ Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene
 | `api-bus`     | Módulo `bus`: paradas cercanas, detalle con líneas y llegadas en `/v1/bus/stops/*`; `POST` en `EmtHttpClient`; caché y cupo propios | api-core | [SPEC-api-bus.md](SPEC-api-bus.md) | approved |
 | `web-bus`     | Selector BiciMAD / Bus, iconos de parada en el mapa, popup de resumen, lista, detalle con llegadas y buscador | web-shell, api-bus, web-error-states | [SPEC-web-bus.md](SPEC-web-bus.md) | approved |
 | `web-design-tokens` | Tema del rediseño en el `@theme` de Tailwind (color, forma, sombra, movimiento), fuente Inter y migración de las clases de la paleta por defecto a tokens | web-bicimad | [SPEC-web-design-tokens.md](SPEC-web-design-tokens.md) | implemented |
-| `web-data-state` | Estado único de la petición de estaciones (`loading`, `ok`, `stale`, `error`, `offline`), reintentos con espera creciente, caché en `localStorage` y nivel `unconfirmed` | web-bicimad | — | — |
+| `web-data-state` | Estado único de la petición de estaciones (`loading`, `ok`, `stale`, `error`, `offline`), reintentos con espera creciente, caché en `localStorage` y nivel `unconfirmed` | web-bicimad | [SPEC-web-data-state.md](SPEC-web-data-state.md) | approved |
 | `web-redesign-desktop` | Componentes del rediseño y pantalla de escritorio (≥ 768 px): cabecera, panel lateral, tarjeta de estación, leyenda y búsqueda por número y nombre | web-design-tokens, web-data-state | — | — |
 | `web-redesign-mobile` | Pantalla móvil (< 768 px): buscador flotante, modo en píldora, botón de centrar y bottom sheet con tres alturas por toques | web-redesign-desktop | — | — |
 | `web-error-states` | Estados `error`, `stale`, `offline` y búsqueda sin resultados en las dos pantallas | web-redesign-desktop, web-redesign-mobile | — | — |
 | `web-sheet-drag` | Arrastre del bottom sheet con imantado a la altura más cercana (opcional) | web-redesign-mobile | — | — |
+| `web-offline-shell` | Service worker propio (plugin de Vite, sin dependencias) que guarda la app para abrirla sin conexión con la caché de estaciones | web-data-state | — | — |
 
 ## Orden de construcción
 
@@ -29,6 +30,7 @@ Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene
 foundation -> api-core -> api-bicimad -> web-shell -> web-bicimad -> deploy
 web-bicimad -> web-design-tokens -> web-data-state -> web-redesign-desktop -> web-redesign-mobile -> web-error-states -> web-bus
 web-redesign-mobile -> web-sheet-drag
+web-data-state -> web-offline-shell
 api-core -> api-bus -> (release del cliente) -> web-bus
 ```
 

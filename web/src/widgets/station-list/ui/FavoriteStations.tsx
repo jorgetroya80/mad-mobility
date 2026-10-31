@@ -7,12 +7,12 @@ import { StationSection } from './StationSection';
 type FavoriteStationsProps = { need: Need; onSelect: (number: string) => void };
 
 export function FavoriteStations({ need, onSelect }: FavoriteStationsProps) {
-  const stations = useFavoriteStations();
+  const { stations, status } = useFavoriteStations();
 
   if (stations.length === 0) return null;
   return (
     <StationSection section="favorites" heading="Favoritas" caption={needCaption(need)}>
-      <StationRows stations={stations} need={need} onSelect={onSelect} />
+      <StationRows stations={stations} need={need} status={status} onSelect={onSelect} />
     </StationSection>
   );
 }

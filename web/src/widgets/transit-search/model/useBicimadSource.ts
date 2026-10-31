@@ -1,4 +1,4 @@
-import { type Station, useAllStations } from '@/entities/station';
+import { type DataStatus, type Station, useAllStations, useDataStatus } from '@/entities/station';
 import type { SearchItem, SearchSource } from '@/features/search-by-number';
 import { useSelectedStation } from '@/features/select-station';
 import { useMemo } from 'react';
@@ -9,12 +9,11 @@ const STATION_LABEL = 'estación';
 const STATION_LABEL_PLURAL = 'estaciones';
 const NO_ITEMS: readonly SearchItem[] = [];
 
-type StationsQuery = { data?: unknown; isError: boolean };
-
-// Stations from an earlier success stay searchable even if a later refresh failed.
-function sourceStatus({ data, isError }: StationsQuery): SearchSource['status'] {
-  if (data) return 'ready';
-  return isError ? 'error' : 'loading';
+// Stations from an earlier success or the saved list stay searchable whatever the status.
+// Without them, offline reads as an error like a failed request.
+function sourceStatus(hasData: boolean, status: DataStatus): SearchSource['status'] {
+  if (hasData) return 'ready';
+  return status === 'loading' ? 'loading' : 'error';
 }
 
 function toSearchItem({ number, name, address }: Station): SearchItem {
@@ -22,10 +21,11 @@ function toSearchItem({ number, name, address }: Station): SearchItem {
 }
 
 export function useBicimadSource(): SearchSource {
-  const { data, isError } = useAllStations();
+  const query = useAllStations();
+  const { status: dataStatus } = useDataStatus(query);
   const { select } = useSelectedStation();
-  const stations = data?.stations;
-  const status = sourceStatus({ data, isError });
+  const stations = query.data?.stations;
+  const status = sourceStatus(stations !== undefined, dataStatus);
 
   const items = useMemo(() => stations?.map(toSearchItem) ?? NO_ITEMS, [stations]);
 

@@ -1,36 +1,28 @@
 import {
   type Coordinates,
+  type DataStatus,
   type Need,
-  parseUpdatedAt,
+  readNearbyStations,
   type Station,
+  useDataStatus,
   useNearbyStations,
 } from '@/entities/station';
 
-export type NearbyList =
-  | { status: 'loading' }
-  | { status: 'error'; retry: () => void }
-  | {
-      status: 'ready';
-      stations: readonly Station[];
-      updatedAt: Date | undefined;
-      stale: boolean;
-      refreshFailed: boolean;
-    };
+export type NearbyList = {
+  status: DataStatus;
+  // Undefined without data, which is not the same as an empty list within the radius.
+  stations: readonly Station[] | undefined;
+  updatedAt: Date | undefined;
+  retry: () => void;
+};
 
-// Without a center (location pending) the query stays idle, which reads as loading. A failed
-// refresh keeps the previous data, so `refreshFailed` only adds a notice on top of it.
+// Without a center (location pending) the query stays idle, which reads as loading unless a
+// saved list fills in. TanStack drops that saved list (placeholder data) once the request
+// fails, so it is read again here: the list stays on screen, unconfirmed, instead of an error.
 export function useNearbyList(center: Coordinates | undefined, need: Need): NearbyList {
-  const { data, isError, refetch } = useNearbyStations(center, need);
-
-  if (data) {
-    return {
-      status: 'ready',
-      stations: data.stations,
-      updatedAt: parseUpdatedAt(data.updatedAt),
-      stale: data.stale,
-      refreshFailed: isError,
-    };
-  }
-  if (isError) return { status: 'error', retry: () => void refetch() };
-  return { status: 'loading' };
+  const query = useNearbyStations(center, need);
+  const { isError, dataUpdatedAt, refetch } = query;
+  const data = query.data ?? (isError ? readNearbyStations(need)?.response : undefined);
+  const { status, updatedAt, retry } = useDataStatus({ data, isError, dataUpdatedAt, refetch });
+  return { status, stations: data?.stations, updatedAt, retry };
 }

@@ -12,10 +12,10 @@ describe('createQueryClient', () => {
     const queries = createQueryClient().getDefaultOptions().queries;
 
     expect(queries).toMatchObject({
-      staleTime: 60_000,
+      staleTime: 30_000,
       refetchIntervalInBackground: false,
       refetchOnWindowFocus: true,
-      retry: 1,
+      retry: 0,
     });
   });
 });
@@ -28,6 +28,6 @@ describe('QueryProvider', () => {
       </QueryProvider>,
     );
 
-    expect(screen.getByText('60000')).toBeInTheDocument();
+    expect(screen.getByText('30000')).toBeInTheDocument();
   });
 });
