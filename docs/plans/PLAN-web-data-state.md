@@ -1,0 +1,153 @@
+# Plan: web-data-state
+
+- Created: 2026-10-31
+- Status: **approved** (2026-10-31)
+- Spec: [SPEC-web-data-state.md](../specs/SPEC-web-data-state.md)
+
+## Overview
+
+Dar a cada consulta de estaciones un `status` (`loading`, `ok`, `stale`, `error`, `offline`) calculado por una función pura. Las peticiones tienen un límite de 10 s, refresco cada 30 s y reintentos tras un fallo a los 30, 60 y 120 s. La última respuesta se guarda en `localStorage`, y el nivel `unconfirmed` pinta en gris la insignia y el mapa cuando el dato no está confirmado. Las pantallas actuales cambian sus avisos para leer `status`; no hay componentes nuevos.
+
+## Decisiones de implementación
+
+- **Rama `feat/web-data-state`, un PR y un commit por tarea.** Sin `Co-Authored-By`. El PR toca `web/` y `docs/`. Título `feat(web): keep stations visible when the data cannot be confirmed`: cambia lo que ve el usuario, así que publica una release de la web.
+- **Primero lo que puede fallar (T2).** La espera creciente depende de cómo TanStack Query cuenta los fallos entre refrescos. Se implementa con `refetchInterval` como función del estado de la consulta y `retry: 0`. Si el contador que hace falta no existe o se reinicia, se lleva la cuenta en un `Map` por clave de consulta dentro de `stationQueries.ts`. Se decide en T2 y se apunta aquí.
+- **Un hook de estado en `entities/station`.** `useDataStatus(query)` junta `dataStatus` (pura), `useOnline` y `useNow`, y devuelve `status`, `updatedAt` y `retry`. Los widgets solo leen su resultado.
+- **`availabilityFor` recibe `status` como argumento obligatorio.** El compilador encuentra todos los llamadores. `toMapPoints` mantiene su `satisfies Record<AvailabilityLevel, MapPointTone>`, así que olvidar el tono `unconfirmed` no compila.
+- **Lectura y escritura de `localStorage` sin hook.** `readRaw` y `writeRaw` de `useLocalStorage.ts` se exportan desde `shared/lib/storage` y la caché de estaciones las reutiliza, con el mismo trato de errores (modo privado, cuota).
+- **Tests con temporizadores falsos.** Las esperas de 30, 60 y 120 s y el límite de 10 s se prueban con `vi.useFakeTimers({ shouldAdvanceTime: true })` y MSW, sin esperas reales.
+
+## Grafo de dependencias
+
+```
+T1 dataStatus + useOnline + useDataStatus
+   │
+   ├─► T2 límite de 10 s, refresco 30 s, espera creciente
+   │      │
+   │      └─► T3 caché en localStorage
+   │             │
+   │             └─► T4 lista, mapa, buscador y favoritas leen status
+   │                    │
+   │                    └─► T5 detalle lee status (+ estación de la lista en caché)
+   │
+   └─► T6 nivel unconfirmed en la insignia y el mapa ─► T7 cierre
+```
+
+T6 solo depende de T1 y de que los widgets tengan `status` (T4 y T5): va después para pasar el `status` real a `availabilityFor` en lugar de un valor provisional.
+
+## Task List
+
+### Fase 1: Estado y peticiones
+
+- [ ] **T1: Función de estado y conexión** (S, ~1 h)
+  - Descripción: `DataStatus` en `model/types.ts`. `model/dataStatus.ts` con la función pura de la spec. `STALE_AFTER_MS` (5 min) en `shared/config`. `shared/lib/network/useOnline.ts` lee `onlineManager` de TanStack Query con `useSyncExternalStore`. `model/useDataStatus.ts` recibe `{ data, isError, refetch, dataUpdatedAt }` y la marca `stale` del API, y devuelve `{ status, updatedAt, retry }`.
+  - Aceptación:
+    - `dataStatus` cubre las cinco filas de la tabla, la prioridad entre estados y el límite de 5 min (justo por debajo y por encima).
+    - `useOnline` cambia al emitir `offline` y `online` en `window`.
+    - `useDataStatus` pasa de `ok` a `stale` cuando el reloj pasa los 5 min sin datos nuevos.
+  - Verificación: `pnpm --filter web exec vitest run src/entities/station/model src/shared/lib/network`.
+  - Archivos: `entities/station/model/{types.ts,dataStatus.ts,dataStatus.test.ts,useDataStatus.ts,useDataStatus.test.ts}`, `shared/lib/network/{useOnline.ts,useOnline.test.ts}`, `shared/lib/index.ts`, `shared/config/constants.ts`.
+  - Dependencias: ninguna.
+
+- [ ] **T2: Límite de 10 s y espera creciente** (M, ~1 h 30 min)
+  - Descripción: `REQUEST_TIMEOUT_MS` (10 s), `POLL_INTERVAL_MS` a 30 s y `RETRY_DELAYS_MS` (30, 60 y 120 s) en `shared/config`; se quita `QUERY_RETRY_COUNT`. `fetchStations.ts` combina la señal con `AbortSignal.timeout` mediante `AbortSignal.any`. Las tres consultas usan `retry: 0` (el detalle conserva el no reintento de «no encontrada») y un `refetchInterval` que, tras un fallo, toma el siguiente valor de `RETRY_DELAYS_MS` y, tras un acierto, vuelve a 30 s. `QueryProvider` quita el reintento por defecto.
+  - Aceptación:
+    - Una respuesta de MSW que tarda más de 10 s cuenta como fallo.
+    - Tras fallos seguidos, las peticiones llegan a los 30, 60, 120 y 120 s; tras un acierto, cada 30 s (SC5, SC6).
+    - `refetch()` pide en el acto y la siguiente espera vuelve a empezar en 30 s.
+    - Con `document.visibilityState` en `hidden` no hay refrescos.
+  - Verificación: `pnpm --filter web exec vitest run src/entities/station/api src/app`.
+  - Archivos: `shared/config/{constants.ts,index.ts,index.test.ts}`, `entities/station/api/{fetchStations.ts,stationQueries.ts,stationQueries.test.tsx}`, `app/providers/QueryProvider.tsx`.
+  - Dependencias: T1.
+
+- [ ] **T3: Caché en `localStorage`** (M, ~1 h 15 min)
+  - Descripción: exportar `readRaw` y `writeRaw` desde `shared/lib/storage`. `entities/station/api/stationsCache.ts` lee, valida y guarda la lista completa (`bicimad-now:stations`) y la de cercanas de cada modo (`bicimad-now:nearby-bikes` y `bicimad-now:nearby-docks`, con su `near`). Se guarda en el `queryFn` tras cada acierto. `useAllStations` arranca con `initialData` e `initialDataUpdatedAt` y `useNearbyStations` con `placeholderData` del modo cuando no hay datos de su clave. Actualizar la regla de `localStorage` en `web/AGENTS.md`.
+  - Aceptación:
+    - Tras un acierto, las tres claves tienen la respuesta.
+    - Al montar con caché, los datos aparecen sin esperar a la red.
+    - Un JSON corrupto o con otra forma se ignora; un `setItem` que lanza no rompe la consulta.
+  - Verificación: `pnpm --filter web exec vitest run src/entities/station/api src/shared/lib/storage`.
+  - Archivos: `shared/lib/storage/{useLocalStorage.ts,index}`, `shared/lib/index.ts`, `shared/config/constants.ts`, `entities/station/api/{stationsCache.ts,stationsCache.test.ts,stationQueries.ts}`, `web/AGENTS.md`.
+  - Dependencias: T2.
+
+### Checkpoint: Fase 1
+
+- [ ] `pnpm check:task` en verde.
+- [ ] Revisión con el usuario antes de tocar las pantallas.
+
+### Fase 2: Pantallas
+
+- [ ] **T4: Lista, mapa, buscador y favoritas leen `status`** (M, ~1 h 30 min)
+  - Descripción: `useNearbyList` devuelve `{ status, stations, updatedAt, retry }` sin `refreshFailed` ni `stale`. `NearbyStations` y `StationList` muestran el mensaje de carga en `loading`, el de error con «Reintentar» en `error` y en `offline` sin datos, `StaleNotice` en `stale` y un `PanelNotice` «Sin conexión» en `offline` con datos. `StaleNotice` pasa a «Sin confirmar» con la hora. `useBicimadSource`, `useFavoriteStations` y `StationsMap` usan `useDataStatus` y exponen o pasan `status`.
+  - Aceptación:
+    - Con MSW: `ok` y luego fallo, la lista sigue visible con el aviso «Sin confirmar» (SC2).
+    - Respuesta con `stale: true`, mismo aviso.
+    - Evento `offline`, aviso «Sin conexión» y la lista sigue; `online`, nueva petición y el aviso desaparece (SC4).
+    - Ya no aparece «No se pudo actualizar».
+  - Verificación: `pnpm --filter web exec vitest run src/widgets/station-list src/widgets/stations-map src/widgets/transit-search src/shared/ui`.
+  - Archivos: `widgets/station-list/{model/useNearbyList.ts,model/useFavoriteStations.ts,ui/NearbyStations.tsx,ui/StationList.tsx,ui/StationList.test.tsx}`, `widgets/stations-map/ui/StationsMap.tsx`, `widgets/transit-search/model/useBicimadSource.ts`, `shared/ui/data-freshness/StaleNotice.tsx`.
+  - Dependencias: T3.
+
+- [ ] **T5: El detalle lee `status`** (S, ~1 h)
+  - Descripción: `useStationDetail` devuelve `not-found` o `{ status, station, updatedAt, retry }`. Sin datos propios toma la estación de la lista completa (`useAllStations`) con el `status` de esta. `StationInfo` y `DetailBody` siguen el mismo patrón de avisos que T4.
+  - Aceptación:
+    - Detalle con fallo tras un acierto: sigue visible con «Sin confirmar».
+    - Detalle de una estación que solo está en la caché de la lista completa: se muestra en `stale` u `offline`.
+    - «Estación no encontrada» se comporta como hoy.
+  - Verificación: `pnpm --filter web exec vitest run src/widgets/station-detail`.
+  - Archivos: `widgets/station-detail/{model/useStationDetail.ts,ui/StationInfo.tsx,ui/DetailBody.tsx,ui/StationDetail.test.tsx}`.
+  - Dependencias: T4.
+
+### Checkpoint: Fase 2
+
+- [ ] `pnpm check:task` en verde.
+- [ ] `dev:mock` con DevTools: «Offline», bloquear la URL del API y recargar sin conexión (los tres recorridos de Commands en la spec).
+
+### Fase 3: Gris y cierre
+
+- [ ] **T6: Nivel `unconfirmed`** (M, ~1 h 15 min)
+  - Descripción: `AvailabilityLevel` gana `unconfirmed`. `availabilityFor(station, need, status)` lo devuelve en `stale` y `offline`, antes que `off`. `availabilityText` añade «sin confirmar» a la cifra. `AvailabilityBadge` usa `bg-availability-unconfirmed text-availability-unconfirmed-foreground`. `MapPointTone` y `MapColors` añaden `unconfirmed`, leído con `token()`. `StationRow`, `StationFields` y `toMapPoints` pasan el `status` de su widget.
+  - Aceptación:
+    - `availabilityFor` con 0, 1, 4 y 5 en `ok`, y `unconfirmed` en `stale` y `offline`, también para `NO_SERVICE` (SC1).
+    - La insignia en `unconfirmed` muestra la cifra y su texto accesible dice «sin confirmar».
+    - `readMapColors()` devuelve el tono `unconfirmed` y `pointLayers()` lo usa.
+    - Con datos en `stale`, la lista, el detalle y el mapa salen en gris (SC2, SC3).
+  - Verificación: `pnpm --filter web exec vitest run src/entities/station src/shared/ui/base-map src/widgets`.
+  - Archivos: `entities/station/{model/types.ts,model/availability.ts,model/availability.test.ts,ui/availabilityText.ts,ui/AvailabilityBadge.tsx,ui/StationRow.tsx}`, `shared/ui/base-map/{points.ts,mapColors.ts,mapColors.test.ts}`, `widgets/stations-map/lib/toMapPoints.ts`, `widgets/station-detail/ui/StationFields.tsx`, `widgets/station-list/ui/StationRows.tsx`.
+  - Dependencias: T5.
+
+- [ ] **T7: Cierre** (XS, ~30 min)
+  - Descripción: buscar restos de `refreshFailed`, `QUERY_RETRY_COUNT` y `isError` fuera de `useDataStatus`. Cobertura y capas. Changelog de este plan.
+  - Aceptación: `pnpm check:task` en verde (SC7); ningún resto de los nombres anteriores.
+  - Verificación: `pnpm check:task`; `grep -rn "refreshFailed\|QUERY_RETRY_COUNT" web/src` vacío.
+  - Archivos: este plan y lo que salga del `grep`.
+  - Dependencias: T6.
+
+### Checkpoint final
+
+- [ ] SC1-SC7 comprobados; CI en verde.
+- [ ] Pedir permiso antes de push, abrir el PR y hacer merge.
+- [ ] Después del despliegue: en Render, modo avión en el móvil y recargar; marcar spec, plan y capability map como **implemented**.
+
+## Riesgos y mitigaciones
+
+| Riesgo | Impacto | Mitigación |
+| --- | --- | --- |
+| TanStack Query no da un contador de fallos que sobreviva entre refrescos | Medio | Va en T2, al principio; alternativa: contador propio por clave de consulta |
+| Temporizadores falsos y MSW se bloquean entre sí en los tests | Medio | `shouldAdvanceTime: true` y `advanceTimersByTimeAsync`; ya se usa así en `useNow.test.ts` si aplica |
+| `placeholderData` de cercanas con un centro distinto muestra distancias viejas | Bajo | Solo hasta la primera respuesta, y en gris si el dato tiene más de 5 min o hay fallo |
+| La lista completa (~600 estaciones) se escribe cada 30 s en `localStorage` | Bajo | Unos 150 KB por escritura; si se nota en el perfil, guardar solo cuando cambia `updatedAt` |
+| `AbortSignal.any` no existe en navegadores antiguos (Safari < 17.4) | Bajo | Soporte de navegadores del resto de la app; se apunta en la spec (supuesto 5) |
+
+## Paralelización
+
+T6 podría ir en paralelo con T2-T5 pasando `'ok'` a `availabilityFor`, pero se hace en serie para no dejar valores provisionales.
+
+## Estimación
+
+Unas 8 h en total. Fase 1 ~3 h 45 min, fase 2 ~2 h 30 min y fase 3 ~1 h 45 min.
+
+## Changelog
+
+- 2026-10-31: borrador a partir de la spec aprobada.
+- 2026-10-31: aprobado por el usuario.
