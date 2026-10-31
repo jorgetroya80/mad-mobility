@@ -1,9 +1,12 @@
-export const POLL_INTERVAL_MS = 60_000;
+export const POLL_INTERVAL_MS = 30_000;
+
+export const REQUEST_TIMEOUT_MS = 10_000;
+
+// Wait before the next request after 1, 2 and 3+ consecutive failures. Never faster than 30 s.
+export const RETRY_DELAYS_MS = [30_000, 60_000, 120_000] as const;
 
 // Data older than this reads as unconfirmed even if no request failed.
 export const STALE_AFTER_MS = 300_000;
-
-export const QUERY_RETRY_COUNT = 1;
 
 export const MADRID_CENTER = { lng: -3.7038, lat: 40.4168 } as const;
 

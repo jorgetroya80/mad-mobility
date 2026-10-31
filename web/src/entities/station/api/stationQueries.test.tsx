@@ -1,6 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { delay, http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { server } from '@/shared/api/mocks/node';
 import {
@@ -8,7 +8,7 @@ import {
   staleStationsFixture,
   stationsFixture,
 } from '@/shared/api/mocks/fixtures';
-import { env, QUERY_RETRY_COUNT } from '@/shared/config';
+import { env, POLL_INTERVAL_MS, REQUEST_TIMEOUT_MS, RETRY_DELAYS_MS } from '@/shared/config';
 import type { Need } from '../model/types';
 import { StationNotFoundError } from './StationNotFoundError';
 import { stationKeys } from './stationKeys';
@@ -19,10 +19,10 @@ const SOL = { lat: 40.41702, lng: -3.70243 };
 // ~5 m north-east of SOL: same 4-decimal rounding (40.4170, -3.7024).
 const NEAR_SOL = { lat: 40.41704, lng: -3.70238 };
 
-// Same retry count as the app's QueryClient, without the backoff delay.
+// Same retry and background defaults as the app's QueryClient: the queries pace their own retries.
 function createWrapper() {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: QUERY_RETRY_COUNT, retryDelay: 0 } },
+    defaultOptions: { queries: { retry: 0, refetchIntervalInBackground: false } },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
@@ -37,7 +37,10 @@ function recordRequests(): URL[] {
   return urls;
 }
 
-afterEach(() => server.events.removeAllListeners());
+afterEach(() => {
+  server.events.removeAllListeners();
+  vi.useRealTimers();
+});
 
 describe('stationKeys', () => {
   it('shares the nearby key between centers that round to the same 4 decimals', () => {
@@ -166,7 +169,8 @@ describe('useStation', () => {
     expect(urls).toHaveLength(1);
   });
 
-  it('retries other failures once', async () => {
+  it('retries other failures on the next poll, not at once', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const urls = recordRequests();
     server.use(
       http.get(`${STATIONS_URL}/:number`, () =>
@@ -187,7 +191,9 @@ describe('useStation', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).not.toBeInstanceOf(StationNotFoundError);
-    expect(urls).toHaveLength(2);
+    expect(urls).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(RETRY_DELAYS_MS[0]);
+    await waitFor(() => expect(urls).toHaveLength(2));
   });
 
   it('names the request when the network fails', async () => {
@@ -199,5 +205,128 @@ describe('useStation', () => {
     expect(result.current.error?.message).toBe(
       `GET ${new URL(`${STATIONS_URL}/1a`, location.href).href} failed`,
     );
+  });
+});
+
+describe('request timeout', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('fails a request the API does not answer within 10 s', async () => {
+    // AbortSignal.timeout runs on Node's own timers, out of reach of fake timers: the test fires it.
+    const timeout = new AbortController();
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(timeout.signal);
+    server.use(
+      http.get(STATIONS_URL, async () => {
+        await delay('infinite');
+        return HttpResponse.json(stationsFixture);
+      }),
+    );
+    const { result } = renderHook(() => useAllStations(), { wrapper: createWrapper() });
+    await waitFor(() => expect(timeoutSpy).toHaveBeenCalledWith(REQUEST_TIMEOUT_MS));
+
+    timeout.abort(new DOMException('The operation timed out.', 'TimeoutError'));
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toMatch(/^GET .+ failed$/);
+  });
+});
+
+describe('polling and retries', () => {
+  const [FIRST_RETRY_MS, SECOND_RETRY_MS, LAST_RETRY_MS] = RETRY_DELAYS_MS;
+  // Fake time also advances with the real clock, so a wait is checked with a margin around it.
+  const MARGIN_MS = 1000;
+
+  function failStations() {
+    server.use(http.get(STATIONS_URL, () => HttpResponse.error()));
+  }
+
+  function serveStations() {
+    server.use(http.get(STATIONS_URL, () => HttpResponse.json(stationsFixture)));
+  }
+
+  // Checks that no request goes out until the wait is over, and that one does right after it.
+  async function expectNextRequestAfter(urls: URL[], waitMs: number) {
+    const before = urls.length;
+    await vi.advanceTimersByTimeAsync(waitMs - MARGIN_MS);
+    expect(urls).toHaveLength(before);
+    await vi.advanceTimersByTimeAsync(MARGIN_MS);
+    await vi.waitFor(() => expect(urls).toHaveLength(before + 1));
+  }
+
+  async function settled(result: { current: { fetchStatus: string } }) {
+    await vi.waitFor(() => expect(result.current.fetchStatus).toBe('idle'));
+  }
+
+  beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
+  afterEach(() => focusManager.setFocused(undefined));
+
+  it('polls every 30 s while the requests succeed', async () => {
+    const urls = recordRequests();
+    const { result } = renderHook(() => useAllStations(), { wrapper: createWrapper() });
+    await vi.waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    await expectNextRequestAfter(urls, POLL_INTERVAL_MS);
+    await settled(result);
+    await expectNextRequestAfter(urls, POLL_INTERVAL_MS);
+  });
+
+  it('waits 30, 60 and 120 s after consecutive failures, then stays at 120 s', async () => {
+    failStations();
+    const urls = recordRequests();
+    const { result } = renderHook(() => useAllStations(), { wrapper: createWrapper() });
+    await vi.waitFor(() => expect(result.current.isError).toBe(true));
+
+    for (const waitMs of [FIRST_RETRY_MS, SECOND_RETRY_MS, LAST_RETRY_MS, LAST_RETRY_MS]) {
+      await expectNextRequestAfter(urls, waitMs ?? 0);
+      await settled(result);
+    }
+    expect(urls).toHaveLength(5);
+  });
+
+  it('goes back to every 30 s after a success', async () => {
+    const urls = recordRequests();
+    const { result } = renderHook(() => useAllStations(), { wrapper: createWrapper() });
+    await vi.waitFor(() => expect(result.current.isSuccess).toBe(true));
+    failStations();
+    await expectNextRequestAfter(urls, POLL_INTERVAL_MS);
+    await settled(result);
+    await expectNextRequestAfter(urls, FIRST_RETRY_MS ?? 0);
+    await settled(result);
+
+    serveStations();
+    await expectNextRequestAfter(urls, SECOND_RETRY_MS ?? 0);
+    await vi.waitFor(() => expect(result.current.isError).toBe(false));
+
+    await expectNextRequestAfter(urls, POLL_INTERVAL_MS);
+  });
+
+  it('asks at once on refetch and restarts the wait at 30 s', async () => {
+    failStations();
+    const urls = recordRequests();
+    const { result } = renderHook(() => useAllStations(), { wrapper: createWrapper() });
+    await vi.waitFor(() => expect(result.current.isError).toBe(true));
+    await expectNextRequestAfter(urls, FIRST_RETRY_MS ?? 0);
+    await settled(result);
+    await expectNextRequestAfter(urls, SECOND_RETRY_MS ?? 0);
+    await settled(result);
+
+    // The next wait would be 120 s; a failed manual retry starts the sequence again.
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(urls).toHaveLength(4);
+
+    await expectNextRequestAfter(urls, FIRST_RETRY_MS ?? 0);
+  });
+
+  it('does not poll while the tab is hidden', async () => {
+    const urls = recordRequests();
+    const { result } = renderHook(() => useAllStations(), { wrapper: createWrapper() });
+    await vi.waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    act(() => focusManager.setFocused(false));
+    await vi.advanceTimersByTimeAsync(3 * POLL_INTERVAL_MS);
+
+    expect(urls).toHaveLength(1);
   });
 });

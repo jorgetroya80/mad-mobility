@@ -5,7 +5,7 @@ import {
   type StationsResponse,
 } from '@jorgetroya80/mad-transit-client';
 import { apiClient } from '@/shared/api';
-import { NEARBY_RADIUS_M } from '@/shared/config';
+import { NEARBY_RADIUS_M, REQUEST_TIMEOUT_MS } from '@/shared/config';
 import type { Need } from '../model/types';
 import { StationNotFoundError } from './StationNotFoundError';
 
@@ -22,8 +22,14 @@ function requestFailed({ error, request, response }: RequestResult): Error {
   return new Error(`GET ${request?.url ?? 'request'} failed${status}`, { cause: error });
 }
 
+// TanStack's signal cancels a request nobody needs any more; the timeout fails one the API never
+// answers, which then counts as a failed request.
+function withTimeout(signal: AbortSignal): AbortSignal {
+  return AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
+}
+
 export async function fetchAllStations({ signal }: RequestOptions): Promise<StationsResponse> {
-  const result = await listStations({ client: apiClient, signal });
+  const result = await listStations({ client: apiClient, signal: withTimeout(signal) });
   if (result.error) throw requestFailed(result);
   return result.data;
 }
@@ -38,7 +44,7 @@ export async function fetchNearbyStations({
   const result = await listStations({
     client: apiClient,
     query: { near, radius: NEARBY_RADIUS_M, need },
-    signal,
+    signal: withTimeout(signal),
   });
   if (result.error) throw requestFailed(result);
   return result.data;
@@ -53,7 +59,7 @@ export async function fetchStation({
   const result = await getStation({
     client: apiClient,
     path: { number },
-    signal,
+    signal: withTimeout(signal),
   });
   if (result.response?.status === NOT_FOUND) throw new StationNotFoundError(number);
   if (result.error) throw requestFailed(result);

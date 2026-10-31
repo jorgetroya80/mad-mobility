@@ -12,8 +12,9 @@ import {
   NEARBY_RADIUS_M,
   NOW_TICK_MS,
   POLL_INTERVAL_MS,
-  QUERY_RETRY_COUNT,
   REDUCED_MOTION_QUERY,
+  REQUEST_TIMEOUT_MS,
+  RETRY_DELAYS_MS,
   SEARCH_MAX_RESULTS,
   STALE_AFTER_MS,
 } from '.';
@@ -23,16 +24,20 @@ describe('shared/config public API', () => {
     expect(env.apiBaseUrl).toBe('/api');
   });
 
-  it('polls every minute', () => {
-    expect(POLL_INTERVAL_MS).toBe(60_000);
+  it('polls every 30 s', () => {
+    expect(POLL_INTERVAL_MS).toBe(30_000);
   });
 
   it('treats data older than 5 min as stale', () => {
     expect(STALE_AFTER_MS).toBe(300_000);
   });
 
-  it('retries a failed query once', () => {
-    expect(QUERY_RETRY_COUNT).toBe(1);
+  it('gives up on a request after 10 s', () => {
+    expect(REQUEST_TIMEOUT_MS).toBe(10_000);
+  });
+
+  it('waits 30, 60 and then 120 s after consecutive failures', () => {
+    expect(RETRY_DELAYS_MS).toEqual([30_000, 60_000, 120_000]);
   });
 
   it('centers the map on Puerta del Sol', () => {
