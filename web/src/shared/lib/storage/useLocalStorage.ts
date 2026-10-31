@@ -6,7 +6,8 @@ const listenersByKey = new Map<string, Set<Listener>>();
 // Values whose write failed (private mode, quota): they last until the page reloads.
 const unsavedByKey = new Map<string, string>();
 
-function readRaw(key: string): string | null {
+// Raw access without a hook, for values no component subscribes to (the stations cache).
+export function readRaw(key: string): string | null {
   const unsaved = unsavedByKey.get(key);
   if (unsaved !== undefined) return unsaved;
   try {
@@ -16,7 +17,7 @@ function readRaw(key: string): string | null {
   }
 }
 
-function writeRaw(key: string, raw: string): void {
+export function writeRaw(key: string, raw: string): void {
   try {
     localStorage.setItem(key, raw);
     unsavedByKey.delete(key);

@@ -1,5 +1,6 @@
+import type { StationsResponse } from '@jorgetroya80/mad-transit-client';
 import {
-  keepPreviousData,
+  type PlaceholderDataFunction,
   type QueryKey,
   type QueryState,
   skipToken,
@@ -11,6 +12,12 @@ import { POLL_INTERVAL_MS, RETRY_DELAYS_MS } from '@/shared/config';
 import type { Need } from '../model/types';
 import { fetchAllStations, fetchNearbyStations, fetchStation } from './fetchStations';
 import { type Coordinates, stationKeys, toNearParam } from './stationKeys';
+import {
+  readAllStations,
+  readNearbyStations,
+  saveAllStations,
+  saveNearbyStations,
+} from './stationsCache';
 
 type PacedQuery = { state: Pick<QueryState, 'status' | 'errorUpdateCount'> };
 
@@ -57,23 +64,53 @@ export function useAllStations() {
   const queryKey = stationKeys.all();
   const result = useQuery({
     queryKey,
-    queryFn: fetchAllStations,
+    queryFn: async ({ signal }) => {
+      const response = await fetchAllStations({ signal });
+      saveAllStations(response);
+      return response;
+    },
+    // Read once, when the query is created. The save time makes an old cache stale, so it is
+    // asked for again on mount.
+    initialData: () => readAllStations()?.response,
+    initialDataUpdatedAt: () => readAllStations()?.savedAt,
     retry: 0,
     refetchInterval: pollInterval,
   });
   return useRestartingRefetch(result, queryKey);
 }
 
+async function fetchAndSaveNearby(
+  center: Coordinates,
+  need: Need,
+  signal: AbortSignal,
+): Promise<StationsResponse> {
+  const near = toNearParam(center);
+  const response = await fetchNearbyStations({ near, need, signal });
+  saveNearbyStations(need, near, response);
+  return response;
+}
+
+// Module-level so TanStack keeps the placeholder between renders instead of reading storage
+// again. The previous rows of the same hook win; the saved list only fills an empty start.
+type NearbyKey = ReturnType<typeof stationKeys.nearby>;
+
+const nearbyPlaceholders: Record<
+  Need,
+  PlaceholderDataFunction<StationsResponse, Error, StationsResponse, NearbyKey>
+> = {
+  bikes: (previous) => previous ?? readNearbyStations('bikes')?.response,
+  docks: (previous) => previous ?? readNearbyStations('docks')?.response,
+};
+
 // Switching need or center keeps the previous rows on screen until the new ones arrive,
-// instead of flashing back to loading.
+// instead of flashing back to loading. On a fresh start, the last saved list of the need fills
+// in, even for another center.
 export function useNearbyStations(center: Coordinates | undefined, need: Need) {
   const queryKey = stationKeys.nearby(center, need);
   const result = useQuery({
     queryKey,
-    queryFn: center
-      ? ({ signal }) => fetchNearbyStations({ near: toNearParam(center), need, signal })
-      : skipToken,
-    placeholderData: keepPreviousData,
+    queryFn: center ? ({ signal }) => fetchAndSaveNearby(center, need, signal) : skipToken,
+    placeholderData: nearbyPlaceholders[need],
     retry: 0,
     refetchInterval: pollInterval,
   });

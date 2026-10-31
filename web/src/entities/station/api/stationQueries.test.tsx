@@ -8,7 +8,15 @@ import {
   staleStationsFixture,
   stationsFixture,
 } from '@/shared/api/mocks/fixtures';
-import { env, POLL_INTERVAL_MS, REQUEST_TIMEOUT_MS, RETRY_DELAYS_MS } from '@/shared/config';
+import {
+  env,
+  NEARBY_STORAGE_KEYS,
+  POLL_INTERVAL_MS,
+  REQUEST_TIMEOUT_MS,
+  RETRY_DELAYS_MS,
+  STATIONS_STORAGE_KEY,
+} from '@/shared/config';
+import { writeRaw } from '@/shared/lib';
 import type { Need } from '../model/types';
 import { StationNotFoundError } from './StationNotFoundError';
 import { stationKeys } from './stationKeys';
@@ -37,9 +45,16 @@ function recordRequests(): URL[] {
   return urls;
 }
 
+const CACHE_KEYS = [STATIONS_STORAGE_KEY, NEARBY_STORAGE_KEYS.bikes, NEARBY_STORAGE_KEYS.docks];
+
+// Every successful query saves its list: clear it so no test starts from another's cache.
 afterEach(() => {
   server.events.removeAllListeners();
   vi.useRealTimers();
+  vi.restoreAllMocks();
+  // A failed write keeps an in-memory copy per key: a successful one drops it before clearing.
+  for (const key of CACHE_KEYS) writeRaw(key, 'null');
+  localStorage.clear();
 });
 
 describe('stationKeys', () => {
@@ -328,5 +343,120 @@ describe('polling and retries', () => {
     await vi.advanceTimersByTimeAsync(3 * POLL_INTERVAL_MS);
 
     expect(urls).toHaveLength(1);
+  });
+});
+
+describe('stations cache', () => {
+  const HOUR_MS = 3_600_000;
+  const cachedList = { ...stationsFixture, stations: stationsFixture.stations.slice(0, 1) };
+
+  function store(key: string, value: unknown) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function hangStations() {
+    server.use(
+      http.get(STATIONS_URL, async () => {
+        await delay('infinite');
+        return HttpResponse.json(stationsFixture);
+      }),
+    );
+  }
+
+  // The app's staleTime: a cache older than it is asked for again on mount.
+  function createAppWrapper() {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: 0, staleTime: POLL_INTERVAL_MS } },
+    });
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    };
+  }
+
+  it('saves every successful list under its key', async () => {
+    const wrapper = createWrapper();
+    const all = renderHook(() => useAllStations(), { wrapper });
+    const bikes = renderHook(() => useNearbyStations(SOL, 'bikes'), { wrapper });
+    const docks = renderHook(() => useNearbyStations(SOL, 'docks'), { wrapper });
+
+    await waitFor(() => expect(all.result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(bikes.result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(docks.result.current.isSuccess).toBe(true));
+
+    expect(JSON.parse(localStorage.getItem(STATIONS_STORAGE_KEY) ?? 'null')).toMatchObject({
+      response: stationsFixture,
+    });
+    for (const need of ['bikes', 'docks'] as const) {
+      expect(JSON.parse(localStorage.getItem(NEARBY_STORAGE_KEYS[need]) ?? 'null')).toMatchObject({
+        near: '40.4170,-3.7024',
+        response: nearbyStationsFixture,
+      });
+    }
+  });
+
+  it('starts from the saved list without waiting for the network, and asks again', async () => {
+    const savedAt = Date.now() - HOUR_MS;
+    store(STATIONS_STORAGE_KEY, { response: cachedList, savedAt });
+    hangStations();
+    const urls = recordRequests();
+
+    const { result } = renderHook(() => useAllStations(), { wrapper: createAppWrapper() });
+
+    expect(result.current.data).toEqual(cachedList);
+    expect(result.current.dataUpdatedAt).toBe(savedAt);
+    await waitFor(() => expect(urls).toHaveLength(1));
+    expect(result.current.data).toEqual(cachedList);
+  });
+
+  it('ignores a saved list with the wrong shape', async () => {
+    store(STATIONS_STORAGE_KEY, { response: { stations: 'nope' }, savedAt: Date.now() });
+    hangStations();
+
+    const { result } = renderHook(() => useAllStations(), { wrapper: createAppWrapper() });
+
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.isPending).toBe(true);
+  });
+
+  it('keeps the response when the storage refuses the write', async () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    });
+
+    const { result } = renderHook(() => useAllStations(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(stationsFixture);
+  });
+
+  it('shows the saved nearby list of the need while its own list loads, even for another center', async () => {
+    store(NEARBY_STORAGE_KEYS.bikes, {
+      near: '40.4000,-3.7000',
+      response: cachedList,
+      savedAt: Date.now(),
+    });
+    hangStations();
+
+    const { result } = renderHook(() => useNearbyStations(SOL, 'bikes'), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.data).toEqual(cachedList);
+    expect(result.current.isPlaceholderData).toBe(true);
+  });
+
+  it('prefers the previous list of the same hook over the saved one', async () => {
+    store(NEARBY_STORAGE_KEYS.docks, { near: '40.4170,-3.7024', response: cachedList, savedAt: 0 });
+    const { result, rerender } = renderHook(({ need }) => useNearbyStations(SOL, need), {
+      wrapper: createWrapper(),
+      initialProps: { need: 'bikes' as Need },
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    hangStations();
+
+    rerender({ need: 'docks' });
+
+    expect(result.current.isPlaceholderData).toBe(true);
+    expect(result.current.data).toEqual(nearbyStationsFixture);
   });
 });

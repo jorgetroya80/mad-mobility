@@ -37,3 +37,11 @@ export const GEOLOCATION_MAX_AGE_MS = 60_000;
 export const SEARCH_MAX_RESULTS = 8;
 
 export const FAVORITES_STORAGE_KEY = 'bicimad-now:favorites';
+
+// The last stations lists, shown while the network answers or when it cannot.
+export const STATIONS_STORAGE_KEY = 'bicimad-now:stations';
+
+export const NEARBY_STORAGE_KEYS = {
+  bikes: 'bicimad-now:nearby-bikes',
+  docks: 'bicimad-now:nearby-docks',
+} as const;

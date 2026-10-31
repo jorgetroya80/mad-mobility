@@ -8,6 +8,7 @@ import {
   MADRID_ZOOM,
   MAP_STYLE_URL,
   MD_MEDIA_QUERY,
+  NEARBY_STORAGE_KEYS,
   NEAR_COORDINATE_DECIMALS,
   NEARBY_RADIUS_M,
   NOW_TICK_MS,
@@ -17,6 +18,7 @@ import {
   RETRY_DELAYS_MS,
   SEARCH_MAX_RESULTS,
   STALE_AFTER_MS,
+  STATIONS_STORAGE_KEY,
 } from '.';
 
 describe('shared/config public API', () => {
@@ -84,5 +86,13 @@ describe('shared/config public API', () => {
 
   it('stores favorites under a namespaced key', () => {
     expect(FAVORITES_STORAGE_KEY).toBe('bicimad-now:favorites');
+  });
+
+  it('caches the stations under namespaced keys', () => {
+    expect(STATIONS_STORAGE_KEY).toBe('bicimad-now:stations');
+    expect(NEARBY_STORAGE_KEYS).toEqual({
+      bikes: 'bicimad-now:nearby-bikes',
+      docks: 'bicimad-now:nearby-docks',
+    });
   });
 });
