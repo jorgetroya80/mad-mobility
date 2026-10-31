@@ -33,7 +33,7 @@ T2 a T6 solo dependen de T1 y no comparten archivos; van en serie para tener un 
 
 ### Fase 1: Base
 
-- [ ] **T1: Tema e Inter** (S, ~45 min)
+- [x] **T1: Tema e Inter** (S, ~45 min)
   - Descripción: instalar `@fontsource-variable/inter@5.3.0` exacta. Sustituir el `@theme static` de `index.css` por el bloque objetivo del diseño (sin bus) más `--color-primary-foreground`. Añadir el `@font-face` de `Inter Variable` con el fichero `inter-latin-wght-normal.woff2`, el `unicode-range` de latin y `font-display: swap`.
   - Aceptación:
     - `pnpm --filter web build` en verde y el CSS de `web/dist` solo referencia el `.woff2` latin de Inter (SC5).
@@ -140,3 +140,4 @@ Unas 6 h en total. Fase 1 ~1 h 45 min, fase 2 ~2 h 45 min y fase 3 ~1 h 30 min.
 
 - 2026-10-31: borrador a partir de la spec aprobada.
 - 2026-10-31: aprobado por el usuario.
+- 2026-10-31: T1 hecha. Vite resuelve la ruta del paquete dentro de `url()` en `index.css`, así que no hacen falta las alternativas. `web/dist` solo lleva `inter-latin-wght-normal.woff2` (48 KB). `check:task` en verde, 368 tests sin cambios.
