@@ -22,6 +22,7 @@ Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene
 | `web-redesign-mobile` | Pantalla móvil (< 768 px): buscador flotante, modo en píldora, botón de centrar y bottom sheet con tres alturas por toques | web-redesign-desktop | — | — |
 | `web-error-states` | Estados `error`, `stale`, `offline` y búsqueda sin resultados en las dos pantallas | web-redesign-desktop, web-redesign-mobile | — | — |
 | `web-sheet-drag` | Arrastre del bottom sheet con imantado a la altura más cercana (opcional) | web-redesign-mobile | — | — |
+| `web-offline-shell` | Service worker propio (plugin de Vite, sin dependencias) que guarda la app para abrirla sin conexión con la caché de estaciones | web-data-state | — | — |
 
 ## Orden de construcción
 
@@ -29,6 +30,7 @@ Fuente: [docs/ideas/bicimad-now.md](../ideas/bicimad-now.md). Cada módulo tiene
 foundation -> api-core -> api-bicimad -> web-shell -> web-bicimad -> deploy
 web-bicimad -> web-design-tokens -> web-data-state -> web-redesign-desktop -> web-redesign-mobile -> web-error-states -> web-bus
 web-redesign-mobile -> web-sheet-drag
+web-data-state -> web-offline-shell
 api-core -> api-bus -> (release del cliente) -> web-bus
 ```
 

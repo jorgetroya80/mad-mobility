@@ -11,11 +11,11 @@ Módulo `web-data-state` del [Capability Map](CAPABILITY-MAP.md), el segundo del
 Que la web siga siendo útil cuando la EMT, el API o la conexión fallan, y que el usuario sepa siempre si lo que ve está confirmado.
 
 - Como usuario, si falla la actualización sigo viendo las estaciones, en gris «Sin confirmar», con la hora del dato.
-- Como usuario, si recargo sin conexión veo la última lista guardada en lugar de una pantalla vacía.
+- Como usuario, si recargo y el servicio no responde, veo la última lista guardada en lugar de una pantalla vacía.
 - Como usuario, cuando vuelve la conexión o el servicio, los datos se refrescan solos y vuelven los colores.
 - Como desarrollador, cada pantalla lee un `status` (`loading`, `ok`, `stale`, `error`, `offline`) en lugar de combinar `data`, `isError` y `stale` por su cuenta.
 
-**Fuera de alcance:** los componentes nuevos del rediseño (indicador de la cabecera, `StatusBanner`, pantalla de error con cuenta atrás, mapa sustituido por un mensaje sin conexión) y sus textos, que llegan con `web-redesign-desktop`, `web-redesign-mobile` y `web-error-states`; el estado de las llegadas de bus, que llega con `web-bus`.
+**Fuera de alcance:** los componentes nuevos del rediseño (indicador de la cabecera, `StatusBanner`, pantalla de error con cuenta atrás, mapa sustituido por un mensaje sin conexión) y sus textos, que llegan con `web-redesign-desktop`, `web-redesign-mobile` y `web-error-states`; el estado de las llegadas de bus, que llega con `web-bus`; abrir la app sin conexión, que necesita un service worker y llega con `web-offline-shell`.
 
 ## Decisiones (2026-10-31, del usuario)
 
@@ -66,7 +66,7 @@ Manual en `dev:mock`, con DevTools:
 
 - «Offline» en Network: aviso «Sin conexión», datos en gris; al volver, se refrescan solos.
 - Bloquear la URL del API: tras el fallo, datos en gris con la hora y reintentos a los 30, 60 y 120 s.
-- Recargar sin conexión: la lista guardada aparece en gris.
+- Bloquear la URL de estaciones y recargar: la lista guardada aparece en gris.
 
 ## Project Structure
 
@@ -127,7 +127,7 @@ export function dataStatus({ hasData, failed, apiStale, updatedAt, now, online }
 
 1. SC1: `dataStatus` y `availabilityFor` cubren la tabla de estados y el nivel `unconfirmed` con tests.
 2. SC2: con el API caído y datos previos, la lista, el detalle y el mapa siguen visibles en gris con la hora del dato.
-3. SC3: recargar sin conexión muestra la última lista completa y la última de cercanas del modo, en gris.
+3. SC3: recargar con el API caído muestra la última lista completa y la última de cercanas del modo, en gris.
 4. SC4: al volver la conexión, los datos se refrescan sin intervención y vuelven los colores.
 5. SC5: tras un fallo, los intentos siguen a los 30, 60 y 120 s; tras un acierto, cada 30 s; con la pestaña oculta, ninguno.
 6. SC6: una petición sin respuesta en 10 s cuenta como fallida.
@@ -141,3 +141,4 @@ Ninguna.
 
 - 2026-10-31: borrador a partir del documento de diseño (revisión 32), con las decisiones 1 a 4 del usuario.
 - 2026-10-31: aprobada por el usuario.
+- 2026-10-31: recargar sin conexión no abre la app (no hay service worker), así que la caché no llega a leerse. SC3 pasa a medirse recargando con el API caído; abrir la app sin conexión queda para `web-offline-shell`.
